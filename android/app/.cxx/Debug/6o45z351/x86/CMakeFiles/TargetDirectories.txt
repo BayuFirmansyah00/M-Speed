@@ -1,0 +1,2 @@
+D:/INFORMATICS/FREELANCE/m-speed-mobile-new/android/app/.cxx/Debug/6o45z351/x86/CMakeFiles/edit_cache.dir
+D:/INFORMATICS/FREELANCE/m-speed-mobile-new/android/app/.cxx/Debug/6o45z351/x86/CMakeFiles/rebuild_cache.dir

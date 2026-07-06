@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;">
+    <g transform="matrix(0.833333,0,0,0.833333,10,10)">
+        <g id="Store.svg" transform="matrix(1,0,0,1,-12,-12)">
+            <clipPath id="_clip1">
+                <rect x="0" y="0" width="24" height="24"/>
+            </clipPath>
+            <g clip-path="url(#_clip1)">
+                <g>
+                    <path d="M3,21L5,21M21,21L19,21M5,21L19,21M5,21L5,9.328M19,21L19,9.328M5,9.328C4.963,9.307 4.927,9.284 4.891,9.26L4.35,8.9C3.563,8.376 3.251,7.371 3.603,6.493L4.497,4.257C4.801,3.498 5.536,3 6.354,3L17.646,3C18.464,3 19.199,3.498 19.503,4.257L20.397,6.493C20.749,7.371 20.437,8.376 19.65,8.9L19.109,9.26C19.074,9.284 19.037,9.307 19,9.328M5,9.328C5.655,9.707 6.474,9.684 7.109,9.26L9,8L10.891,9.26C11.562,9.708 12.438,9.708 13.109,9.26L15,8L16.891,9.26C17.527,9.684 18.345,9.707 19,9.328" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2px;"/>
+                    <path d="M14,21L14,16C14,14.895 13.105,14 12,14C10.895,14 10,14.895 10,16L10,21" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2px;stroke-linecap:butt;stroke-linejoin:miter;"/>
+                </g>
+            </g>
+        </g>
+        <g id="Store.svg1" serif:id="Store.svg">
+        </g>
+    </g>
+</svg>

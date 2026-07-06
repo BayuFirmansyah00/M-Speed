@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;">
+    <g transform="matrix(1,0,0,1,12,12)">
+        <g id="Icon-Frame.svg" serif:id="Icon Frame.svg" transform="matrix(1,0,0,1,-12.5,-12)">
+            <path d="M16.772,6.008C17.119,6.601 17.763,7 18.5,7C19.605,7 20.5,6.105 20.5,5C20.5,3.895 19.605,3 18.5,3C17.395,3 16.5,3.895 16.5,5C16.5,5.368 16.599,5.712 16.772,6.008ZM16.772,6.008L8.228,10.992M8.228,10.992C7.881,10.399 7.237,10 6.5,10C5.395,10 4.5,10.895 4.5,12C4.5,13.105 5.395,14 6.5,14C7.237,14 7.881,13.601 8.228,13.008M8.228,10.992C8.401,11.288 8.5,11.632 8.5,12C8.5,12.368 8.401,12.712 8.228,13.008M8.228,13.008L16.772,17.992M16.772,17.992C17.119,17.399 17.763,17 18.5,17C19.605,17 20.5,17.895 20.5,19C20.5,20.105 19.605,21 18.5,21C17.395,21 16.5,20.105 16.5,19C16.5,18.632 16.599,18.288 16.772,17.992Z" style="fill:none;fill-rule:nonzero;stroke:black;stroke-width:2px;"/>
+        </g>
+        <g id="Icon-Frame.svg1" serif:id="Icon Frame.svg">
+        </g>
+    </g>
+</svg>

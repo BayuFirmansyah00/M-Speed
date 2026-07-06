@@ -1,0 +1,2 @@
+D:/INFORMATICS/FREELANCE/m-speed-mobile-new/android/app/.cxx/RelWithDebInfo/3e485032/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/INFORMATICS/FREELANCE/m-speed-mobile-new/android/app/.cxx/RelWithDebInfo/3e485032/armeabi-v7a/CMakeFiles/rebuild_cache.dir

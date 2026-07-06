@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 20 20" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;">
+    <g>
+        <g id="Shopping-Card.svg" serif:id="Shopping Card.svg" transform="matrix(0.8,0,0,0.8,10,10)">
+            <g transform="matrix(1,0,0,1,-12,-12.5)">
+                <g>
+                    <path d="M3,2.5C2.448,2.5 2,2.948 2,3.5C2,4.052 2.448,4.5 3,4.5L3,2.5ZM5,3.5L5.997,3.423C5.957,2.902 5.523,2.5 5,2.5L5,3.5ZM21,6.5L21.994,6.61C22.025,6.328 21.935,6.045 21.745,5.833C21.555,5.621 21.284,5.5 21,5.5L21,6.5ZM5.231,6.5L4.234,6.577L5.231,6.5ZM18.339,15.619L18.41,16.616L18.339,15.619ZM7.984,16.358L7.913,15.361L7.984,16.358ZM3,4.5L5,4.5L5,2.5L3,2.5L3,4.5ZM8.055,17.356L18.41,16.616L18.267,14.621L7.913,15.361L8.055,17.356ZM21.178,13.955L21.994,6.61L20.006,6.39L19.19,13.734L21.178,13.955ZM4.003,3.577L4.234,6.577L6.228,6.423L5.997,3.423L4.003,3.577ZM4.234,6.577L4.85,14.594L6.845,14.44L6.228,6.423L4.234,6.577ZM21,5.5L5.231,5.5L5.231,7.5L21,7.5L21,5.5ZM18.41,16.616C19.854,16.513 21.018,15.394 21.178,13.955L19.19,13.734C19.137,14.214 18.749,14.587 18.267,14.621L18.41,16.616ZM7.913,15.361C7.364,15.4 6.887,14.989 6.845,14.44L4.85,14.594C4.977,16.239 6.409,17.473 8.055,17.356L7.913,15.361Z" style="fill:rgb(16,6,41);fill-rule:nonzero;"/>
+                    <rect x="8.5" y="21" width="0.01" height="0.01" style="fill:none;stroke:rgb(16,6,41);stroke-width:2px;"/>
+                    <rect x="17.5" y="21" width="0.01" height="0.01" style="fill:none;stroke:rgb(16,6,41);stroke-width:2px;"/>
+                </g>
+            </g>
+        </g>
+        <g transform="matrix(1,0,0,1,-0.0302848,-0.166565)">
+            <circle cx="7.234" cy="17.008" r="0.863" style="fill:rgb(16,6,41);"/>
+        </g>
+        <g transform="matrix(1,0,0,1,7.11689,-0.166565)">
+            <circle cx="7.234" cy="17.008" r="0.863" style="fill:rgb(16,6,41);"/>
+        </g>
+    </g>
+</svg>

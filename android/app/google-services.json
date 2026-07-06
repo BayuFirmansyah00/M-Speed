@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "340085933065",
+    "project_id": "mspeed-38888",
+    "storage_bucket": "mspeed-38888.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:340085933065:android:11d5975a0451a5347024d8",
+        "android_client_info": {
+          "package_name": "com.mitrakaryaprima.mspeed"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWq8OhvczzNwjhBh3CIEQSnTDU0b9iDMQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
