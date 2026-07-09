@@ -1,15 +1,13 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:mspeed/src/buyer/home/model/home_model.dart';
 import 'package:mspeed/src/buyer/home/view/home_buyer_view.dart';
 import 'package:mspeed/src/buyer/notifikasi/view/notifikasi_view.dart';
 import 'package:mspeed/src/buyer/profil/view/akun_saya_view.dart';
-
 import 'package:mspeed/src/buyer/wishlist/view/wishlist_view.dart';
 import 'package:flutter/material.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../common/helper/constant.dart';
 
 class MainHome extends StatefulWidget {
   final int? index;
@@ -25,32 +23,24 @@ class _MainHomeState extends State<MainHome> {
   late HomeModel homeModel;
   String? roles;
 
+  // Palet Warna M-SPEED
+  final Color mRed = const Color(0xFFE50012);
+
   @override
   void initState() {
     getData();
-    // setIndex();
     super.initState();
   }
 
   @override
   void didChangeDependencies() {
     roles = ModalRoute.of(context)?.settings.arguments as String?;
-    // getData();
     super.didChangeDependencies();
   }
 
   getData() async {
     setIndex();
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    // roles = prefs.getString(Constant.kSetPrefRoles);
-    // await Utils.showLoading();
-    // await context.read<HomeProvider>().fetchHome();
-    // await context.read<ProfileProvider>().fetchProfile(context: context);
-    // await context.read<JamaahProvider>().fetchJamaah();
-    // if (roles == "agen") await context.read<SubAgenProvider>().fetchSubAgen();
-    // await context.read<ProfileProvider>().fetchSosmed();
-    // await context.read<NotifikasiProvider>().fetchNotif();
-    // await Utils.dismissLoading();
     setState(() {});
   }
 
@@ -62,130 +52,129 @@ class _MainHomeState extends State<MainHome> {
     });
   }
 
-  void jumpToJamaah() {
-    setState(() {
-      currentIndex = 1;
-    });
-  }
-
-  void jumpToSubAgen() {
-    setState(() {
-      currentIndex = 2;
-    });
-  }
-
-  void jumpToProfile() {
-    setState(() {
-      if (roles == "agen") {
-        currentIndex = 4;
-      } else {
-        currentIndex = 3;
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    Widget customBottomNav() {
-      return SafeArea(
-        child: Container(
-          height: Platform.isAndroid ? 70 : 105,
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.5),
-                spreadRadius: 4,
-                blurRadius: 7,
-                offset: Offset(0, 1), // changes position of shadow
-              ),
-            ],
-          ),
-          child: BottomNavigationBar(
-            backgroundColor: Colors.white,
-            selectedFontSize: 13,
-            unselectedFontSize: 13,
-            unselectedItemColor: Constant.textHintColor2,
-            currentIndex: currentIndex,
-            onTap: (index) {
-              // context.read<PaketProvider>().clearFilter();
-              setState(() => currentIndex = index);
-            },
-            type: BottomNavigationBarType.fixed,
-            selectedIconTheme: IconThemeData(color: Constant.primaryColor),
-            selectedItemColor: Constant.primaryColor,
-            selectedLabelStyle: Constant.primaryBold15.copyWith(fontSize: 13),
-            unselectedLabelStyle:
-                TextStyle(fontSize: 13, color: Constant.textHintColor2),
-            items: [
-              BottomNavigationBarItem(
-                icon: Container(
-                    padding: EdgeInsets.only(bottom: 4),
-                    width: 25,
-                    height: 25,
-                    child: FittedBox(
-                        child: Image.asset(currentIndex == 0
-                            ? 'assets/icons/ic-home-red.png'
-                            : 'assets/icons/ic-home-black.png'))),
-                label: 'Beranda',
-              ),
-              BottomNavigationBarItem(
-                  icon: Container(
-                      padding: EdgeInsets.only(bottom: 4),
-                      width: 25,
-                      height: 25,
-                      child: FittedBox(
-                          child: Image.asset(currentIndex == 1
-                              ? 'assets/icons/ic-wishlist-red.png'
-                              : 'assets/icons/ic-wishlist-black.png'))),
-                  label: 'Wishlist'),
-              BottomNavigationBarItem(
-                icon: Container(
-                    padding: EdgeInsets.only(bottom: 4),
-                    width: 25,
-                    height: 25,
-                    child: FittedBox(
-                        child: Image.asset(currentIndex == 2
-                            ? 'assets/icons/ic-notification-red.png'
-                            : 'assets/icons/ic-notification-black.png'))),
-                label: 'Notifikasi',
-              ),
-              BottomNavigationBarItem(
-                icon: Container(
-                    padding: EdgeInsets.only(bottom: 4),
-                    width: 25,
-                    height: 25,
-                    child: FittedBox(
-                        child: Image.asset(currentIndex == 3
-                            ? 'assets/icons/ic-account-red.png'
-                            : 'assets/icons/ic-account-black.png'))),
-                label: 'Akun',
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       primary: true,
-      bottomNavigationBar: customBottomNav(),
+      extendBody: true, 
       body: SafeArea(
+        bottom: false,
         child: WillPopScope(
           onWillPop: () async {
             if (currentIndex != 0) {
               setState(() => currentIndex = 0);
               return false;
             }
-            // kalau sudah ada api maka muncul konfirm exit dua kali
             return true;
           },
           child: [
             HomeBuyerView(),
-            WishlistView(),
+            WishlistView(), 
             NotificationView(),
             AkunSayaView()
-            // ProfileView(jumpToJamaah, jumpToSubAgen)
           ][currentIndex],
+        ),
+      ),
+      bottomNavigationBar: _buildGlassBottomNav(),
+    );
+  }
+
+  // --- WIDGET FLOATING APPLE GLASSMORPHISM (FROSTED WHITE) ---
+  Widget _buildGlassBottomNav() {
+    return SafeArea(
+      child: Container(
+        height: 70,
+        margin: const EdgeInsets.only(left: 20, right: 20, bottom: 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(35),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08), // Bayangan hitam netral yang lembut
+              blurRadius: 20,
+              spreadRadius: 2,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(35),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                // Dasar kaca berwarna putih salju semi-transparan
+                color: Colors.white.withOpacity(0.7), 
+                borderRadius: BorderRadius.circular(35),
+                // Efek pantulan cahaya di pinggiran
+                border: Border.all(color: Colors.white.withOpacity(0.5), width: 1.5),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildNavItem(0, 'Beranda', Icons.home_rounded),
+                  _buildNavItem(1, 'Wishlist', Icons.favorite_rounded),
+                  _buildNavItem(2, 'Notifikasi', Icons.notifications_rounded),
+                  _buildNavItem(3, 'Akun', Icons.person_rounded),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- LOGIKA ANIMASI: MERAH HANYA UNTUK MENU AKTIF ---
+  Widget _buildNavItem(int index, String label, IconData icon) {
+    final bool isSelected = currentIndex == index;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() => currentIndex = index);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutQuint,
+        padding: EdgeInsets.symmetric(
+          horizontal: isSelected ? 16.0 : 12.0,
+          vertical: 10.0,
+        ),
+        decoration: BoxDecoration(
+          // Background MERAH hanya diaplikasikan jika tombol ini sedang di-select
+          color: isSelected ? mRed : Colors.transparent,
+          borderRadius: BorderRadius.circular(25),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 26,
+              // Ikon: Putih jika aktif, abu-abu gelap jika mati
+              color: isSelected ? Colors.white : Colors.grey.shade600,
+            ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutQuint,
+              child: SizedBox(
+                width: isSelected ? null : 0,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 6),
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      color: Colors.white, // Teks selalu putih karena di atas background merah
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

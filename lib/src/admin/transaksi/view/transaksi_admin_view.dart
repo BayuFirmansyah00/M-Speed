@@ -14,72 +14,102 @@ class TransaksiAdminView extends StatefulWidget {
 }
 
 class _TransaksiAdminViewState extends State<TransaksiAdminView> {
+  // Palet Warna Brand
+  final Color appRed = const Color(0xFFED1C24);
+  final Color oceanBlue = const Color(0xFF0096C7);
+
   @override
   Widget build(BuildContext context) {
-    PreferredSizeWidget appBar() {
-      return CustomAppBar.appBar(
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA), // Latar yang lebih lembut
+      appBar: CustomAppBar.appBar(
         context,
-        'Transaksi',
+        'Menu Transaksi',
         color: Colors.white,
         isCenter: true,
         titleSpacing: 24,
-        textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+        textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
         isLeading: false,
-      );
-    }
-
-    Widget userCard({required String title, required VoidCallback onTap}) {
-      return Card(
-        color: Color(0xFFFFEBE2),
-        margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        child: InkWell(
-          onTap: onTap,
-          child: Container(
-              padding: EdgeInsets.all(30),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  SvgPicture.asset(
-                    Assets.svgsIcAdminTransaksi,
-                    width: 24,
-                    height: 24,
-                    color: Colors.black,
-                  ),
-                  SizedBox(
-                    width: 12,
-                  ),
-                  Text(
-                    title,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
-                  )
-                ],
-              )),
-        ),
-      );
-    }
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: appBar(),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            userCard(
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+          child: GridView(
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 1.15,
+            ),
+            children: [
+              _buildTransactionCard(
                 title: 'Data DPP',
-                onTap: () {
-                  CusNav.nPush(context, DataDppAdminView());
-                }),
-            userCard(
+                iconPath: Assets.svgsIcAdminTransaksi, // Pastikan path ini benar di assets.dart
+                accentColor: oceanBlue,
+                onTap: () => CusNav.nPush(context, const DataDppAdminView()),
+              ),
+              _buildTransactionCard(
                 title: 'Data Order',
-                onTap: () {
-                  CusNav.nPush(context, DataOrderAdminView());
+                iconPath: Assets.svgsIcAdminTransaksi,
+                accentColor: appRed,
+                onTap: () => CusNav.nPush(context, const DataOrderAdminView()),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-                }),
-          ],
+  Widget _buildTransactionCard({
+    required String title,
+    required String iconPath,
+    required Color accentColor,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      elevation: 3,
+      shadowColor: accentColor.withOpacity(0.15),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border(bottom: BorderSide(color: accentColor, width: 4)),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: accentColor.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: SvgPicture.asset(
+                  iconPath,
+                  width: 32,
+                  height: 32,
+                  colorFilter: ColorFilter.mode(accentColor, BlendMode.srcIn),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );

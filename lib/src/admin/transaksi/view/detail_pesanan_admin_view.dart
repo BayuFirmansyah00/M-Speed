@@ -20,575 +20,379 @@ class DetailPesananAdminView extends StatefulWidget {
 }
 
 class _DetailPesananAdminViewState extends BaseState<DetailPesananAdminView> {
+  // Palet Warna Khas Aplikasi
+  final Color appRed = const Color(0xFFED1C24);
+  final Color oceanBlue = const Color(0xFF0096C7);
+  final Color orangeAcc = const Color(0xFFFF9800);
+  final Color yellowAcc = const Color(0xFFFFC300);
+
   String userId = "";
   String buyerName = "";
   String buyerPhone = "";
+  bool isExpanded = false;
 
   @override
   void initState() {
-    initData();
     super.initState();
+    initData();
   }
 
   Future<void> initData() async {
     final prefs = await SharedPreferences.getInstance();
-    userId = await prefs.getString(Constant.kSetPrefId) ?? "";
-    buyerName = await prefs.getString(Constant.kSetPrefFirstName) ?? "";
-    buyerPhone = await prefs.getString(Constant.kSetPrefPhone) ?? "";
+    userId = prefs.getString(Constant.kSetPrefId) ?? "";
+    buyerName = prefs.getString(Constant.kSetPrefFirstName) ?? "";
+    buyerPhone = prefs.getString(Constant.kSetPrefPhone) ?? "";
 
-    context.read<TransactionProvider>().fetchDetailTransaction(
-        transaction_id: widget.transaction_id, withLoading: true);
+    if (mounted) {
+      context.read<TransactionProvider>().fetchDetailTransaction(
+            transaction_id: widget.transaction_id,
+            withLoading: true,
+          );
+    }
   }
 
-  DetailTransaksiBuyerModelData? data = DetailTransaksiBuyerModelData();
-
-  void refresh() {
-    // context.read<TransactionProvider>().fetchTransaction(withLoading: true);
+  // Mencegah crash jika backend mengirim desimal (cth: "10000.00")
+  int _safeParse(String? value) {
+    if (value == null || value.isEmpty) return 0;
+    final cleanValue = value.split('.')[0];
+    return int.tryParse(cleanValue) ?? 0;
   }
 
-  bool isExpanded = false;
+  String formatCurrency(String amount) {
+    int value = _safeParse(amount);
+    final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    return formatter.format(value);
+  }
 
   @override
   Widget build(BuildContext context) {
-    data = context.watch<TransactionProvider>().getDetailTransaksi.data;
-
-    List<Widget> showListItems() {
-      List<Widget> list = [];
-      final length = data?.detail?.length ?? 0;
-      if (length == 0) {
-        return [
-          Center(
-              child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Text(
-              "tidak ada data",
-              style: TextStyle(color: Colors.grey),
-            ),
-          ))
-        ];
-      }
-
-      final iteration = isExpanded ? length : 1;
-
-      for (int i = 0; i < iteration; i++) {
-        list.add(
-          Container(
-            margin: EdgeInsets.symmetric(vertical: 12),
-            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Color(0xFFF6F6F6)),
-            ),
-            child: Row(
-              children: [
-                ImageNetworkWidget(
-                  width: 50,
-                  height: 50,
-                  radius: 12,
-                  imageUrl: data?.detail?[i]?.foto ?? '',
-                ),
-                SizedBox(
-                  width: 8,
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        data?.detail?[i]?.nama ?? '',
-                        style: TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w400),
-                      ),
-                      Text(
-                        '${data?.detail?[i]?.qty ?? '1'} x${formatCurrency(data?.detail?[i]?.harga ?? '0')}',
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: Constant.grayColor),
-                      )
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Total Harga',
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: Constant.grayColor),
-                    ),
-                    Text(
-                      formatCurrency(data?.detail?[i]?.hargaAkhir ?? '0'),
-                      style:
-                          TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
-                    ),
-                  ],
-                )
-              ],
-            ),
-          ),
-        );
-      }
-
-      return list;
-    }
+    final data = context.watch<TransactionProvider>().getDetailTransaksi.data;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF4F6F9),
       appBar: CustomAppBar.appBar(
         context,
         'Detail Pesanan',
         color: Colors.white,
         isCenter: true,
+        textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.black87),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              color: Color(0xFFF6F6F6),
-              height: 8,
-              width: double.infinity,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text('Ringkasan',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  SizedBox(
-                    height: 8,
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('No Order',
-                          style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400)),
-                      Text(data?.ParentOrderModel?.nomorOrder ?? '-',
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w400)),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Tanggal Order',
-                          style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400)),
-                      Text(data?.ParentOrderModel?.Created ?? '-',
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w400)),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Rekening',
-                          style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400)),
-                      Text(data?.detail?.firstOrNull?.noRek ?? '-',
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w400)),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Estimasi Pengiriman',
-                          style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400)),
-                      Text(data?.ParentOrderModel?.estPengiriman ?? '-',
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w400)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              color: Color(0xFFF6F6F6),
-              height: 8,
-              width: double.infinity,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
+      body: data == null
+          ? Center(child: CircularProgressIndicator(color: appRed))
+          : SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Info Pengiriman',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('PIC Penerima',
-                          style: TextStyle(color: Colors.grey, fontSize: 12)),
-                      SizedBox(
-                        width: 36,
-                      ),
-                      Expanded(
-                          child: Text(
-                        buyerName,
-                        style: TextStyle(fontSize: 12),
-                        textAlign: TextAlign.end,
-                      )),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Alamat Pengiriman',
-                          style: TextStyle(color: Colors.grey, fontSize: 12)),
-                      SizedBox(
-                        width: 36,
-                      ),
-                      Expanded(
-                          child: Text(
-                        '${data?.ParentOrderModel?.alamat ?? '-'}\n${data?.ParentOrderModel?.telp}',
-                        style: TextStyle(fontSize: 12),
-                        textAlign: TextAlign.end,
-                      )),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Estimasi Tanggal Pengiriman',
-                          style: TextStyle(color: Colors.grey, fontSize: 12)),
-                      SizedBox(
-                        width: 36,
-                      ),
-                      Expanded(
-                          child: Text(
-                        data?.ParentOrderModel?.estPengiriman ?? '-',
-                        style: TextStyle(fontSize: 12),
-                        textAlign: TextAlign.end,
-                      )),
-                    ],
-                  ),
+                  _buildSummaryCard(data),
+                  const SizedBox(height: 16),
+                  _buildShippingCard(data),
+                  const SizedBox(height: 16),
+                  _buildProductCard(data),
+                  const SizedBox(height: 16),
+                  _buildPaymentSummaryCard(data),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
-            Container(
-              color: Color(0xFFF6F6F6),
-              height: 8,
-              width: double.infinity,
-            ),
-            // Product Info
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Detail Produk',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  ...showListItems(),
-                  Container(
-                    color: Color(0xFFF6F6F6),
-                    height: 1,
-                    width: double.infinity,
-                  ),
-                  Center(
-                    child: TextButton(
-                      onPressed: () {
-                        setState(() {
-                          isExpanded = !isExpanded;
-                        });
-                      },
-                      child: Text(
-                        isExpanded
-                            ? 'Tutup Tampilan'
-                            : 'Tampilkan Produk Lainnya',
-                        style: TextStyle(color: Constant.grayColor),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              color: Color(0xFFF6F6F6),
-              height: 8,
-              width: double.infinity,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text('Ringkasan',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          'Subtotal',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 1,
-                        child: Row(
-                          children: [
-                            Text('Rp'),
-                            Expanded(
-                                child: Text(
-                              Utils.thousandSeparator(
-                                  int.parse(
-                                      data?.ParentOrderModel?.subtotal ?? '0'),
-                                  symbol: ''),
-                              textAlign: TextAlign.end,
-                            )),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          'Ongkos Kirim',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 1,
-                        child: Row(
-                          children: [
-                            Text('Rp'),
-                            Expanded(
-                                child: Text(
-                              Utils.thousandSeparator(
-                                  int.parse(
-                                      data?.ParentOrderModel?.ongkir ?? '0'),
-                                  symbol: ''),
-                              textAlign: TextAlign.end,
-                            )),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          'Pajak',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ),
-                      Expanded(
-                        flex: 1,
-                        child: Row(
-                          children: [
-                            Text('Rp'),
-                            Expanded(
-                                child: Text(
-                              Utils.thousandSeparator(
-                                  int.parse(
-                                      data?.ParentOrderModel?.pajak ?? '0'),
-                                  symbol: ''),
-                              textAlign: TextAlign.end,
-                            )),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  Divider(
-                    color: Color(0xFFF6F6F6),
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: Text('Total Harga',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Constant.primaryColor)),
-                      ),
-                      Expanded(
-                        flex: 1,
-                        child: Row(
-                          children: [
-                            Text(
-                              'Rp',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.red,
-                              ),
-                            ),
-                            Expanded(
-                                child: Text(
-                              Utils.thousandSeparator(
-                                  int.parse(
-                                      data?.ParentOrderModel?.total ?? '0'),
-                                  symbol: ''),
-                              textAlign: TextAlign.end,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.red,
-                              ),
-                            )),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  //
-                  // Row(
-                  //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  //   children: [
-                  //     Text('Total Harga',
-                  //         style: TextStyle(
-                  //             fontWeight: FontWeight.bold,
-                  //             color: Constant.primaryColor)),
-                  //     Text(
-                  //       formatCurrency(data?.ParentOrderModel?.total ?? '0'),
-                  //       style: TextStyle(
-                  //         fontWeight: FontWeight.bold,
-                  //         color: Colors.red,
-                  //       ),
-                  //     ),
-                  //   ],
-                  // ),
-                ],
-              ),
-            ),
-            SizedBox(height: 24),
-          ],
-        ),
-      ),
-      bottomNavigationBar: buildBottomBar(),
+      bottomNavigationBar: data != null ? _buildBottomBar(data) : const SizedBox.shrink(),
     );
   }
 
-  Widget buildBottomBar() {
+  // --- KUMPULAN WIDGET CARD --- //
+
+  Widget _buildSummaryCard(DetailTransaksiBuyerModelData data) {
+    return _buildCardBase(
+      title: 'Ringkasan Order',
+      icon: Icons.receipt_long_rounded,
+      iconColor: oceanBlue,
+      child: Column(
+        children: [
+          _buildInfoRow('No Order', data.ParentOrderModel?.nomorOrder ?? '-'),
+          _buildDivider(),
+          _buildInfoRow('Tanggal Order', data.ParentOrderModel?.Created ?? '-'),
+          _buildDivider(),
+          _buildInfoRow('Rekening', data.detail?.firstOrNull?.noRek ?? '-'),
+          _buildDivider(),
+          _buildInfoRow('Estimasi Pengiriman', data.ParentOrderModel?.estPengiriman ?? '-'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShippingCard(DetailTransaksiBuyerModelData data) {
+    return _buildCardBase(
+      title: 'Informasi Pengiriman',
+      icon: Icons.local_shipping_rounded,
+      iconColor: orangeAcc,
+      child: Column(
+        children: [
+          _buildInfoRow('PIC Penerima', buyerName),
+          _buildDivider(),
+          _buildInfoRow(
+            'Alamat Pengiriman',
+            '${data.ParentOrderModel?.alamat ?? '-'}\n${data.ParentOrderModel?.telp ?? ''}',
+            valueMaxLines: 4,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductCard(DetailTransaksiBuyerModelData data) {
+    final detailList = data.detail ?? [];
+    final length = detailList.length;
+
+    return _buildCardBase(
+      title: 'Detail Produk',
+      icon: Icons.shopping_bag_rounded,
+      iconColor: yellowAcc,
+      child: length == 0
+          ? const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: Text("Tidak ada data produk", style: TextStyle(color: Colors.grey))),
+            )
+          : Column(
+              children: [
+                ...List.generate(isExpanded ? length : (length > 0 ? 1 : 0), (index) {
+                  final item = detailList[index];
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFEEEEEE)),
+                      color: const Color(0xFFFAFAFA),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: ImageNetworkWidget(
+                            width: 60,
+                            height: 60,
+                            radius: 8,
+                            imageUrl: item?.foto ?? '',
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item?.nama ?? '-',
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                '${item?.qty ?? '1'} x ${formatCurrency(item?.harga ?? '0')}',
+                                style: const TextStyle(fontSize: 13, color: Colors.black54),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            const Text('Total', style: TextStyle(fontSize: 11, color: Colors.black54)),
+                            const SizedBox(height: 4),
+                            Text(
+                              formatCurrency(item?.hargaAkhir ?? '0'),
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: appRed),
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  );
+                }),
+                if (length > 1)
+                  TextButton.icon(
+                    onPressed: () => setState(() => isExpanded = !isExpanded),
+                    icon: Icon(isExpanded ? Icons.expand_less : Icons.expand_more, color: oceanBlue),
+                    label: Text(
+                      isExpanded ? 'Tutup Tampilan' : 'Tampilkan ${length - 1} Produk Lainnya',
+                      style: TextStyle(color: oceanBlue, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildPaymentSummaryCard(DetailTransaksiBuyerModelData data) {
+    return _buildCardBase(
+      title: 'Ringkasan Pembayaran',
+      icon: Icons.account_balance_wallet_rounded,
+      iconColor: appRed,
+      child: Column(
+        children: [
+          _buildPaymentRow('Subtotal', data.ParentOrderModel?.subtotal),
+          const SizedBox(height: 8),
+          _buildPaymentRow('Ongkos Kirim', data.ParentOrderModel?.ongkir),
+          const SizedBox(height: 8),
+          _buildPaymentRow('Pajak', data.ParentOrderModel?.pajak),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Divider(color: Color(0xFFEEEEEE)),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Total Harga', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(
+                formatCurrency(data.ParentOrderModel?.total ?? '0'),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: appRed),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- KOMPONEN BANTUAN UI --- //
+
+  Widget _buildCardBase({required String title, required IconData icon, required Color iconColor, required Widget child}) {
     return Container(
-      padding: EdgeInsets.all(8.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Icon(icon, size: 20, color: iconColor),
+                const SizedBox(width: 8),
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87)),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: Color(0xFFEEEEEE)),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: child,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value, {int valueMaxLines = 2}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          flex: 2,
+          child: Text(label, style: const TextStyle(color: Colors.black54, fontSize: 13)),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          flex: 3,
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87),
+            maxLines: valueMaxLines,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPaymentRow(String label, String? rawValue) {
+    final value = _safeParse(rawValue);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(color: Colors.black54, fontSize: 14)),
+        Text(
+          'Rp ${Utils.thousandSeparator(value, symbol: '')}',
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.black87),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDivider() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 12),
+      child: Divider(height: 1, color: Color(0xFFF5F5F5)),
+    );
+  }
+
+  // --- BOTTOM NAV BAR (TOLAK / TERIMA) --- //
+
+  Widget _buildBottomBar(DetailTransaksiBuyerModelData data) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 5,
-            blurRadius: 7,
-            offset: Offset(0, 3),
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.05), spreadRadius: 0, blurRadius: 10, offset: const Offset(0, -4)),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: SizedBox(
-              height: 48, // Same height as chat button
-              child: ElevatedButton(
+      child: SafeArea(
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
                 onPressed: () {
-                  if (data?.ParentOrderModel?.tglTtdSuratPesanan == null) {
-                    // showTtdDialog(context);
+                  if (data.ParentOrderModel?.tglTtdSuratPesanan == null) {
+                    // Logika awal Anda
                   } else {}
                 },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Icon(
-                      Icons.clear,
-                      color: Colors.white,
-                      size: 14,
-                    ),
-                    Text('Tolak Pesanan',
-                        style: TextStyle(color: Colors.white)),
-                  ],
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Constant.primaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                icon: const Icon(Icons.close_rounded, size: 18),
+                label: const Text('Tolak'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: appRed,
+                  side: BorderSide(color: appRed, width: 1.5),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
               ),
             ),
-          ),
-          SizedBox(width: 8),
-          Expanded(
-            child: SizedBox(
-              height: 48, // Same height as chat button
-              child: ElevatedButton(
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton.icon(
                 onPressed: () {
-                  if (data?.ParentOrderModel?.tglTtdSuratPesanan == null) {
-                    // showTtdDialog(context);
+                  if (data.ParentOrderModel?.tglTtdSuratPesanan == null) {
+                    // Logika awal Anda
                   } else {}
                 },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Icon(
-                      Icons.check,
-                      color: Colors.white,
-                      size: 14,
-                    ),
-                    Text('Terima Pesanan',
-                        style: TextStyle(color: Colors.white)),
-                  ],
-                ),
+                icon: const Icon(Icons.check_rounded, size: 18),
+                label: const Text('Terima'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF1ABC62),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  foregroundColor: Colors.white,
+                  backgroundColor: const Color(0xFF1ABC62), // Hijau konfirmasi yang standar & aman
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
-  }
-
-  String formatCurrency(String amount) {
-    // Mengonversi string ke integer
-    int value = int.parse(amount);
-
-    // Membuat format untuk Rupiah
-    final formatCurrency =
-        NumberFormat.currency(locale: 'id_ID', symbol: 'Rp', decimalDigits: 0);
-
-    // Mengonversi integer ke format mata uang
-    return formatCurrency.format(value);
   }
 }

@@ -6,7 +6,6 @@ import 'package:http/http.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
-
 import '../../main.dart';
 import '../../utils/utils.dart';
 import '../component/custom_alert.dart';

@@ -10,6 +10,8 @@ import 'package:mspeed/src/admin/user/model/keuangan_admin_model.dart';
 import 'package:mspeed/src/admin/user/model/penerima_admin_model.dart';
 import 'package:mspeed/src/admin/user/view/user_data_admin_view.dart';
 import 'package:mspeed/src/auth/model/login_model.dart';
+import 'package:mspeed/src/admin/user/model/manager_admin_model.dart';
+import 'package:mspeed/src/admin/user/model/audit_admin_model.dart';
 import 'package:flutter/material.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -414,4 +416,114 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       throw Exception(message);
     }
   }
+  
+var managerAdminModel = ManagerAdminModel();
+Future<void> fetchManager({
+  bool withLoading = false,
+  String search = '',
+}) async {
+  if (withLoading) loading(true);
+  Map<String, String> param = {};
+  if (search.isNotEmpty) param.addAll({'search': search});
+  if (id != null) param.addAll({'manager_id': id ?? '0'});
+  final response = await get(
+    Constant.BASE_API_FULL + '/getmanageradmin',
+    body: param,
+  );
+ 
+  if (response.statusCode == 201 || response.statusCode == 200) {
+    userData.clear();
+    managerAdminModel = ManagerAdminModel.fromJson(
+      jsonDecode(response.body),
+    );
+    managerAdminModel.data?.forEach((v) {
+      userData.add(
+        UserData(
+          name1: v?.firstname,
+          name2: v?.lastname,
+          email: v?.email,
+          id: v?.ID,
+          alamat: v?.alamat,
+        ),
+      );
+    });
+ 
+    notifyListeners();
+ 
+    if (withLoading) loading(false);
+  } else {
+    final message = jsonDecode(response.body)["messages"]["error"];
+    loading(false);
+    throw Exception(message);
+  }
+}
+
+var auditAdminModel = AuditAdminModel();
+Future<void> fetchAudit({
+  bool withLoading = false,
+  String search = '',
+}) async {
+  if (withLoading) loading(true);
+  Map<String, String> param = {};
+  if (search.isNotEmpty) param.addAll({'search': search});
+ 
+  // TODO KONFIRMASI KE BACKEND: endpoint 'getauditadmin' ini ASUMSI
+  final response = await get(
+    Constant.BASE_API_FULL + '/getauditadmin',
+    body: param,
+  );
+ 
+  if (response.statusCode == 201 || response.statusCode == 200) {
+    userData.clear();
+    auditAdminModel = AuditAdminModel.fromJson(
+      jsonDecode(response.body),
+    );
+    auditAdminModel.data?.forEach((v) {
+      userData.add(
+        UserData(
+          // NOTE: reuse UserData class -- Audit cuma punya username & fullname,
+          // jadi dipetakan ke name1/name2 seadanya. Kalau ternyata butuh tampilan
+          // khusus (2 kolom saja: username, Full Name), pertimbangkan bikin
+          // widget list item terpisah untuk Audit, bukan reuse produkItem().
+          name1: v?.username,
+          name2: v?.fullname,
+          id: v?.ID,
+        ),
+      );
+    });
+ 
+    notifyListeners();
+ 
+    if (withLoading) loading(false);
+  } else {
+    final message = jsonDecode(response.body)["messages"]["error"];
+    loading(false);
+    throw Exception(message);
+  }
+}
+ 
+Future<void> deleteManager({
+  bool withLoading = false,
+  String managerId = "0",
+}) async {
+  if (withLoading) loading(true);
+ 
+  final response = await post(
+    Constant.BASE_API_FULL + '/hapusmanageradmin',
+    body: {'manager_id': managerId},
+  );
+ 
+  if (response.statusCode == 201 || response.statusCode == 200) {
+    final model = BaseResponse.from(response);
+    notifyListeners();
+    await Utils.showSuccess(msg: model.message);
+    await Future.delayed(Duration(seconds: 2), () {});
+    if (withLoading) loading(false);
+    fetchManager(withLoading: true);
+  } else {
+    final message = jsonDecode(response.body)["messages"]["error"];
+    loading(false);
+    throw Exception(message);
+  }
+}
 }

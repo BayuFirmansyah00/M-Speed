@@ -8,6 +8,8 @@ import 'package:mspeed/src/admin/master/provider/master_provider.dart';
 import 'package:mspeed/src/admin/transaksi/provider/transaction_admin_provider.dart';
 import 'package:mspeed/src/admin/user/provider/admin_form_buyer_provider.dart';
 import 'package:mspeed/src/admin/user/provider/admin_form_keuangan_provider.dart';
+import 'package:mspeed/src/admin/user/provider/admin_form_manager_provider.dart';
+import 'package:mspeed/src/admin/user/provider/admin_form_audit_provider.dart';
 import 'package:mspeed/src/admin/user/provider/admin_form_penerima_provider.dart';
 import 'package:mspeed/src/admin/user/provider/admin_form_seller_provider.dart';
 import 'package:mspeed/src/admin/user/provider/admin_user_provider.dart';
@@ -351,6 +353,9 @@ class MyApp extends StatelessWidget {
                   create: (context) => TransactionAdminProvider()),
               ChangeNotifierProvider<CustomMapProvider>(
                   create: (context) => CustomMapProvider()),
+              ChangeNotifierProvider(create: (_) => AdminFormSellerProvider()),
+              ChangeNotifierProvider(create: (_) => AdminFormManagerProvider()),
+              ChangeNotifierProvider(create: (_) => AdminFormAuditProvider()),
             ],
             child: MaterialApp(
               title: 'M-Speed',
