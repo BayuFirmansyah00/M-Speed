@@ -85,15 +85,24 @@ class _SettingsViewState extends BaseState<SettingsView> {
     final profileP = context.watch<ProfileProvider>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF5F5F7),
       appBar: CustomAppBar.appBar(
         context,
         "Pengaturan Akun",
         color: Colors.white,
         isCenter: true,
-        textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+        textStyle: const TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFF111827),
+          letterSpacing: -0.3,
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Color(0xFF111827),
+            size: 18,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -106,15 +115,39 @@ class _SettingsViewState extends BaseState<SettingsView> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))
-                ]
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: const [
+                  BoxShadow(color: Color(0x0D000000), blurRadius: 12, offset: Offset(0, 4))
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Informasi Pribadi", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0B4177).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.person_rounded,
+                          size: 16,
+                          color: Color(0xFF0B4177),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        "Informasi Pribadi",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                          color: Color(0xFF111827),
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 16),
                   CustomTextField.borderTextField(
                     controller: profileP.firstNameC,
@@ -137,15 +170,39 @@ class _SettingsViewState extends BaseState<SettingsView> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))
-                ]
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: const [
+                  BoxShadow(color: Color(0x0D000000), blurRadius: 12, offset: Offset(0, 4))
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Keamanan", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.lock_rounded,
+                          size: 16,
+                          color: Color(0xFF10B981),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        "Keamanan",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                          color: Color(0xFF111827),
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 16),
                   CustomTextField.borderTextField(
                     controller: profileP.passwordC,
@@ -159,15 +216,42 @@ class _SettingsViewState extends BaseState<SettingsView> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text("  Koordinat Default", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black54)),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF58B2B).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.location_on_rounded,
+                      size: 16,
+                      color: Color(0xFFF58B2B),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    "Koordinat Default",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: Color(0xFF111827),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 8),
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: Container(
                 height: 250, 
                 decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFFEEEEEE)),
-                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: locationCoordinate == null 
                   ? const Center(child: CircularProgressIndicator())
@@ -194,19 +278,17 @@ class _SettingsViewState extends BaseState<SettingsView> {
       ),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05), 
-              spreadRadius: 0, 
-              blurRadius: 10, 
-              offset: const Offset(0, -4)
+              color: Color(0x0D000000),
+              blurRadius: 12,
+              offset: Offset(0, -4),
             ),
           ],
         ),
         child: SafeArea(
-          // KUNCI PERBAIKAN: Bungkus dengan SizedBox untuk mengunci tinggi maksimal button
           child: SizedBox(
             height: 50, 
             child: CustomButton.mainButton(

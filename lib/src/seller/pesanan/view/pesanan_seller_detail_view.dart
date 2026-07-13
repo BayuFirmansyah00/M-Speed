@@ -1081,6 +1081,36 @@ class _PesananSellerDetailViewState extends BaseState<PesananSellerDetailView> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
+                          'Status Pesanan',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Constant.statusColor(dataSeller?.ParentOrderModel?.status ?? "-").withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            (dataSeller?.ParentOrderModel?.status ?? "-").replaceAll('_', ' '),
+                            style: TextStyle(
+                              color: Constant.statusColor(dataSeller?.ParentOrderModel?.status ?? "-") == Colors.black ? Colors.grey : Constant.statusColor(dataSeller?.ParentOrderModel?.status ?? "-"),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 16),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
                           'No Order',
                           style: TextStyle(
                             color: Colors.grey,

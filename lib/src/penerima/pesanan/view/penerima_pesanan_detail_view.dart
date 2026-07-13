@@ -154,8 +154,8 @@ class _PenerimaPesananDetailViewState
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: Text(
-                "tidak ada data",
-                style: TextStyle(color: Colors.grey),
+                "Tidak ada data produk",
+                style: TextStyle(color: Colors.black45, fontSize: 14),
               ),
             ),
           ),
@@ -167,60 +167,106 @@ class _PenerimaPesananDetailViewState
       for (int i = 0; i < iteration; i++) {
         list.add(
           Container(
-            margin: EdgeInsets.symmetric(vertical: 12),
-            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Color(0xFFF6F6F6)),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 10,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 4),
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 2,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+              border: Border.all(color: Colors.grey.withOpacity(0.1)),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: Checkbox(
-                    value: checks[i],
-                    onChanged: (_) {
-                      setState(() {
-                        checks[i] = !checks[i];
-                      });
-                    },
+                // Custom Checkbox
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      checks[i] = !checks[i];
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOut,
+                    width: 24,
+                    height: 24,
+                    margin: const EdgeInsets.only(right: 12),
+                    decoration: BoxDecoration(
+                      color: checks[i] ? Constant.primaryColor : Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: checks[i] ? Constant.primaryColor : Colors.grey.shade300,
+                        width: 1.5,
+                      ),
+                      boxShadow: checks[i]
+                          ? [
+                              BoxShadow(
+                                color: Constant.primaryColor.withOpacity(0.3),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              )
+                            ]
+                          : [],
+                    ),
+                    child: checks[i]
+                        ? const Icon(Icons.check, size: 16, color: Colors.white)
+                        : null,
                   ),
                 ),
                 ImageNetworkWidget(
-                  width: 50,
-                  height: 50,
+                  width: 60,
+                  height: 60,
                   radius: 12,
                   imageUrl: data?.detail?.elementAt(i)?.foto ?? '',
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         data?.detail?.elementAt(i)?.nama ?? '',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.w400,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
+                      const SizedBox(height: 4),
                       Text(
                         data?.detail?.elementAt(i)?.hargaAkhir != null
-                            ? '${data?.detail?.elementAt(i)?.qty ?? '1'} x${formatCurrency(data?.detail?.elementAt(i)?.hargaAkhir ?? '0')}'
-                            : '${data?.detail?.elementAt(i)?.qty ?? '1'} x${formatCurrency(data?.detail?.elementAt(i)?.harga ?? '0')}',
-                        style: TextStyle(
+                            ? '${data?.detail?.elementAt(i)?.qty ?? '1'} x ${formatCurrency(data?.detail?.elementAt(i)?.hargaAkhir ?? '0')}'
+                            : '${data?.detail?.elementAt(i)?.qty ?? '1'} x ${formatCurrency(data?.detail?.elementAt(i)?.harga ?? '0')}',
+                        style: const TextStyle(
                           fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: Constant.grayColor,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black54,
                         ),
                       ),
+                      const SizedBox(height: 6),
                       Text(
                         formatCurrency(
                           data?.detail?.elementAt(i)?.hargaAkhir ?? '0',
                         ),
                         style: TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.w400,
+                          fontWeight: FontWeight.w700,
+                          color: Constant.primaryColor,
                         ),
                       ),
                     ],
@@ -241,52 +287,52 @@ class _PenerimaPesananDetailViewState
                         ),
                       );
                     },
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        SvgPicture.asset(
-                          Assets.svgsIcChat,
-                          color: Constant.primaryColor,
-                          width: 12,
-                          height: 12,
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          'Komplain',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Constant.primaryColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SvgPicture.asset(
+                            Assets.svgsIcChat,
                             color: Constant.primaryColor,
+                            width: 14,
+                            height: 14,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 6),
+                          Text(
+                            'Komplain',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Constant.primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   )
                 else
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => ChatPesananKomplainView(
-                                id: data?.detail?.elementAt(i)?.SellerID ?? "",
-                                orderNo:
-                                    data?.detail?.elementAt(i)?.IDOrder ?? '',
-                              ),
-                        ),
-                      );
-                    },
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Icon(Icons.history, color: Colors.grey, size: 12),
-                        SizedBox(width: 4),
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(Icons.history, color: Colors.grey, size: 14),
+                        SizedBox(width: 6),
                         Text(
                           'Dikomplain',
                           style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
                             color: Colors.grey,
                           ),
                         ),
@@ -365,398 +411,230 @@ class _PenerimaPesananDetailViewState
       return SizedBox();
     }
 
+    Widget _buildInfoRow(String label, String value, {bool isBold = false}) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.black54,
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: isBold ? FontWeight.w600 : FontWeight.w500,
+                  color: Colors.black87,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget _buildStatusRow(String status) {
+      Color baseColor = Constant.statusColor(status);
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Status Pesanan',
+              style: TextStyle(
+                color: Colors.black54,
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: baseColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                status.replaceAll('_', ' '),
+                style: TextStyle(
+                  color: baseColor == Colors.black ? Colors.grey : baseColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget _buildSectionCard({required String title, required Widget child, Widget? trailing}) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 16,
+              spreadRadius: 0,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  if (trailing != null) trailing,
+                ],
+              ),
+              const SizedBox(height: 20),
+              child,
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F5F7), // Apple style background
       appBar: CustomAppBar.appBar(
         context,
         'Detail Pesanan',
         color: Colors.white,
         isCenter: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Colors.black87),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
       ),
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             statusW(),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
+            const SizedBox(height: 16),
+            
+            // ORDER INFO SECTION
+            _buildSectionCard(
+              title: 'Informasi Pesanan',
               child: Column(
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'No Order',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      Text(
-                        data?.ParentOrderModel?.nomorOrder ?? '-',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Tanggal Order',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      Text(
-                        data?.ParentOrderModel?.Created ?? '-',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  // Row(
-                  //   crossAxisAlignment: CrossAxisAlignment.start,
-                  //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  //   children: [
-                  //     Text(
-                  //       'Departemen',
-                  //       style: TextStyle(
-                  //         color: Colors.grey,
-                  //         fontSize: 12,
-                  //         fontWeight: FontWeight.w400,
-                  //       ),
-                  //     ),
-                  //     Text(
-                  //       data?.NamaDepartment ?? '-',
-                  //       style: TextStyle(
-                  //         fontSize: 14,
-                  //         fontWeight: FontWeight.w400,
-                  //       ),
-                  //     ),
-                  //   ],
-                  // ),
-                  // SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Alamat Pengiriman',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      SizedBox(width: 20),
-                      Expanded(
-                        child: Text(
-                          data?.ParentOrderModel?.alamat ?? '-',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.end,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Nama Seller',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      Text(
-                        data?.ParentOrderModel?.SellerNama ?? '-',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Alamat Seller',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      SizedBox(width: 20),
-                      Expanded(
-                        child: Text(
-                          data?.ParentOrderModel?.alamat ?? '-',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.end,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Nama Penerima',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      Text(
-                        data?.ParentOrderModel?.nama ?? '-',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'PIC (Kontak Sales)',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      Text(
-                        data?.ParentOrderModel?.telp ?? '-',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Estimasi Tanggal Pengiriman',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      SizedBox(width: 20),
-                      Expanded(
-                        child: Text(
-                          '${data?.ParentOrderModel?.estPengiriman != "0000-00-00" ? DateFormat('d MMMM yyyy').format(DateTime.parse(data?.ParentOrderModel?.estPengiriman ?? "0000-00-00")) : ''} - ${data?.ParentOrderModel?.estPengiriman2 != "0000-00-00" ? DateFormat('d MMMM yyyy').format(DateTime.parse(data?.ParentOrderModel?.estPengiriman2 ?? "0000-00-00")) : ''}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.end,
-                        ),
-                      ),
-                    ],
-                  ),
-                  // SizedBox(height: 16),
-                  // Row(
-                  //   crossAxisAlignment: CrossAxisAlignment.start,
-                  //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  //   children: [
-                  //     Text(
-                  //       'DPP',
-                  //       style: TextStyle(
-                  //         color: Colors.grey,
-                  //         fontSize: 12,
-                  //         fontWeight: FontWeight.w400,
-                  //       ),
-                  //     ),
-                  //     SizedBox(width: 20),
-                  //     Expanded(
-                  //       child: Text(
-                  //         '${data?.ParentOrderModel?.nomorDpp ?? ''}${data?.ParentOrderModel?.dpp != null ? ' - ${data?.ParentOrderModel?.dpp}' : ''}',
-                  //         style: TextStyle(
-                  //           fontSize: 14,
-                  //           fontWeight: FontWeight.w400,
-                  //         ),
-                  //         maxLines: 2,
-                  //         overflow: TextOverflow.ellipsis,
-                  //         textAlign: TextAlign.end,
-                  //       ),
-                  //     ),
-                  //   ],
-                  // ),
+                  _buildStatusRow(data?.ParentOrderModel?.status ?? '-'),
+                  _buildInfoRow('No Order', data?.ParentOrderModel?.nomorOrder ?? '-', isBold: true),
+                  _buildInfoRow('Tanggal Order', data?.ParentOrderModel?.Created ?? '-'),
+                  _buildInfoRow('Nama Seller', data?.ParentOrderModel?.SellerNama ?? '-'),
+                  _buildInfoRow('Alamat Seller', data?.ParentOrderModel?.alamat ?? '-'),
+                  _buildInfoRow('Nama Penerima', data?.ParentOrderModel?.nama ?? '-'),
+                  _buildInfoRow('PIC (Kontak Sales)', data?.ParentOrderModel?.telp ?? '-'),
+                  _buildInfoRow('Estimasi Pengiriman', '${data?.ParentOrderModel?.estPengiriman != "0000-00-00" ? DateFormat('d MMMM yyyy').format(DateTime.parse(data?.ParentOrderModel?.estPengiriman ?? "0000-00-00")) : ''} - ${data?.ParentOrderModel?.estPengiriman2 != "0000-00-00" ? DateFormat('d MMMM yyyy').format(DateTime.parse(data?.ParentOrderModel?.estPengiriman2 ?? "0000-00-00")) : ''}'),
                 ],
               ),
             ),
-            Container(
-              color: Color(0xFFF6F6F6),
-              height: 8,
-              width: double.infinity,
-            ),
-            // Product Info
-            Padding(
-              padding: const EdgeInsets.all(16.0),
+
+            // PRODUCT INFO SECTION
+            _buildSectionCard(
+              title: 'Terima Barang',
+              trailing: TextButton(
+                onPressed: () {
+                  setState(() {
+                    for (int i = 0; i < checks.length; i++) {
+                      checks[i] = true;
+                    }
+                  });
+                },
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  'Tandai Semua',
+                  style: TextStyle(
+                    color: (checks.contains(false)
+                        ? Constant.primaryColor
+                        : Colors.grey),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Terima Barang',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      TextButton(
+                  ...showListItems(),
+                  if ((data?.detail?.length ?? 0) > 1)
+                    Center(
+                      child: TextButton(
                         onPressed: () {
                           setState(() {
-                            for (int i = 0; i < checks.length; i++) {
-                              checks[i] = true;
-                            }
+                            isExpanded = !isExpanded;
                           });
                         },
-                        child: Text(
-                          'Tandai Semua Diterima',
-                          style: TextStyle(
-                            color:
-                                (checks.contains(false)
-                                    ? Constant.primaryColor
-                                    : Constant.grayColor),
-                            fontWeight: FontWeight.w400,
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              isExpanded ? 'Tutup Tampilan' : 'Tampilkan Produk Lainnya',
+                              style: TextStyle(color: Constant.primaryColor, fontWeight: FontWeight.w500),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                              color: Constant.primaryColor,
+                              size: 20,
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
-                  ...showListItems(),
-                  Container(
-                    color: Color(0xFFF6F6F6),
-                    height: 1,
-                    width: double.infinity,
-                  ),
-                  Center(
-                    child: TextButton(
-                      onPressed: () {
-                        setState(() {
-                          isExpanded = !isExpanded;
-                        });
-                      },
-                      child: Text(
-                        isExpanded
-                            ? 'Tutup Tampilan'
-                            : 'Tampilkan Produk Lainnya',
-                        style: TextStyle(color: Constant.grayColor),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
-            Container(
-              color: Color(0xFFF6F6F6),
-              height: 8,
-              width: double.infinity,
-            ), // Shipping Info
-            Padding(
-              padding: const EdgeInsets.all(16.0),
+
+            // SHIPPING INFO SECTION
+            _buildSectionCard(
+              title: 'Info Pengiriman',
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Info Pengiriman',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'PIC Penerima',
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                      SizedBox(width: 36),
-                      Expanded(
-                        child: Text(
-                          buyerName,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Alamat Pengiriman',
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                      SizedBox(width: 36),
-                      Expanded(
-                        child: Text(
-                          '${data?.ParentOrderModel?.telp}\n${data?.ParentOrderModel?.alamat ?? '-'}',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    ],
-                  ),
+                  _buildInfoRow('PIC Penerima', buyerName, isBold: true),
+                  _buildInfoRow('Alamat Pengiriman', '${data?.ParentOrderModel?.telp}\n${data?.ParentOrderModel?.alamat ?? '-'}'),
                 ],
               ),
             ),
-            SizedBox(height: 12),
-            Container(
-              color: Color(0xFFF6F6F6),
-              height: 8,
-              width: double.infinity,
-            ), // Order Summary
+            
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -789,107 +667,129 @@ class _PenerimaPesananDetailViewState
     }
 
     return Container(
-      padding: EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withOpacity(0.95),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 5,
-            blurRadius: 7,
-            offset: Offset(0, 3),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 48,
-            height: 48,
-            child: ElevatedButton(
-              onPressed: () {
-                CusNav.nPush(
-                  context,
-                  ChatPersonView(
-                    id: data?.ParentOrderModel?.SellerID ?? '0',
-                    sellerName: data?.ParentOrderModel?.nama ?? '-',
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.red, width: 2),
-                ),
-                padding: EdgeInsets.zero,
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Container(
+              height: 52,
+              width: 52,
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.red.shade100, width: 1.5),
               ),
-              child: Center(
-                child: SvgPicture.asset(
+              child: IconButton(
+                onPressed: () {
+                  CusNav.nPush(
+                    context,
+                    ChatPersonView(
+                      id: data?.ParentOrderModel?.SellerID ?? '0',
+                      sellerName: data?.ParentOrderModel?.nama ?? '-',
+                    ),
+                  );
+                },
+                icon: SvgPicture.asset(
                   Assets.svgsIcChat,
                   color: Constant.primaryColor,
-                  width: 24,
-                  height: 24,
+                  width: 22,
+                  height: 22,
                 ),
+                padding: EdgeInsets.zero,
+                splashRadius: 24,
               ),
             ),
-          ),
-          if (penerimaType != PENERIMA_TYPE.NONE) ...[
-            SizedBox(width: 16),
-            Expanded(
-              child: SizedBox(
-                height: 48, // Same height as chat button
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final p = context.read<PenerimaPesananProvider>();
-                    final pdf = await p.getPdf(
-                      parent_id: data?.ParentOrderModel?.ID ?? '',
-                    );
-
-                    if (penerimaType == PENERIMA_TYPE.SURAT_JALAN) {
-                      CusNav.nPush(
-                        context,
-                        TtdSuratPerjalananView(
-                          name:
-                              '${data?.ParentOrderModel?.nomorOrder?.replaceAll('/', '_')}_surat_jalan',
-                          pdfUrl: pdf.toString(),
-                          noOrder: data?.ParentOrderModel?.nomorOrder ?? '',
-                          parentId: data?.ParentOrderModel?.ID ?? '',
-                        ),
-                      );
-                    } else {
-                      CusNav.nPush(
-                        context,
-                        CetakSuratView(
-                          pdfUrl: pdf.toString(),
-                          title: 'Cetak Surat Jalan',
-                        ),
-                      );
-                    }
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      penerimaType.icon!,
-                      SizedBox(width: 8),
-                      Text(
-                        penerimaType.title!,
-                        style: TextStyle(color: Colors.white),
+            if (penerimaType != PENERIMA_TYPE.NONE) ...[
+              const SizedBox(width: 16),
+              Expanded(
+                child: Container(
+                  height: 52,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFE53935), Color(0xFFC62828)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.red.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final p = context.read<PenerimaPesananProvider>();
+                      final pdf = await p.getPdf(
+                        parent_id: data?.ParentOrderModel?.ID ?? '',
+                      );
+
+                      if (penerimaType == PENERIMA_TYPE.SURAT_JALAN) {
+                        CusNav.nPush(
+                          context,
+                          TtdSuratPerjalananView(
+                            name: '${data?.ParentOrderModel?.nomorOrder?.replaceAll('/', '_')}_surat_jalan',
+                            pdfUrl: pdf.toString(),
+                            noOrder: data?.ParentOrderModel?.nomorOrder ?? '',
+                            parentId: data?.ParentOrderModel?.ID ?? '',
+                          ),
+                        );
+                      } else {
+                        CusNav.nPush(
+                          context,
+                          CetakSuratView(
+                            pdfUrl: pdf.toString(),
+                            title: 'Cetak Surat Jalan',
+                          ),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        penerimaType.icon!,
+                        const SizedBox(width: 8),
+                        Text(
+                          penerimaType.title!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

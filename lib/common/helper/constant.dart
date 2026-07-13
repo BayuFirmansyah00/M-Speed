@@ -74,13 +74,16 @@ class Constant {
   static Color pesananDitolakColor = primaryColor;
 
   static Color statusColor(String status) {
-    if (status == 'PESANAN_BARU') return Constant.pesananBaruColor;
-    if (status == 'PESANAN_DITERIMA') return Constant.pesananDiterimaColor;
-    if (status == 'PESANAN_DIKIRIM') return Constant.pesananDikirimColor;
-    if (status == 'BARANG_DITERIMA') return Constant.barangDiterimaColor;
-    if (status == 'PROSES_PEMBAYARAN') return Constant.prosesPembayaranColor;
-    if (status == 'TELAH_DIBAYAR') return Constant.telahDibayarColor;
-    if (status == 'PESANAN_DITOLAK') return Constant.pesananDitolakColor;
+    if (status == 'PESANAN_BARU') return Colors.blue;
+    if (status == 'PESANAN_DITERIMA') return Colors.indigo;
+    if (status == 'PESANAN_DIKIRIM') return Colors.orange;
+    if (status == 'PESANAN_TELAH_DITERIMA') return Colors.purple;
+    if (status == 'BARANG_DITERIMA') return Colors.pink;
+    if (status == 'PROSES_PEMBAYARAN') return Colors.amber;
+    if (status == 'TELAH_DIBAYAR') return Colors.teal;
+    if (status == 'PESANAN_SELESAI') return Colors.green;
+    if (status == 'DIBATALKAN') return Colors.red;
+    if (status == 'PESANAN_DITOLAK') return Colors.red;
     return Colors.black;
   }
 

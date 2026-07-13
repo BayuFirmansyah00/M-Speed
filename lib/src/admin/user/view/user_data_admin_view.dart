@@ -1,4 +1,11 @@
 import 'dart:async';
+import 'dart:io';
+
+import 'package:excel/excel.dart' hide Border;
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
 
 import 'package:flutter/material.dart';
 import 'package:mspeed/common/base/base_state.dart';
@@ -178,6 +185,214 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
     }
   }
 
+  void _showExportBottomSheet() {
+    final title = widget.userType == UserDataType.FINANCE ? 'Data Finance' : 'Data Penerima';
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Export $title',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Pilih format file yang ingin Anda unduh:',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        _exportToPdf();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                        ),
+                        child: const Column(
+                          children: [
+                            Icon(Icons.picture_as_pdf_rounded, color: Colors.red, size: 32),
+                            SizedBox(height: 8),
+                            Text(
+                              'Export PDF',
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                        _exportToExcel();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                        ),
+                        child: const Column(
+                          children: [
+                            Icon(Icons.table_view_rounded, color: Colors.green, size: 32),
+                            SizedBox(height: 8),
+                            Text(
+                              'Export Excel',
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ── Export ──
+  Future<void> _exportToPdf() async {
+    if (widget.userType != UserDataType.PENERIMA && widget.userType != UserDataType.FINANCE) return;
+    Utils.showLoading();
+    try {
+      final p = context.read<AdminUserProvider>();
+      final isFinance = widget.userType == UserDataType.FINANCE;
+      final String title = isFinance ? 'Data Finance' : 'Data Penerima';
+      final List<dynamic> dataList = isFinance
+          ? (p.keuanganAdminModel.data ?? [])
+          : (p.penerimaAdminModel.data ?? []);
+
+      final pdfDoc = pw.Document();
+
+      pdfDoc.addPage(
+        pw.MultiPage(
+          build: (context) => [
+            pw.Header(
+              level: 0,
+              child: pw.Text(title, style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+            ),
+            pw.TableHelper.fromTextArray(
+              context: context,
+              data: <List<String>>[
+                ['No', 'Nama', 'Email', 'No HP', 'Alamat', 'Kab/Kota'],
+                ...dataList.asMap().entries.map((e) => [
+                      '${e.key + 1}',
+                      '${e.value?.firstname ?? ''} ${e.value?.lastname ?? ''}',
+                      e.value?.email ?? '',
+                      e.value?.telp ?? '',
+                      e.value?.alamat ?? '',
+                      e.value?.kabkota ?? '',
+                    ])
+              ],
+            ),
+          ],
+        ),
+      );
+
+      final directory = await getApplicationDocumentsDirectory();
+      final path = '${directory.path}/${title.replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      final file = File(path);
+      await file.writeAsBytes(await pdfDoc.save());
+
+      Utils.dismissLoading();
+      await OpenFilex.open(path);
+    } catch (e) {
+      Utils.dismissLoading();
+      Utils.showFailed(msg: 'Gagal export PDF: $e');
+    }
+  }
+
+  Future<void> _exportToExcel() async {
+    if (widget.userType != UserDataType.PENERIMA && widget.userType != UserDataType.FINANCE) return;
+    Utils.showLoading();
+    try {
+      final p = context.read<AdminUserProvider>();
+      final isFinance = widget.userType == UserDataType.FINANCE;
+      final String title = isFinance ? 'Data Finance' : 'Data Penerima';
+      final List<dynamic> dataList = isFinance
+          ? (p.keuanganAdminModel.data ?? [])
+          : (p.penerimaAdminModel.data ?? []);
+      
+      var excel = Excel.createExcel();
+      Sheet sheetObject = excel[title];
+      excel.setDefaultSheet(title);
+      
+      // Header
+      sheetObject.appendRow([
+        TextCellValue('No'),
+        TextCellValue('Nama'),
+        TextCellValue('Email'),
+        TextCellValue('No HP'),
+        TextCellValue('Alamat'),
+        TextCellValue('Kab/Kota'),
+      ]);
+
+      // Data
+      for (int i = 0; i < dataList.length; i++) {
+        final item = dataList[i];
+        sheetObject.appendRow([
+          IntCellValue(i + 1),
+          TextCellValue('${item?.firstname ?? ''} ${item?.lastname ?? ''}'),
+          TextCellValue(item?.email ?? ''),
+          TextCellValue(item?.telp ?? ''),
+          TextCellValue(item?.alamat ?? ''),
+          TextCellValue(item?.kabkota ?? ''),
+        ]);
+      }
+
+      var fileBytes = excel.save();
+      if (fileBytes != null) {
+        final directory = await getApplicationDocumentsDirectory();
+        final path = '${directory.path}/${title.replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+        File(path)
+          ..createSync(recursive: true)
+          ..writeAsBytesSync(fileBytes);
+        Utils.dismissLoading();
+        await OpenFilex.open(path);
+      }
+    } catch (e) {
+      Utils.dismissLoading();
+      Utils.showFailed(msg: 'Gagal export Excel: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final model = context.watch<AdminUserProvider>().userData;
@@ -199,6 +414,28 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
               icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
             ),
             actions: [
+              if (widget.userType == UserDataType.PENERIMA || widget.userType == UserDataType.FINANCE)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: GestureDetector(
+                    onTap: _showExportBottomSheet,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.download_rounded, color: Colors.white, size: 18),
+                          SizedBox(width: 4),
+                          Text('Export', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: GestureDetector(
@@ -452,7 +689,7 @@ class _UserCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: accentColor.withOpacity(0.04),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
-              border: Border(bottom: BorderSide(color: const Color(0xffF0F0F0), width: 1)),
+              border: const Border(bottom: BorderSide(color: Color(0xffF0F0F0), width: 1)),
             ),
             child: Row(
               children: [

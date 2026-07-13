@@ -200,11 +200,13 @@ class HomeProvider extends BaseController with ChangeNotifier {
     if (response.statusCode == 201 || response.statusCode == 200) {
       kategoriLokasiModel =
           KategoriLokasiModel.fromJson(jsonDecode(response.body));
-      kategoriLokasiMap = Map.fromIterable(
-        kategoriLokasiModel?.data ?? [],
-        key: (k) => k.kota ?? 'Unknown',
-        value: (v) => false,
-      );
+      
+      Map<String, bool> tempMap = {};
+      for (var k in (kategoriLokasiModel?.data ?? [])) {
+        tempMap[k.kota ?? 'Unknown'] = _kategoriLokasiMap[k.kota ?? 'Unknown'] ?? false;
+      }
+      kategoriLokasiMap = tempMap;
+      
       notifyListeners();
       if (withLoading) loading(false);
     } else {
@@ -221,11 +223,13 @@ class HomeProvider extends BaseController with ChangeNotifier {
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       kategoriModel = KategoriModel.fromJson(jsonDecode(response.body));
-      kategoriMap = Map.fromIterable(
-        kategoriModel?.data ?? [],
-        key: (k) => k.nama,
-        value: (v) => false,
-      );
+      
+      Map<String, bool> tempMap = {};
+      for (var k in (kategoriModel?.data ?? [])) {
+        tempMap[k.nama ?? 'Unknown'] = _kategoriMap[k.nama ?? 'Unknown'] ?? false;
+      }
+      kategoriMap = tempMap;
+      
       notifyListeners();
       if (withLoading) loading(false);
     } else {

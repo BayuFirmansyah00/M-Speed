@@ -44,26 +44,34 @@ class _DetailProductViewState extends State<DetailProductView> {
   Widget build(BuildContext context) {
     final data = context.watch<ProductProvider>().productModel.data?.first;
     final cartTotal = context.watch<ShoppingCartProvider>().countQtyCartItem();
+
     Widget buildProductDetailRow(String label, String value,
-        {Color textColor = Colors.black}) {
+        {Color textColor = const Color(0xFF111827)}) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(
-              width: 100,
+              width: 110,
               child: Text(
-                '$label:',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
+                label,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF6B7280),
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-            SizedBox(width: 8),
-            Text(
-              value,
-              style: TextStyle(color: textColor),
+            Expanded(
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: textColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
@@ -72,25 +80,22 @@ class _DetailProductViewState extends State<DetailProductView> {
 
     Widget buildBottomBar() {
       return Container(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         decoration: BoxDecoration(
           color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.5),
-              spreadRadius: 5,
-              blurRadius: 7,
-              offset: Offset(0, 3),
-            ),
-          ],
+          border: Border(top: BorderSide(color: Colors.grey.shade200)),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            SizedBox(
-              width: 48,
-              height: 48,
-              child: ElevatedButton(
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.red.shade100, width: 1.5),
+                borderRadius: BorderRadius.circular(14),
+                color: Colors.red.shade50,
+              ),
+              child: IconButton(
                 onPressed: () {
                   CusNav.nPush(
                       context,
@@ -98,42 +103,34 @@ class _DetailProductViewState extends State<DetailProductView> {
                           id: data?.SellerID ?? '',
                           sellerName: data?.SellerNama ?? ''));
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: Colors.red, width: 2),
-                  ),
-                  padding: EdgeInsets.zero,
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.chat_bubble_outline,
-                    color: Colors.red,
-                    size: 24, // Adjust icon size as needed
-                  ),
-                ),
+                icon: const Icon(Icons.chat_bubble_outline_rounded,
+                    color: Color(0xFFE50012)),
               ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 12),
             Expanded(
               child: SizedBox(
-                height: 48, // Same height as chat button
-                child: ElevatedButton.icon(
+                height: 50,
+                child: ElevatedButton(
                   onPressed: () async {
                     await context
                         .read<ShoppingCartProvider>()
                         .addToCart(context, produkId: data?.ID ?? '0', qty: 1);
-
                     CusNav.nPushReplace(context, ShoppingCartView());
                   },
-                  icon: Icon(Icons.add, color: Colors.white),
-                  label:
-                      Text('Keranjang', style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
+                    backgroundColor: const Color(0xFFE50012),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    'Tambah ke Keranjang',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
@@ -145,188 +142,289 @@ class _DetailProductViewState extends State<DetailProductView> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: CustomAppBar.appBar(
-        context,
-        "Detail Product",
-        isCenter: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+      backgroundColor: const Color(0xFFF5F5F7), // Light grey background like home page
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: true,
+        title: const Text(
+          "Detail Produk",
+          style: TextStyle(
+              color: Colors.black, fontSize: 16, fontWeight: FontWeight.w700),
         ),
-        color: Colors.white,
-        action: [
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
           IconButton(
-              onPressed: () {
-                Share.share(data?.foto ?? '', subject: data?.nama ?? '');
-              },
-              icon: SvgPicture.asset(
-                Assets.svgsIcShareApp,
-                width: 24,
-              )),
+            onPressed: () {
+              Share.share(data?.foto ?? '', subject: data?.nama ?? '');
+            },
+            icon: const Icon(Icons.ios_share_rounded, color: Colors.black, size: 22),
+          ),
           IconButton(
             onPressed: () {
               CusNav.nPush(context, ShoppingCartView());
             },
             icon: cartTotal == 0
-                ? SizedBox()
+                ? SvgPicture.asset(Assets.svgsIcCart, width: 24)
                 : Badge(
                     isLabelVisible: true,
                     label: Text('$cartTotal'),
-                    offset: Offset(8, -4),
-                    backgroundColor: Colors.redAccent,
+                    offset: const Offset(8, -4),
+                    backgroundColor: const Color(0xFFE50012),
                     child: SvgPicture.asset(Assets.svgsIcCart, width: 24),
                   ),
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: Column(
         children: [
           Expanded(
             child: ListView(
+              padding: EdgeInsets.zero,
               children: [
-                ImageCarousel(
-                  imageUrls: [
-                    data?.foto ?? '',
-                  ],
+                // Product Image
+                Container(
+                  color: Colors.white,
+                  child: ImageCarousel(
+                    imageUrls: [data?.foto ?? ''],
+                  ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
+                
+                // Title and Price Section
+                Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Rp ${Utils.formatCurrency(num.parse(data?.harga ?? '0'))}',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                          Expanded(
+                            child: Text(
+                              'Rp ${Utils.formatCurrency(num.parse(data?.harga ?? '0'))}',
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFFE50012),
                               ),
-                              StatefulBuilder(
-                                builder: (BuildContext context,
-                                    StateSetter setState) {
-                                  return IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        isFav = !isFav;
-                                        final productId =
-                                            widget.id; // TODO: CHANGE PRODUCT ID // TODO: CHANGE USER ID
-
-                                        context
-                                            .read<WishlistProvider>()
-                                            .addProductWishlist(
-                                                productId: productId.toString(),
-                                                );
-                                      });
-                                    },
-                                    icon: Icon(isFav
-                                        ? Icons.favorite
-                                        : Icons.favorite_border),
-                                    color:
-                                        isFav ? Colors.red : Color(0xFF6D7588),
-                                  );
+                            ),
+                          ),
+                          StatefulBuilder(
+                            builder: (BuildContext context, StateSetter setState) {
+                              return GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    isFav = !isFav;
+                                    context
+                                        .read<WishlistProvider>()
+                                        .addProductWishlist(productId: widget.id);
+                                  });
                                 },
-                              )
-                            ],
-                          ),
-                          Text(
-                            data?.nama ?? '',
-                            style: TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.w400),
-                          ),
-                          SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Terjual: ${data?.terjual ?? 0}',
-                                style: TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.w400),
-                              ),
-                              Text(
-                                'Stok: ${data?.qty ?? 0}',
-                                style: TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.w400),
-                              ),
-                            ],
-                          ),
+                                child: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: isFav ? Colors.red.shade50 : Colors.grey.shade100,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                    color: isFav ? const Color(0xFFE50012) : Colors.grey,
+                                    size: 24,
+                                  ),
+                                ),
+                              );
+                            },
+                          )
                         ],
                       ),
-                    ),
-                    SizedBox(
-                      height: 8,
-                    ),
-                    Container(
-                      height: 8,
-                      color: Color(0xFFF6F6F6),
-                    ),
-                    SizedBox(
-                      height: 8,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      const SizedBox(height: 8),
+                      Text(
+                        data?.nama ?? '',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF111827),
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
                         children: [
-                          Text(
-                            'Detail Produk',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              border: Border.all(color: Colors.grey.shade200),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.inventory_2_outlined, size: 14, color: Colors.grey),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Stok: ${data?.qty ?? 0}',
+                                  style: const TextStyle(
+                                      fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black87),
+                                ),
+                              ],
                             ),
                           ),
-                          buildProductDetailRow(
-                              'Kode', data?.kodeProduk ?? '-'),
-                          Divider(
-                            color: Color(0xFFEEF0F8),
-                          ),
-                          buildProductDetailRow(
-                              'Kategori', data?.NamaKategori ?? '-',
-                              textColor: Colors.red),
-                          Divider(
-                            color: Color(0xFFEEF0F8),
-                          ),
-                          buildProductDetailRow('Lokasi', data?.kota ?? '-'),
-                          Divider(
-                            color: Color(0xFFEEF0F8),
-                          ),
-                          Text(
-                            'Deskripsi Produk',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                          const SizedBox(width: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              border: Border.all(color: Colors.grey.shade200),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.sell_outlined, size: 14, color: Colors.grey),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Terjual: ${data?.terjual ?? 0}',
+                                  style: const TextStyle(
+                                      fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black87),
+                                ),
+                              ],
                             ),
                           ),
-                          SizedBox(
-                            height: 12,
-                          ),
-                          Text(
-                            data?.deskripsi ?? '',
-                            style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
-                                color: Color(0xFF6D7588)),
-                          ),
-                          InkWell(
-                              onTap: () {},
-                              child: Text(
-                                'Baca Selengkapnya',
-                                style: TextStyle(color: Colors.red),
-                              )),
-                          SizedBox(height: 16)
                         ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                
+                const SizedBox(height: 10),
+
+                // Store / Seller Info
+                Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.storefront_rounded, color: Color(0xFFE50012)),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              data?.SellerNama ?? 'Nama Toko',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF111827),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(Icons.location_on_rounded, size: 14, color: Colors.grey),
+                                const SizedBox(width: 4),
+                                Text(
+                                  data?.kota ?? 'Lokasi',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                // Product Detail & Description
+                Container(
+                  color: Colors.white,
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Detail Produk',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF111827),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Column(
+                          children: [
+                            buildProductDetailRow('Kode Produk', data?.kodeProduk ?? '-'),
+                            const Divider(height: 16, color: Color(0xFFEEEEEE)),
+                            buildProductDetailRow('Kategori', data?.NamaKategori ?? '-', textColor: const Color(0xFFE50012)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Deskripsi Produk',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF111827),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        data?.deskripsi ?? '',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                          color: Color(0xFF4B5563),
+                          height: 1.6,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      InkWell(
+                        onTap: () {},
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Baca Selengkapnya',
+                              style: TextStyle(color: Color(0xFFE50012), fontWeight: FontWeight.w600, fontSize: 13),
+                            ),
+                            Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFFE50012), size: 18),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16)
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 40),
               ],
             ),
           ),

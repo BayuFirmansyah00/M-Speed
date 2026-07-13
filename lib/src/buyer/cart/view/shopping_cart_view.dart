@@ -711,24 +711,18 @@ class _ShoppingCartViewState extends BaseState<ShoppingCartView> {
                                           //     ),
                                           //   ],
                                           // ),
-                                          Container(
-                                            margin: EdgeInsets.only(left: 8),
-                                            padding: EdgeInsets.symmetric(
-                                                horizontal: 7, vertical: 5),
-                                            decoration: ShapeDecoration(
-                                              color: Colors.white,
-                                              shape: RoundedRectangleBorder(
-                                                side: BorderSide(
-                                                    width: 1,
-                                                    color: Color(0xFFE9E9E9)),
-                                                borderRadius:
-                                                    BorderRadius.circular(60),
+                                            Container(
+                                              margin: const EdgeInsets.only(left: 8),
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey.shade50,
+                                                border: Border.all(color: Colors.grey.shade200),
+                                                borderRadius: BorderRadius.circular(30),
                                               ),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.end,
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
                                               children: [
                                                 InkWell(
                                                   onTap: () async {
@@ -810,25 +804,13 @@ class _ShoppingCartViewState extends BaseState<ShoppingCartView> {
                                                     });
                                                   },
                                                   child: Container(
-                                                    width: 21,
-                                                    height: 21,
-                                                    child: CircleAvatar(
-                                                      radius: 21,
-                                                      backgroundColor: Constant
-                                                          .tertiaryColor,
-                                                      child: CircleAvatar(
-                                                        radius: 17,
-                                                        backgroundColor:
-                                                            Colors.white,
-                                                        foregroundColor:
-                                                            Constant
-                                                                .tertiaryColor,
-                                                        child: Icon(
-                                                          Icons.remove,
-                                                          size: 17,
-                                                        ),
-                                                      ),
+                                                    width: 24,
+                                                    height: 24,
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.grey.shade200,
+                                                      shape: BoxShape.circle,
                                                     ),
+                                                    child: const Icon(Icons.remove, size: 14, color: Colors.black87),
                                                   ),
                                                 ),
                                                 SizedBox(width: 10),
@@ -929,18 +911,13 @@ class _ShoppingCartViewState extends BaseState<ShoppingCartView> {
                                                     });
                                                   },
                                                   child: Container(
-                                                    width: 20,
-                                                    height: 20,
-                                                    child: CircleAvatar(
-                                                      backgroundColor:
-                                                          Constant.primaryColor,
-                                                      foregroundColor:
-                                                          Colors.white,
-                                                      child: Icon(
-                                                        Icons.add,
-                                                        size: 15,
-                                                      ),
+                                                    width: 24,
+                                                    height: 24,
+                                                    decoration: BoxDecoration(
+                                                      color: Constant.primaryColor.withValues(alpha: 0.1),
+                                                      shape: BoxShape.circle,
                                                     ),
+                                                    child: Icon(Icons.add, size: 14, color: Constant.primaryColor),
                                                   ),
                                                 ),
                                               ],

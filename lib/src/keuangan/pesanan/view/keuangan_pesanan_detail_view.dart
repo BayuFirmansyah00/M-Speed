@@ -749,6 +749,36 @@ class _KeuanganPesananDetailViewState
                     Text('Ringkasan',
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     SizedBox(height: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Status Pesanan',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Constant.statusColor(data?.ParentOrderModel?.status ?? "-").withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            (data?.ParentOrderModel?.status ?? "-").replaceAll('_', ' '),
+                            style: TextStyle(
+                              color: Constant.statusColor(data?.ParentOrderModel?.status ?? "-") == Colors.black ? Colors.grey : Constant.statusColor(data?.ParentOrderModel?.status ?? "-"),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 16),
                     orderDetailItem(
                         'No Order', data?.ParentOrderModel?.nomorOrder ?? '-'),
                     SizedBox(height: 16),

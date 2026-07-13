@@ -167,165 +167,213 @@ class _ListPesananViewState extends BaseState<ListPesananView> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F5F7), // Apple style background
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
             refresh();
           },
           child: Padding(
-            padding: EdgeInsets.fromLTRB(16, 25, 16, 16),
+            padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // HEADER
                 Row(
                   children: [
-                    Image.asset(Assets.iconsIcSellerProfile,
-                        width: 53, height: 53),
-                    SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [Constant.primaryColor, Colors.orangeAccent],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: CircleAvatar(
+                        radius: 24,
+                        backgroundColor: Colors.white,
+                        backgroundImage: AssetImage(Assets.iconsIcSellerProfile),
+                      ),
+                    ),
+                    SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Selamat datang',
-                              style: TextStyle(
-                                  color: Constant.grayColor,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400)),
-                          Text(userName,
-                              style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600)),
+                          Text(
+                            'Selamat datang,',
+                            style: TextStyle(
+                              color: Colors.black54,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            userName,
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.3,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ],
                       ),
                     ),
                     Consumer<NotifikasiPenerimaProvider>(
                       builder: (context, npProvider, child) {
-                        return IconButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    NotificationPenerimaView(),
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 10,
+                                spreadRadius: 1,
+                                offset: const Offset(0, 4),
                               ),
-                            );
-                          },
-                          icon: Badge(
-                            isLabelVisible:
-                                npProvider.unreadCount.toString() == '0'
-                                    ? false
-                                    : true,
-                            label: Text(
-                              npProvider.unreadCount.toString(),
-                            ),
-                            offset: const Offset(8, -4),
-                            backgroundColor: Colors.redAccent,
-                            child: Image.asset(
-                              Assets.iconsIcNotificationBlack,
-                              width: 24,
-                              color: isCollapsed ? Colors.black : Colors.black,
+                            ],
+                          ),
+                          child: IconButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => NotificationPenerimaView(),
+                                ),
+                              );
+                            },
+                            icon: Badge(
+                              isLabelVisible: npProvider.unreadCount.toString() != '0',
+                              label: Text(npProvider.unreadCount.toString()),
+                              offset: const Offset(8, -4),
+                              backgroundColor: Constant.primaryColor,
+                              child: Icon(Icons.notifications_none_rounded, color: Colors.black87),
                             ),
                           ),
                         );
                       },
                     ),
-                    IconButton(
-                      icon: Icon(Icons.logout, color: Colors.red),
-                      onPressed: () async {
-                        SharedPreferences prefs =
-                            await SharedPreferences.getInstance();
-                        final isAdmin =
-                            await prefs.getBool(Constant.kSetPrefIsAdmin) ??
-                                false;
-                        if (isAdmin) {
-                          _showLogoutBottomSheet(context);
-                        } else {
-                          handleTap(() async {
-                            Utils.showYesNoDialog(
-                              context: context,
-                              title: "Konfirmasi",
-                              desc: "Apakah Anda Yakin ingin Keluar",
-                              yesCallback: () async {
-                                handleTap(() async {
-                                  await context.read<AuthProvider>().logout();
-                                  Navigator.pushAndRemoveUntil(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => LoginView()),
-                                    (Route<dynamic> route) => false,
-                                  );
-                                });
-                              },
-                              noCallback: () {
-                                Navigator.pop(context);
-                              },
-                            );
-                          });
-                        }
-                      },
+                    SizedBox(width: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 22),
+                        onPressed: () async {
+                          SharedPreferences prefs = await SharedPreferences.getInstance();
+                          final isAdmin = await prefs.getBool(Constant.kSetPrefIsAdmin) ?? false;
+                          if (isAdmin) {
+                            _showLogoutBottomSheet(context);
+                          } else {
+                            handleTap(() async {
+                              Utils.showYesNoDialog(
+                                context: context,
+                                title: "Konfirmasi",
+                                desc: "Apakah Anda Yakin ingin Keluar?",
+                                yesCallback: () async {
+                                  handleTap(() async {
+                                    await context.read<AuthProvider>().logout();
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => LoginView()),
+                                      (Route<dynamic> route) => false,
+                                    );
+                                  });
+                                },
+                                noCallback: () {
+                                  Navigator.pop(context);
+                                },
+                              );
+                            });
+                          }
+                        },
+                      ),
                     ),
                   ],
                 ),
-                SizedBox(
-                  height: 24,
-                ),
-                TextField(
-                  controller: searchC,
-                  // onSubmitted: (_) {
-                  //   refresh();
-                  // },
-                  onChanged: (value) {
-                    setState(() {
-                      listPesanan = p.pesananPenerimaModel.data
-                              ?.where((element) =>
-                                  element?.nomorOrder
-                                      ?.toLowerCase()
-                                      .contains(searchC.text.toLowerCase()) ??
-                                  false)
-                              .toList() ??
-                          [];
-                    });
-                  },
-                  textInputAction: TextInputAction.search, // This
-                  decoration: InputDecoration(
-                    hintText: 'Cari',
-                    hintStyle: TextStyle(color: Color(0xFF6D7588)),
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: Color(0xFF6D7588),
+                SizedBox(height: 32),
+                
+                // SEARCH BAR
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 20,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: searchC,
+                    onChanged: (value) {
+                      setState(() {
+                        listPesanan = p.pesananPenerimaModel.data
+                                ?.where((element) =>
+                                    element?.nomorOrder
+                                        ?.toLowerCase()
+                                        .contains(searchC.text.toLowerCase()) ??
+                                    false)
+                                .toList() ??
+                            [];
+                      });
+                    },
+                    textInputAction: TextInputAction.search,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    decoration: InputDecoration(
+                      hintText: 'Cari nomor order...',
+                      hintStyle: TextStyle(color: Colors.black38, fontWeight: FontWeight.w400),
+                      prefixIcon: const Icon(Icons.search_rounded, color: Colors.black38),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Colors.transparent,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                     ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Color(0xFFEEF0F8)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Color(0xFFEEF0F8)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Color(0xFFEEF0F8)),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
                   ),
                 ),
-                SizedBox(
-                  height: 12,
+                SizedBox(height: 24),
+                
+                // TITLE
+                Text(
+                  'Daftar Pesanan',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                    letterSpacing: 0.2,
+                  ),
                 ),
-                Text('Daftar Pesanan',
-                    style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Constant.grayColor)),
-                SizedBox(
-                  height: 4,
-                ),
+                SizedBox(height: 16),
+                
+                // LIST VIEW
                 Expanded(
                   child: ListView.builder(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: 24),
                     itemCount: listPesanan.length,
                     itemBuilder: (context, index) {
                       return InkWell(
@@ -337,9 +385,9 @@ class _ListPesananViewState extends BaseState<ListPesananView> {
                                 seller_id: listPesanan[index]?.SellerID ?? '0',
                               ));
                         },
+                        borderRadius: BorderRadius.circular(16),
                         child: OrderItem(
-                          bgColor:
-                              index % 2 == 0 ? Color(0xFFF6F6F6) : Colors.white,
+                          bgColor: Colors.transparent, // Color is handled inside OrderItem
                           orderNumber: listPesanan[index]?.nomorOrder ?? "-",
                           date: listPesanan[index]?.Created ?? "-",
                           sellerName: listPesanan[index]?.nama ?? "-",

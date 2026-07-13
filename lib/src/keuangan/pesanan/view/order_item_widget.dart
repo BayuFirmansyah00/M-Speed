@@ -149,11 +149,9 @@ class OrderItem extends StatelessWidget {
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: status == TransactionStatus.BARANG_DITERIMA
-                                  ? Colors.pink
-                                  : status == TransactionStatus.PESANAN_DIKIRIM
-                                      ? Colors.orange
-                                      : Colors.green)),
+                              color: Constant.statusColor(status.toString()) == Colors.black 
+                                  ? Colors.green 
+                                  : Constant.statusColor(status.toString()))),
                     ],
                   ),
                 ),
