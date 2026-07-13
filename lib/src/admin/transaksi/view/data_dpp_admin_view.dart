@@ -1,14 +1,12 @@
 import 'dart:io';
 
 import 'package:excel/excel.dart' hide Border;
-import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
 
 import 'package:flutter/material.dart';
 import 'package:mspeed/common/base/base_state.dart';
-import 'package:mspeed/common/helper/Constant.dart';
 import 'package:mspeed/src/admin/transaksi/model/dpp_admin_model.dart';
 import 'package:mspeed/src/admin/transaksi/provider/transaction_admin_provider.dart';
 import 'package:mspeed/utils/Utils.dart';
@@ -164,8 +162,8 @@ class _DataDppAdminViewState extends BaseState<DataDppAdminView> {
                       '${e.key + 1}',
                       e.value?.nomorPermintaan ?? '-',
                       e.value?.jumlahPrk ?? '-',
-                      Utils.formatUang(double.tryParse(e.value?.nilaiPrk ?? '0') ?? 0),
-                      Utils.formatUang(double.tryParse(e.value?.sisa ?? '0') ?? 0),
+                      'Rp ${Utils.thousandSeparator(int.tryParse(e.value?.nilaiPrk?.split('.').first ?? '0') ?? 0, symbol: '')}',
+                      'Rp ${Utils.thousandSeparator(int.tryParse(e.value?.sisa?.split('.').first ?? '0') ?? 0, symbol: '')}',
                       e.value?.status == '1' ? 'Selesai' : 'Aktif',
                     ])
               ],
@@ -214,8 +212,8 @@ class _DataDppAdminViewState extends BaseState<DataDppAdminView> {
           IntCellValue(i + 1),
           TextCellValue(item?.nomorPermintaan ?? '-'),
           TextCellValue(item?.jumlahPrk ?? '-'),
-          TextCellValue(Utils.formatUang(double.tryParse(item?.nilaiPrk ?? '0') ?? 0)),
-          TextCellValue(Utils.formatUang(double.tryParse(item?.sisa ?? '0') ?? 0)),
+          TextCellValue('Rp ${Utils.thousandSeparator(int.tryParse(item?.nilaiPrk?.split('.').first ?? '0') ?? 0, symbol: '')}'),
+          TextCellValue('Rp ${Utils.thousandSeparator(int.tryParse(item?.sisa?.split('.').first ?? '0') ?? 0, symbol: '')}'),
           TextCellValue(item?.status == '1' ? 'Selesai' : 'Aktif'),
         ]);
       }
@@ -357,7 +355,7 @@ class _DataDppAdminViewState extends BaseState<DataDppAdminView> {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 10,
                         offset: const Offset(0, 3),
                       ),
@@ -440,7 +438,7 @@ class _DppCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -460,7 +458,7 @@ class _DppCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: const Color(0xff06B6D4).withOpacity(0.1),
+                        color: const Color(0xff06B6D4).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(Icons.receipt_long_rounded,
@@ -481,8 +479,8 @@ class _DppCard extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: statusActive
-                        ? const Color(0xff10B981).withOpacity(0.1)
-                        : const Color(0xffEF4444).withOpacity(0.1),
+                        ? const Color(0xff10B981).withValues(alpha: 0.1)
+                        : const Color(0xffEF4444).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
