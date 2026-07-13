@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
-import 'package:mspeed/common/helper/Constant.dart';
+import 'package:mspeed/common/helper/constant.dart';
 import 'package:mspeed/src/admin/user/provider/admin_user_provider.dart';
 import 'package:mspeed/src/admin/user/view/create_data_buyer_admin_view.dart';
 import 'package:mspeed/src/admin/user/view/create_data_finance_admin_view.dart';
@@ -11,7 +11,7 @@ import 'package:mspeed/src/admin/user/view/create_data_penerima_admin_view.dart'
 import 'package:mspeed/src/admin/user/view/create_data_seller_admin_view.dart';
 import 'package:mspeed/src/admin/user/view/create_data_manager_admin_view.dart';
 import 'package:mspeed/src/admin/user/view/create_data_audit_admin_view.dart';
-import 'package:mspeed/utils/Utils.dart';
+import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
