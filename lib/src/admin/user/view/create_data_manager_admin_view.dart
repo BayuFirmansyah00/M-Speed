@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:mspeed/common/component/custom_appbar.dart';
-import 'package:mspeed/common/component/custom_button.dart';
-import 'package:mspeed/common/component/custom_textfield.dart';
-import 'package:mspeed/common/helper/constant.dart';
-import 'package:mspeed/src/admin/user/model/manager_admin_model.dart';
+import 'package:mspeed/common/base/base_state.dart';
+import 'package:mspeed/common/component/custom_navigator.dart';
+import 'package:mspeed/src/admin/user/model/keuangan_admin_model.dart';
 import 'package:mspeed/src/admin/user/provider/admin_form_manager_provider.dart';
+import 'package:mspeed/src/admin/user/view/admin_form_widgets.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
 
 class CreateDataManagerAdminView extends StatefulWidget {
   const CreateDataManagerAdminView({super.key, this.manager});
-
-  final ManagerAdminModelData? manager;
+  final KeuanganAdminModelData? manager;
 
   @override
   State<CreateDataManagerAdminView> createState() =>
@@ -19,98 +17,148 @@ class CreateDataManagerAdminView extends StatefulWidget {
 }
 
 class _CreateDataManagerAdminViewState
-    extends State<CreateDataManagerAdminView> {
+    extends BaseState<CreateDataManagerAdminView> {
+  static const _gradient = [Color(0xffEC4899), Color(0xffBE185D)];
+  static const _accent = Color(0xffEC4899);
+
+  bool get isEdit => widget.manager != null;
+
   @override
   void initState() {
+    getData();
     super.initState();
-    // Isi form dengan data lama kalau ini mode Edit
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AdminFormManagerProvider>().setData(widget.manager);
+  }
+
+  getData() async {
+    final p = context.read<AdminFormManagerProvider>();
+    await p.setData(widget.manager);
+  }
+
+  Future<void> _save() async {
+    await handleTap(() async {
+      Utils.showYesNoDialog(
+        context: context,
+        title: 'Konfirmasi Simpan',
+        desc: 'Pastikan data sudah benar sebelum disimpan.',
+        yesCallback: () async {
+          handleTap(() async {
+            CusNav.nPop(context);
+            await context
+                .read<AdminFormManagerProvider>()
+                .sendManager(context, managerId: widget.manager?.ID);
+          });
+        },
+        noCallback: () => Navigator.pop(context),
+      );
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final p = context.watch<AdminFormManagerProvider>();
-    final isEdit = widget.manager != null;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: CustomAppBar.appBar(
-        context,
-        "${isEdit ? "Edit" : "Create"} Manager",
-        color: Colors.white,
-        isCenter: true,
-        foregroundColor: Colors.black,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CustomTextField.borderTextField(
-                controller: p.firstNameC,
-                labelText: "First Name",
-                hintText: 'First Name',
+      backgroundColor: const Color(0xffF5F6FA),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            pinned: true,
+            expandedHeight: 120,
+            backgroundColor: _gradient[1],
+            surfaceTintColor: Colors.transparent,
+            leading: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon:
+                  const Icon(Icons.arrow_back_rounded, color: Colors.white),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              background: AdminFormHeader(
+                gradient: _gradient,
+                icon: Icons.manage_accounts_rounded,
+                title: isEdit ? 'Edit Manager' : 'Tambah Manager',
+                subtitle: isEdit
+                    ? 'Perbarui data pengguna manager'
+                    : 'Isi data untuk menambah manager baru',
               ),
-              SizedBox(height: 12),
-              CustomTextField.borderTextField(
-                controller: p.lastNameC,
-                labelText: "Last Name",
-                hintText: 'Last Name',
-              ),
-              SizedBox(height: 12),
-              CustomTextField.borderTextField(
-                controller: p.emailC,
-                labelText: "Email",
-                hintText: "Email",
-                enabled: !isEdit,
-              ),
-              SizedBox(height: 12),
-              CustomTextField.borderTextField(
-                controller: p.phoneNumberC,
-                labelText: "No Telepon",
-                hintText: "No Telepon",
-                textInputType: TextInputType.phone,
-              ),
-              SizedBox(height: 12),
-              CustomTextField.borderTextArea(
-                controller: p.alamatC,
-                labelText: "Alamat",
-                hintText: "Alamat",
-                focusNode: FocusNode(),
-              ),
-              SizedBox(height: 32),
-            ],
+            ),
           ),
-        ),
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+              child: Column(
+                children: [
+                  AdminFormSection(
+                    title: 'Informasi Dasar',
+                    icon: Icons.person_outline_rounded,
+                    accentColor: _accent,
+                    children: [
+                      AdminFormField(
+                          controller: p.firstNameC,
+                          label: 'First Name',
+                          hint: 'Masukkan nama depan',
+                          icon: Icons.badge_outlined),
+                      AdminFormField(
+                          controller: p.lastNameC,
+                          label: 'Last Name',
+                          hint: 'Masukkan nama belakang',
+                          icon: Icons.badge_outlined),
+                      AdminFormField(
+                          controller: p.emailC,
+                          label: 'Email',
+                          hint: 'Masukkan alamat email',
+                          icon: Icons.email_outlined,
+                          inputType: TextInputType.emailAddress),
+                      AdminFormField(
+                          controller: p.phoneNumberC,
+                          label: 'No. Telepon',
+                          hint: 'Masukkan no. HP',
+                          icon: Icons.phone_outlined,
+                          inputType: TextInputType.phone),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  AdminFormSection(
+                    title: 'Lokasi',
+                    icon: Icons.location_on_outlined,
+                    accentColor: _accent,
+                    children: [
+                      AdminFormField(
+                          controller: p.cityC,
+                          label: 'Kota',
+                          hint: 'Masukkan kota',
+                          icon: Icons.location_city_outlined),
+                      AdminFormField(
+                          controller: p.alamatC,
+                          label: 'Alamat Lengkap',
+                          hint: 'Masukkan alamat lengkap',
+                          icon: Icons.map_outlined,
+                          maxLines: 3),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  AdminFormSection(
+                    title: 'Keamanan',
+                    icon: Icons.lock_outline_rounded,
+                    accentColor: _accent,
+                    children: [
+                      AdminFormField(
+                          controller: p.passwordC,
+                          label: 'Password',
+                          hint: 'Masukkan password',
+                          icon: Icons.lock_outline_rounded,
+                          obscure: true,
+                          inputType: TextInputType.visiblePassword),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.white,
-        child: CustomButton.mainButton(
-          'Simpan',
-          borderRadius: BorderRadius.circular(12),
-          () async {
-            try {
-              Utils.showLoading();
-              await p.sendManager(
-                context,
-                withLoading: false,
-                managerId: widget.manager?.ID,
-              );
-            } catch (e) {
-              Utils.showFailed(msg: '$e');
-            } finally {
-              Utils.dismissLoading();
-            }
-          },
-        ),
-      ),
+      bottomNavigationBar:
+          AdminSaveBar(accentColor: _accent, gradient: _gradient, onSave: _save),
     );
   }
 }

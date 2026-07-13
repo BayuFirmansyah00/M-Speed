@@ -867,4 +867,6 @@ class Constant {
   static const String kebijakanPrivasiUrl = "webview?slug=kebijakan-privasi";
   static const String faqUrl = "webview?slug=faq";
   static const String kontakUrl = "webview?slug=kontak";
+
+  
 }

@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mspeed/common/base/base_state.dart';
-import 'package:mspeed/common/component/custom_appbar.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
+import 'package:mspeed/common/helper/Constant.dart';
 import 'package:mspeed/generated/assets.dart';
 import 'package:mspeed/src/admin/master/model/alamat_admin_model.dart';
 import 'package:mspeed/src/admin/master/provider/master_provider.dart';
 import 'package:mspeed/src/admin/master/view/add_addres_admin_view.dart';
 import 'package:provider/provider.dart';
-import 'package:mspeed/utils/utils.dart'; // Ditambahkan untuk Utils.showYesNoDialog
 
 class DataAlamatAdminView extends StatefulWidget {
   const DataAlamatAdminView({super.key});
@@ -18,225 +17,371 @@ class DataAlamatAdminView extends StatefulWidget {
 }
 
 class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
-  final Color appRed = const Color(0xFFED1C24);
-  final Color orangeAcc = const Color(0xFFFF9800);
-  final Color oceanBlue = const Color(0xFF0096C7);
-
-  bool _isLoading = true;
+  static const _gradient = [Color(0xff059669), Color(0xff047857)];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final p = context.read<MasterProvider>();
-      p.searchAlamatC.clear();
-      refresh();
-    });
+    refresh();
   }
 
-  Future<void> refresh({String q = ''}) async {
-    setState(() => _isLoading = true);
-    try {
-      await context.read<MasterProvider>().fetchAlamatAdmin(withLoading: false, search: q);
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+  void refresh({String q = ''}) {
+    context
+        .read<MasterProvider>()
+        .fetchAlamatAdmin(withLoading: true, search: q);
+  }
+
+  void _showButtonBottomSheet(BuildContext context, int i, List<AlamatAdminModelData?>? model, MasterProvider masterP) {
+    showModalBottomSheet(
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Pilihan Aksi',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xff100629)),
+                  ),
+                  GestureDetector(
+                    onTap: () => CusNav.nPop(context),
+                    child: const Icon(Icons.close_rounded, color: Color(0xffA0AEC0)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xff059669).withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: SvgPicture.asset(Assets.svgsIcAdminEdit, color: const Color(0xff059669), width: 18, height: 18),
+                ),
+                title: const Text('Ubah Alamat', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                onTap: () {
+                  CusNav.nPop(context);
+                  CusNav.nPush(
+                    context,
+                    AddAddressAdminView(alamat: model![i]),
+                  );
+                },
+              ),
+              const Divider(color: Color(0xffF0F0F0)),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xffEF4444).withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: SvgPicture.asset(Assets.svgsIcAdminDelete, color: const Color(0xffEF4444), width: 18, height: 18),
+                ),
+                title: const Text('Hapus Alamat', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Color(0xffEF4444))),
+                onTap: () {
+                  CusNav.nPop(context);
+                  masterP.deleteAlamat(alamatId: model![i]?.id);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final masterP = context.watch<MasterProvider>();
-    final model = masterP.getAlamatAdminModel.data;
+    final data = context.watch<MasterProvider>().getAlamatAdminModel;
+    final model = data.data;
+    final searchC = context.read<MasterProvider>().searchAlamatC;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F9),
-      appBar: CustomAppBar.appBar(
-        context,
-        'Data Alamat Penerima',
-        color: Colors.white,
-        isCenter: true,
-        textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
-        ),
-        action: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(20),
-              onTap: () => CusNav.nPush(context, const AddAddressAdminView()),
-              child: CircleAvatar(
-                radius: 16,
-                backgroundColor: appRed,
-                child: const Icon(Icons.add, size: 22, color: Colors.white),
+      backgroundColor: const Color(0xffF5F6FA),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          refresh(q: searchC.text);
+        },
+        child: CustomScrollView(
+          slivers: [
+            // ── Gradient SilverAppBar ──
+            SliverAppBar(
+              pinned: true,
+              expandedHeight: 120,
+              backgroundColor: _gradient[1],
+              surfaceTintColor: Colors.transparent,
+              leading: IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
               ),
-            ),
-          )
-        ],
-      ),
-      body: Column(
-        children: [
-          _buildSearchBar(masterP.searchAlamatC),
-          Expanded(
-            child: _isLoading
-                ? Center(child: CircularProgressIndicator(color: orangeAcc))
-                : (model == null || model.isEmpty)
-                    ? _buildEmptyState()
-                    : RefreshIndicator(
-                        color: orangeAcc,
-                        onRefresh: () => refresh(),
-                        child: ListView.separated(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          itemCount: model.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 12),
-                          itemBuilder: (context, index) {
-                            final alamat = model[index];
-                            return _buildAlamatCard(alamat, index, masterP);
-                          },
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    CusNav.nPush(context, AddAddressAdminView());
+                  },
+                  icon: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                background: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: _gradient,
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        right: -20,
+                        top: -20,
+                        child: Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.08),
+                            shape: BoxShape.circle,
+                          ),
                         ),
                       ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearchBar(TextEditingController controller) {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF3F4F6),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
-        child: TextField(
-          controller: controller,
-          onSubmitted: (val) => refresh(q: val),
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            hintText: "Cari alamat...",
-            hintStyle: const TextStyle(color: Colors.black45, fontSize: 14),
-            prefixIcon: Icon(Icons.search, color: orangeAcc),
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.location_off_rounded, size: 72, color: orangeAcc.withOpacity(0.5)),
-          const SizedBox(height: 16),
-          const Text("Data alamat kosong", style: TextStyle(fontSize: 16, color: Colors.black54, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAlamatCard(AlamatAdminModelData? alamat, int index, MasterProvider p) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 4))],
-        border: Border(left: BorderSide(color: orangeAcc, width: 4)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      alamat?.prov ?? '-',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      alamat?.kota ?? '-',
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black54),
-                    ),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 60, 20, 16),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.18),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.location_on_rounded,
+                                  color: Colors.white, size: 22),
+                            ),
+                            const SizedBox(width: 12),
+                            const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Data Alamat',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  'Kelola alamat pengiriman barang',
+                                  style: TextStyle(
+                                      fontSize: 12, color: Colors.white70),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              _buildPopupMenu(alamat, p),
-            ],
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Divider(height: 1, color: Color(0xFFEEEEEE)),
-          ),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.location_on_rounded, size: 16, color: appRed),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  alamat?.nama ?? '-',
-                  style: const TextStyle(fontSize: 13, color: Colors.black87, height: 1.4),
+            ),
+
+            // ── Search Bar ──
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: searchC,
+                    onSubmitted: (val) {
+                      refresh(q: val);
+                    },
+                    textInputAction: TextInputAction.search,
+                    style: const TextStyle(fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'Cari berdasarkan alamat...',
+                      hintStyle:
+                          const TextStyle(color: Color(0xffA0AEC0), fontSize: 13),
+                      prefixIcon: const Icon(Icons.search_rounded,
+                          color: Color(0xffA0AEC0), size: 20),
+                      suffixIcon: searchC.text.isNotEmpty
+                          ? GestureDetector(
+                              onTap: () {
+                                searchC.clear();
+                                refresh();
+                              },
+                              child: const Icon(Icons.close_rounded,
+                                  color: Color(0xffA0AEC0), size: 18),
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                    ),
+                  ),
                 ),
               ),
-            ],
-          )
-        ],
-      ),
-    );
-  }
+            ),
 
-  Widget _buildPopupMenu(AlamatAdminModelData? alamat, MasterProvider p) {
-    return SizedBox(
-      height: 24,
-      width: 24,
-      child: PopupMenuButton<String>(
-        padding: EdgeInsets.zero,
-        icon: const Icon(Icons.more_vert, color: Colors.black45, size: 22),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        onSelected: (value) async {
-          if (value == 'ubah') {
-            CusNav.nPush(context, AddAddressAdminView(alamat: alamat));
-          } else if (value == 'hapus') {
-            await Utils.showYesNoDialog(
-              context: context,
-              title: 'Konfirmasi',
-              desc: 'Apakah Anda yakin ingin menghapus alamat ini?',
-              yesCallback: () async {
-                CusNav.nPop(context);
-                await p.deleteAlamat(alamatId: alamat?.id);
-                refresh();
-              },
-              noCallback: () => CusNav.nPop(context),
-            );
-          }
-        },
-        itemBuilder: (context) => [
-          PopupMenuItem(value: 'ubah', child: _menuItem(Icons.edit_rounded, oceanBlue, 'Ubah')),
-          PopupMenuItem(value: 'hapus', child: _menuItem(Icons.delete_rounded, appRed, 'Hapus')),
-        ],
+            // ── Data List ──
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              sliver: (model?.isEmpty ?? true)
+                  ? const SliverFillRemaining(
+                      child: Center(
+                        child: Text(
+                          'Tidak ada data alamat.',
+                          style: TextStyle(color: Color(0xff8A93A3)),
+                        ),
+                      ),
+                    )
+                  : SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final item = model?[index];
+                          if (item == null) return const SizedBox.shrink();
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.04),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(16, 10, 10, 8),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xff059669).withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: const Icon(Icons.map_rounded,
+                                            color: Color(0xff059669), size: 16),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          item.prov ?? '-',
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 13,
+                                              color: Color(0xff100629)),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        onPressed: () => _showButtonBottomSheet(context, index, model, masterP),
+                                        icon: const Icon(Icons.more_vert_rounded, color: Color(0xff8A93A3)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Divider(height: 1, color: Color(0xffF0F0F0)),
+                                Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        flex: 2,
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Kabupaten / Kota',
+                                              style: TextStyle(fontSize: 11, color: Color(0xff8A93A3)),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              item.kota ?? '-',
+                                              style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Color(0xff100629)),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Alamat Lengkap',
+                                              style: TextStyle(fontSize: 11, color: Color(0xff8A93A3)),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              item.nama ?? '-',
+                                              style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: Color(0xff4A5568)),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        childCount: model?.length ?? 0,
+                      ),
+                    ),
+            ),
+          ],
+        ),
       ),
-    );
-  }
-
-  Widget _menuItem(IconData icon, Color color, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: color),
-        const SizedBox(width: 12),
-        Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-      ],
     );
   }
 }

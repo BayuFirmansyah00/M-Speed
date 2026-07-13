@@ -12,72 +12,73 @@ class HomeAdminTransactionGraph extends StatefulWidget {
 }
 
 class _HomeAdminTransactionGraphState extends State<HomeAdminTransactionGraph> {
+  int? _touchedIndex;
+
   @override
   Widget build(BuildContext context) {
     final p = context.watch<AdminHomeProvider>();
     final graph = p.homeAdminModel.data?.transaksi ?? [];
     final label = p.homeAdminModel.data?.transaksiLabel ?? [];
     final nominal = p.homeAdminModel.data?.transaksiNominal ?? [];
-    return Padding(
-      padding: const EdgeInsets.only(top: 24.0),
-      child: SizedBox(
-        height: 250,
-        child: BarChart(
-          BarChartData(
-            barTouchData: BarTouchData(
-              enabled: false,
-              touchTooltipData: BarTouchTooltipData(
-                getTooltipColor: (group) => Colors.transparent,
-                tooltipPadding: EdgeInsets.zero,
-                tooltipMargin: 4,
-                getTooltipItem: (
-                  BarChartGroupData group,
-                  int groupIndex,
-                  BarChartRodData rod,
-                  int rodIndex,
-                ) {
-                  return BarTooltipItem(
-                    '${rod.toY.round()};\n${Utils.thousandSeparator(nominal[groupIndex] ?? 0)}',
-                    TextStyle(color: Constant.greenColor, fontSize: 8),
-                  );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(bottom: 4),
+          child: Text(
+            'Trend Transaksi',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Color(0xffB0BAC9),
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 240,
+          child: BarChart(
+            BarChartData(
+              barTouchData: BarTouchData(
+                enabled: true,
+                touchCallback: (event, response) {
+                  if (response != null &&
+                      response.spot != null &&
+                      event is FlTapUpEvent) {
+                    setState(() {
+                      _touchedIndex = response.spot!.touchedBarGroupIndex;
+                    });
+                  } else if (event is FlTapUpEvent) {
+                    setState(() => _touchedIndex = null);
+                  }
                 },
-              ),
-            ),
-            barGroups: List.generate(
-              graph.length,
-              (i) => BarChartGroupData(
-                x: i,
-                showingTooltipIndicators: [0],
-                barRods: [
-                  BarChartRodData(
-                    toY: (graph[i] ?? 0).toDouble(),
-                    fromY: 0,
-                    borderRadius: BorderRadius.circular(2),
-                    color: Constant.greenColor,
-                    width: 30,
-                  ),
-                ],
-              ),
-            ),
-            titlesData: FlTitlesData(
-              bottomTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  reservedSize: 40, // Adjust if necessary
-                  getTitlesWidget: (value, meta) {
-                    return Column(
+                touchTooltipData: BarTouchTooltipData(
+                  getTooltipColor: (group) => const Color(0xff1A1A2E),
+                  tooltipRoundedRadius: 10,
+                  tooltipPadding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  tooltipMargin: 6,
+                  getTooltipItem: (
+                    BarChartGroupData group,
+                    int groupIndex,
+                    BarChartRodData rod,
+                    int rodIndex,
+                  ) {
+                    return BarTooltipItem(
+                      '${rod.toY.round()} trx\n',
+                      const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
                       children: [
-                        Constant.xSizedBox4,
-                        Flexible(
-                          child: SizedBox(
-                            width: 40,
-                            child: Text(
-                              label[value.toInt()] ?? '',
-                              maxLines: 2,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  fontSize: 8, overflow: TextOverflow.ellipsis),
-                            ),
+                        TextSpan(
+                          text: Utils.thousandSeparator(
+                              nominal[groupIndex] ?? 0),
+                          style: const TextStyle(
+                            color: Color(0xff4ADE80),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
@@ -85,62 +86,103 @@ class _HomeAdminTransactionGraphState extends State<HomeAdminTransactionGraph> {
                   },
                 ),
               ),
-              leftTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  reservedSize: 18, // Adjust if necessary
-                  getTitlesWidget: (value, meta) {
-                    return Text(
+              barGroups: List.generate(
+                graph.length,
+                (i) {
+                  final isTouched = i == _touchedIndex;
+                  return BarChartGroupData(
+                    x: i,
+                    showingTooltipIndicators: isTouched ? [0] : [],
+                    barRods: [
+                      BarChartRodData(
+                        toY: (graph[i] ?? 0).toDouble(),
+                        fromY: 0,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(6),
+                        ),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: isTouched
+                              ? [
+                                  const Color(0xff4ADE80),
+                                  const Color(0xff1ABC62),
+                                ]
+                              : [
+                                  const Color(0xff6EE7A7),
+                                  const Color(0xff1ABC62),
+                                ],
+                        ),
+                        width: 22,
+                      ),
+                    ],
+                  );
+                },
+              ),
+              titlesData: FlTitlesData(
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 34,
+                    getTitlesWidget: (value, meta) {
+                      final idx = value.toInt();
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 5),
+                        child: SizedBox(
+                          width: 38,
+                          child: Text(
+                            idx < label.length ? (label[idx] ?? '') : '',
+                            maxLines: 2,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xffB0BAC9),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 26,
+                    getTitlesWidget: (value, meta) => Text(
                       value.toInt().toString(),
-                      style: TextStyle(fontSize: 10),
-                    );
-                  },
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xffB0BAC9),
+                      ),
+                    ),
+                  ),
+                ),
+                topTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                rightTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
                 ),
               ),
-              topTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  reservedSize: 0, // Adjust if necessary
-                  getTitlesWidget: (value, meta) {
-                    return Text(
-                      '',
-                      style: TextStyle(fontSize: 10),
-                    );
-                  },
-                ),
-              ),
-              rightTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  reservedSize: 0, // Adjust if necessary
-                  getTitlesWidget: (value, meta) {
-                    return Text(
-                      '',
-                      style: TextStyle(fontSize: 10),
-                    );
-                  },
-                ),
-              ),
-            ),
-            minY: 0,
-            maxY: p.biggestTransactionGraphVal.toDouble() + 30,
-            gridData: FlGridData(
-              show: true,
-              drawVerticalLine: false,
-              getDrawingHorizontalLine: (value) {
-                return FlLine(
-                  color: Constant.textHintColor,
+              minY: 0,
+              maxY: p.biggestTransactionGraphVal.toDouble() + 30,
+              gridData: FlGridData(
+                show: true,
+                drawVerticalLine: false,
+                getDrawingHorizontalLine: (value) => FlLine(
+                  color: const Color(0xffF0F2F5),
                   strokeWidth: 1,
-                );
-              },
-            ),
-            borderData: FlBorderData(
-              show: false,
-              border: Border.all(color: Colors.black, width: 1),
+                  dashArray: [4, 4],
+                ),
+              ),
+              borderData: FlBorderData(show: false),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 }

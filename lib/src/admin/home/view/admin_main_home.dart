@@ -8,220 +8,176 @@ import 'package:mspeed/src/admin/transaksi/view/transaksi_admin_view.dart';
 import 'package:mspeed/src/admin/user/view/user_admin_view.dart';
 import 'package:mspeed/src/buyer/home/model/home_model.dart';
 import 'package:flutter/material.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../common/helper/constant.dart';
 
+class _AdminNavItem {
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  const _AdminNavItem({required this.icon, required this.activeIcon, required this.label});
+}
+
 class AdminMainHome extends StatefulWidget {
   final int? index;
-
   const AdminMainHome({super.key, this.index});
-
   @override
   State<AdminMainHome> createState() => _SellerMainHomeState();
 }
 
-class _SellerMainHomeState extends State<AdminMainHome> {
+class _SellerMainHomeState extends State<AdminMainHome> with SingleTickerProviderStateMixin {
   int currentIndex = 0;
   late HomeModel homeModel;
   String? roles;
+  late AnimationController _indicatorController;
+  late Animation<double> _indicatorAnim;
+  int _prevIndex = 0;
+
+  static const _navItems = [
+    _AdminNavItem(icon: Icons.home_outlined,           activeIcon: Icons.home_rounded,              label: 'Beranda'),
+    _AdminNavItem(icon: Icons.group_outlined,           activeIcon: Icons.group_rounded,             label: 'User'),
+    _AdminNavItem(icon: Icons.swap_horiz_rounded,       activeIcon: Icons.swap_horiz_rounded,        label: 'Transaksi'),
+    _AdminNavItem(icon: Icons.tune_outlined,            activeIcon: Icons.tune_rounded,              label: 'Master'),
+  ];
 
   @override
   void initState() {
-    getData();
-    // setIndex();
     super.initState();
+    _indicatorController = AnimationController(vsync: this, duration: const Duration(milliseconds: 350));
+    _indicatorAnim = Tween<double>(begin: 0, end: 0).animate(
+      CurvedAnimation(parent: _indicatorController, curve: Curves.easeInOutCubic),
+    );
+    if (widget.index != null) currentIndex = widget.index ?? 0;
+    getData();
   }
+
+  @override
+  void dispose() { _indicatorController.dispose(); super.dispose(); }
 
   @override
   void didChangeDependencies() {
     roles = ModalRoute.of(context)?.settings.arguments as String?;
-    // getData();
     super.didChangeDependencies();
   }
 
-  getData() async {
-    setIndex();
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    // roles = prefs.getString(Constant.kSetPrefRoles);
-    // await Utils.showLoading();
-    // await context.read<HomeProvider>().fetchHome();
-    // await context.read<ProfileProvider>().fetchProfile(context: context);
-    // await context.read<JamaahProvider>().fetchJamaah();
-    // if (roles == "agen") await context.read<SubAgenProvider>().fetchSubAgen();
-    // await context.read<ProfileProvider>().fetchSosmed();
-    // await context.read<PesananProvider>().fetchNotif();
-    // await Utils.dismissLoading();
-    setState(() {});
-  }
+  getData() async { setState(() {}); }
 
-  setIndex() {
-    setState(() {
-      if (widget.index != null) {
-        currentIndex = widget.index ?? 0;
-      }
-    });
-  }
+  void jumpToJamaah()  => _onTap(1);
+  void jumpToSubAgen() => _onTap(2);
+  void jumpToProfile() => _onTap(roles == 'agen' ? 4 : 3);
 
-  void jumpToJamaah() {
-    setState(() {
-      currentIndex = 1;
-    });
-  }
-
-  void jumpToSubAgen() {
-    setState(() {
-      currentIndex = 2;
-    });
-  }
-
-  void jumpToProfile() {
-    setState(() {
-      if (roles == "agen") {
-        currentIndex = 4;
-      } else {
-        currentIndex = 3;
-      }
-    });
+  void _onTap(int index) {
+    if (index == currentIndex) return;
+    _prevIndex = currentIndex;
+    _indicatorAnim = Tween<double>(begin: _prevIndex.toDouble(), end: index.toDouble())
+        .animate(CurvedAnimation(parent: _indicatorController, curve: Curves.easeInOutCubic));
+    _indicatorController.forward(from: 0);
+    setState(() => currentIndex = index);
   }
 
   @override
   Widget build(BuildContext context) {
-    Widget customBottomNav() {
-      return SafeArea(
-        child: Container(
-          height: Platform.isAndroid ? 70 : 105,
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.5),
-                spreadRadius: 4,
-                blurRadius: 7,
-                offset: Offset(0, 1), // changes position of shadow
-              ),
-            ],
-          ),
-          child: BottomNavigationBar(
-            backgroundColor: Colors.white,
-            selectedFontSize: 13,
-            unselectedFontSize: 13,
-            unselectedItemColor: Constant.textHintColor2,
-            currentIndex: currentIndex,
-            onTap: (index) {
-              // context.read<PaketProvider>().clearFilter();
-              setState(() => currentIndex = index);
-            },
-            type: BottomNavigationBarType.fixed,
-            selectedIconTheme: IconThemeData(color: Constant.primaryColor),
-            selectedItemColor: Constant.primaryColor,
-            selectedLabelStyle: Constant.primaryBold15.copyWith(fontSize: 13),
-            unselectedLabelStyle: TextStyle(
-              fontSize: 13,
-              color: Constant.textHintColor2,
-            ),
-            items: [
-              BottomNavigationBarItem(
-                icon: Container(
-                  padding: EdgeInsets.only(bottom: 4),
-                  width: 25,
-                  height: 25,
-                  child: FittedBox(
-                    child: Image.asset(
-                      currentIndex == 0
-                          ? 'assets/icons/ic-home-red.png'
-                          : 'assets/icons/ic-home-black.png',
-                    ),
-                  ),
-                ),
-                label: 'Beranda',
-              ),
-              BottomNavigationBarItem(
-                icon: Container(
-                  padding: EdgeInsets.only(bottom: 4),
-                  width: 30,
-                  height: 30,
-                  child: FittedBox(
-                    child: SvgPicture.asset(
-                      Assets.svgsIsAdminUsers,
-                      width: 30,
-                      height: 30,
-                      color:
-                          currentIndex == 1
-                              ? Constant.primaryColor
-                              : Colors.black,
-                    ),
-                  ),
-                ),
-                label: 'User',
-              ),
-              BottomNavigationBarItem(
-                icon: Container(
-                  padding: EdgeInsets.only(bottom: 4),
-                  width: 25,
-                  height: 25,
-                  child: FittedBox(
-                    child: SvgPicture.asset(
-                      Assets.svgsIcAdminTransaksi,
-                      width: 25,
-                      height: 25,
-                      color:
-                          currentIndex == 2
-                              ? Constant.primaryColor
-                              : Colors.black,
-                    ),
-                  ),
-                ),
-                label: 'Transaksi',
-              ),
-              BottomNavigationBarItem(
-                icon: Container(
-                  padding: EdgeInsets.only(bottom: 4),
-                  width: 25,
-                  height: 25,
-                  child: FittedBox(
-                    child: SvgPicture.asset(
-                      Assets.svgsIcSettings,
-                      width: 30,
-                      height: 30,
-                      color:
-                          currentIndex == 3
-                              ? Constant.primaryColor
-                              : Colors.black,
-                    ),
-                  ),
-                ),
-                label: 'Master',
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
-      primary: true,
-      bottomNavigationBar: customBottomNav(),
+      extendBody: true,
+      bottomNavigationBar: _buildNav(),
       body: SafeArea(
+        bottom: false,
         child: WillPopScope(
-          onWillPop: () async {
-            if (currentIndex != 0) {
-              setState(() => currentIndex = 0);
-              return false;
-            }
-            // kalau sudah ada api maka muncul konfirm exit dua kali
-            return true;
-          },
-          child:
-              [
-                HomeAdminView(),
-                UserAdminView(),
-                TransaksiAdminView(),
-                MasterAdminView(),
-                // RequestNegoView()
-                // ProfileView(jumpToJamaah, jumpToSubAgen)
-              ][currentIndex],
+          onWillPop: () async { if (currentIndex != 0) { _onTap(0); return false; } return true; },
+          child: [
+            HomeAdminView(),
+            UserAdminView(),
+            TransaksiAdminView(),
+            MasterAdminView(),
+          ][currentIndex],
         ),
       ),
+    );
+  }
+
+  Widget _buildNav() {
+    final primary = Constant.primaryColor;
+    final bottomPad = Platform.isIOS ? 20.0 : 12.0;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPad),
+      child: LayoutBuilder(builder: (context, constraints) {
+        final slotWidth = constraints.maxWidth / _navItems.length;
+        const inset = 6.0;
+        return Container(
+          height: 68,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(color: primary.withOpacity(0.15), blurRadius: 30, offset: const Offset(0, 10)),
+              BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 16, offset: const Offset(0, 4)),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(30),
+            child: Stack(children: [
+              // ── Sliding gradient indicator ──
+              AnimatedBuilder(
+                animation: _indicatorAnim,
+                builder: (_, __) => Positioned(
+                  left: _indicatorAnim.value * slotWidth + inset,
+                  top: 8,
+                  child: Container(
+                    width: slotWidth - inset * 2,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [primary, primary.withOpacity(0.82)],
+                      ),
+                      borderRadius: BorderRadius.circular(22),
+                      boxShadow: [BoxShadow(color: primary.withOpacity(0.4), blurRadius: 14, offset: const Offset(0, 6))],
+                    ),
+                  ),
+                ),
+              ),
+              // ── Nav items ──
+              Row(children: List.generate(_navItems.length, (i) {
+                final isActive = currentIndex == i;
+                return Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => _onTap(i),
+                    child: SizedBox(
+                      height: 68,
+                      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 250),
+                          switchInCurve: Curves.easeOutBack,
+                          switchOutCurve: Curves.easeIn,
+                          transitionBuilder: (child, anim) => ScaleTransition(
+                            scale: anim, child: FadeTransition(opacity: anim, child: child)),
+                          child: Icon(_navItems[i].activeIcon,
+                            key: ValueKey(isActive),
+                            size: 24,
+                            color: isActive ? Colors.white : Colors.grey.shade400),
+                        ),
+                        AnimatedSize(
+                          duration: const Duration(milliseconds: 220),
+                          curve: Curves.easeInOut,
+                          child: isActive
+                              ? Padding(
+                                  padding: const EdgeInsets.only(top: 3),
+                                  child: Text(_navItems[i].label,
+                                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.2)),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                      ]),
+                    ),
+                  ),
+                );
+              })),
+            ]),
+          ),
+        );
+      }),
     );
   }
 }

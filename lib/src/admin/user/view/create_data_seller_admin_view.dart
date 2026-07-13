@@ -1,464 +1,278 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:mspeed/common/component/custom_appbar.dart';
-import 'package:mspeed/common/component/custom_button.dart';
-import 'package:mspeed/common/helper/Constant.dart';
 import 'package:mspeed/src/admin/home/model/seller_admin_model.dart';
 import 'package:mspeed/src/admin/user/provider/admin_form_seller_provider.dart';
-import 'package:mspeed/src/buyer/address/view/custom_map_view.dart';
-import 'package:mspeed/src/buyer/address/view/search_location_view.dart';
+import 'package:mspeed/src/admin/user/view/admin_form_widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
-
-import '../../../../common/component/custom_textfield.dart';
+import 'package:mspeed/utils/utils.dart';
+import 'package:mspeed/common/component/custom_navigator.dart';
 
 class CreateDataSellerAdminView extends StatefulWidget {
   const CreateDataSellerAdminView({super.key, this.seller});
-
   final SellerAdminModelData? seller;
 
   @override
-  State<CreateDataSellerAdminView> createState() =>
-      _CreateDataSellerAdminViewState();
+  State<CreateDataSellerAdminView> createState() => _CreateDataSellerAdminViewState();
 }
 
 class _CreateDataSellerAdminViewState extends State<CreateDataSellerAdminView> {
-  // Initial location
-  final LatLng _initialPosition = LatLng(37.42796133580664, -122.085749655962);
+  static const _gradient = [Color(0xff10B981), Color(0xff059669)];
+  static const _accent = Color(0xff10B981);
 
-  // Marker and camera position
-  LatLng _currentPosition = LatLng(37.42796133580664, -122.085749655962);
-  Set<Marker> _markers = {};
+  bool get isEdit => widget.seller != null;
 
   @override
   void initState() {
     super.initState();
-    _currentPosition = _initialPosition;
+    // Pre-fill if editing
+    final p = context.read<AdminFormSellerProvider>();
+    p.setData(widget.seller);
   }
 
-  void _onMapTapped(LatLng location) {
-    setState(() {
-      _currentPosition = location;
-      latC.text = location.latitude.toString();
-      lonC.text = location.longitude.toString();
-      _markers.clear();
-      _markers.add(
-        Marker(
-          // markerId: MarkerId('selected_location'),
-          point: location,
-          child: Icon(
-            Icons.location_on,
-            color: Colors.red,
-          ),
-        ),
-      );
-    });
-  }
-
-  Widget splitTextField(TextEditingController controller, String hint) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: TextInputType.number,
-      decoration: InputDecoration(
-        contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
-        hintText: hint,
-        filled: true,
-        fillColor: Colors.white,
-        hoverColor: Constant.primaryColor,
-        focusColor: Constant.primaryColor,
-        errorStyle: TextStyle(color: Colors.red),
-        hintStyle: TextStyle(color: Constant.textHintColor2),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
-            width: 0.5,
-            color: Constant.borderSearchColor,
-            style: BorderStyle.solid,
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
-            width: 0.5,
-            color: Constant.borderSearchColor,
-            style: BorderStyle.solid,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(
-            width: 1,
-            color: Constant.primaryColor,
-            style: BorderStyle.solid,
-          ),
-        ),
-      ),
-      validator: (value) {
-        if ((value == null || value.isEmpty)) {
-          return "Maaf, Lokasi wajib diisi";
-        }
-        return null;
+  Future<void> _save() async {
+    Utils.showYesNoDialog(
+      context: context,
+      title: 'Konfirmasi Simpan',
+      desc: 'Pastikan data sudah benar sebelum disimpan.',
+      yesCallback: () async {
+        CusNav.nPop(context);
+        await context.read<AdminFormSellerProvider>().sendSeller(
+              context,
+              withLoading: true,
+              sellerId: widget.seller?.ID,
+            );
       },
+      noCallback: () => Navigator.pop(context),
     );
   }
-
-  final latC = TextEditingController();
-  final lonC = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     final p = context.watch<AdminFormSellerProvider>();
 
-    Widget fileButton(
-        {required String title, required Function(XFile) onChoose}) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Text(
-              title,
-              style: Constant.primaryTextStyle.copyWith(
-                fontSize: 14,
-                fontWeight: Constant.medium,
-              ),
-            ),
-          ),
-          InkWell(
-            onTap: () async {
-              final result =
-                  await FilePicker.platform.pickFiles(allowMultiple: false);
-              if (result != null) {
-                final file = result.files.singleOrNull;
-                print('Selected file: ${result.files.singleOrNull?.name}');
-
-                if (file != null) {
-                  onChoose(file.xFile);
-                }
-              }
-            },
-            child: Container(
-              padding: EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                border: Border.all(
-                  width: 0.5,
-                  color: Constant.borderSearchColor,
-                  style: BorderStyle.solid,
-                ),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Browse'),
-                  Icon(
-                    Icons.cloud_upload,
-                    color: Colors.grey,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-
-    Widget selectLocationBtn() {
-      return Container(
-        padding: EdgeInsets.symmetric(horizontal: 20),
-        width: double.infinity,
-        child: CustomButton.secondaryButton(
-          "Pilih Lokasi",
-          borderRadius: BorderRadius.circular(8),
-          () async {
-            late LatLng currentPosition;
-            if (p.locationCoordinate != null) {
-              currentPosition = p.locationCoordinate!;
-            } else {
-              bool serviceEnabled;
-              LocationPermission permission;
-
-              serviceEnabled = await Geolocator.isLocationServiceEnabled();
-              if (!serviceEnabled)
-                return Future.error('Location services are disabled.');
-
-              permission = await Geolocator.checkPermission();
-              if (permission == LocationPermission.denied) {
-                await Geolocator.requestPermission();
-                if (permission == LocationPermission.deniedForever) {
-                  await Geolocator.requestPermission();
-                  return Future.error(
-                      'Location permissions are permanently denied, we cannot request permissions.');
-                }
-
-                if (permission == LocationPermission.denied) {
-                  await Geolocator.requestPermission();
-                  return Future.error('Location permissions are denied');
-                }
-              }
-              Position? pos;
-              try {
-                pos = await Geolocator.getCurrentPosition(
-                  forceAndroidLocationManager: true,
-                  desiredAccuracy: LocationAccuracy.best,
-                  timeLimit: Duration(seconds: 3),
-                ).timeout(Duration(seconds: 20));
-              } catch (e) {
-                pos = await Geolocator.getLastKnownPosition(
-                    forceAndroidLocationManager: true);
-              }
-              if (pos != null)
-                currentPosition = LatLng(pos.latitude, pos.longitude);
-            }
-            PickedData? pickedData =
-                await Navigator.push(context, MaterialPageRoute(
-              builder: (context) {
-                return SearchLocationView.create(currentPosition);
-              },
-            ));
-
-            if (pickedData != null) {
-              p.setMapLocation(pickedData).then((value) {
-                setState(() {});
-              });
-            }
-          },
-        ),
-      );
-    }
-
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: CustomAppBar.appBar(
-        context,
-        "${widget.seller == null ? "Create" : "Edit"} Seller",
-        color: Colors.white,
-        isCenter: true,
-        foregroundColor: Colors.black,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        action: [
-          if (widget.seller != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: InkWell(
-                onTap: () {},
-                child: Icon(
-                  Icons.delete_outline,
-                  size: 27,
-                  color: Constant.primaryColor,
-                ),
+      backgroundColor: const Color(0xffF5F6FA),
+      body: CustomScrollView(
+        slivers: [
+          // ── Gradient AppBar ──
+          SliverAppBar(
+            pinned: true,
+            expandedHeight: 120,
+            backgroundColor: _gradient[1],
+            surfaceTintColor: Colors.transparent,
+            leading: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              background: AdminFormHeader(
+                gradient: _gradient,
+                icon: Icons.storefront_rounded,
+                title: isEdit ? 'Edit Seller' : 'Tambah Seller',
+                subtitle: isEdit ? 'Perbarui data vendor / seller' : 'Isi data untuk mendaftarkan seller baru',
               ),
-            )
+            ),
+          ),
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+              child: Column(
+                children: [
+                  // ── Informasi Toko ──
+                  AdminFormSection(
+                    title: 'Informasi Toko',
+                    icon: Icons.storefront_outlined,
+                    accentColor: _accent,
+                    children: [
+                      AdminFormField(controller: p.companyNameC, label: 'Nama Toko / Perusahaan', hint: 'Nama toko atau perusahaan', icon: Icons.business_outlined),
+                      AdminFormField(controller: p.emailC, label: 'Email', hint: 'Email toko', icon: Icons.email_outlined, inputType: TextInputType.emailAddress, enabled: !isEdit),
+                      AdminFormField(controller: p.kbliC, label: 'KBLI', hint: 'Kode KBLI', icon: Icons.numbers_rounded),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  // ── Pemilik & Kontak ──
+                  AdminFormSection(
+                    title: 'Pemilik & Kontak',
+                    icon: Icons.person_outline_rounded,
+                    accentColor: _accent,
+                    children: [
+                      AdminFormField(controller: p.ownerNameC, label: 'Nama Pemilik', hint: 'Nama pemilik toko', icon: Icons.person_rounded),
+                      AdminFormField(controller: p.cpNameC, label: 'Nama Contact Person', hint: 'Nama contact person', icon: Icons.contact_phone_outlined),
+                      AdminFormField(controller: p.cpPhoneNumberC, label: 'Telepon Contact Person', hint: 'No. telepon CP', icon: Icons.phone_callback_outlined, inputType: TextInputType.phone),
+                      AdminFormField(controller: p.phoneNumberC, label: 'No. Telepon Toko', hint: 'No. telepon toko', icon: Icons.phone_outlined, inputType: TextInputType.phone),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  // ── Lokasi ──
+                  AdminFormSection(
+                    title: 'Lokasi',
+                    icon: Icons.location_on_outlined,
+                    accentColor: _accent,
+                    children: [
+                      AdminFormField(controller: p.cityC, label: 'Kota', hint: 'Masukkan kota', icon: Icons.location_city_outlined),
+                      AdminFormField(controller: p.alamatC, label: 'Alamat Perusahaan', hint: 'Masukkan alamat lengkap', icon: Icons.map_outlined, maxLines: 3),
+
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  // ── Dokumen Hukum ──
+                  AdminFormSection(
+                    title: 'Dokumen & Legalitas',
+                    icon: Icons.description_outlined,
+                    accentColor: _accent,
+                    children: [
+                      AdminFormField(controller: p.npwpC, label: 'No. NPWP', hint: 'Nomor NPWP perusahaan', icon: Icons.receipt_long_outlined),
+                      AdminFormField(controller: p.ktpC, label: 'No. KTP / Identitas', hint: 'Nomor KTP pemilik', icon: Icons.credit_card_outlined),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  // ── Rekening ──
+                  AdminFormSection(
+                    title: 'Rekening Bank',
+                    icon: Icons.account_balance_outlined,
+                    accentColor: _accent,
+                    children: [
+                      _BankRow(bankNameC: p.bankNameC, bankNumberC: p.bankNumberC),
+                      AdminFormField(controller: p.bankAccountC, label: 'Rekening Atas Nama', hint: 'Nama pemilik rekening', icon: Icons.person_outline_rounded),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  // ── Upload Dokumen ──
+                  AdminFormSection(
+                    title: 'Upload Dokumen',
+                    icon: Icons.upload_file_outlined,
+                    accentColor: _accent,
+                    children: [
+                      _FileButton(title: 'File NPWP', accent: _accent, onChoose: (_) {}, gradient: _gradient),
+                      _FileButton(title: 'File No. KTP / Identitas', accent: _accent, onChoose: (_) {}, gradient: _gradient),
+                      _FileButton(title: 'File Buku Rekening', accent: _accent, onChoose: (_) {}, gradient: _gradient),
+                      _FileButton(title: 'File SP SKP', accent: _accent, onChoose: (_) {}, gradient: _gradient),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CustomTextField.borderTextField(
-                controller: p.companyNameC,
-                labelText: "Nama Toko / Perusahaan",
-                hintText: 'Nama Toko',
-              ),
-              SizedBox(height: 12),
-              CustomTextField.borderTextField(
-                  controller: p.emailC,
-                  labelText: "Email",
-                  hintText: "Email",
-                  enabled: widget.seller == null),
-              SizedBox(height: 12),
-              CustomTextField.borderTextField(
-                  controller: p.ownerNameC,
-                  labelText: "Nama Pemilik",
-                  hintText: "Nama Pemilik"
-                  // hintText: "Enter your name",
-                  ),
-              SizedBox(height: 12),
-              CustomTextField.borderTextField(
-                  controller: p.cpNameC,
-                  labelText: "Nama Contact Person",
-                  hintText: "Nama Contact Person"),
-              SizedBox(height: 12),
-              CustomTextField.borderTextField(
-                  controller: p.cpPhoneNumberC,
-                  labelText: "Telp Contact Person",
-                  hintText: "Telp Contact Person",
-                  textInputType: TextInputType.phone),
-              SizedBox(height: 12),
-              CustomTextField.borderTextField(
-                  controller: p.phoneNumberC,
-                  labelText: "No Telepon",
-                  hintText: "No Telepon",
-                  textInputType: TextInputType.phone),
-              SizedBox(height: 12),
-              CustomTextField.borderTextField(
-                  controller: p.kbliC, labelText: "KBLI", hintText: "KBLI"
-                  // hintText: "Enter your name",
-                  ),
-              SizedBox(height: 12),
-              CustomTextField.borderTextArea(
-                  controller: p.alamatC,
-                  labelText: "Alamat perusahaan",
-                  hintText: "alamat",
-                  focusNode: FocusNode()
-                  // hintText: "Enter your name",
-                  ),
-              SizedBox(height: 12),
-              CustomTextField.borderTextField(
-                  controller: p.cityC, labelText: "Kota", hintText: "Kota"
-                  // hintText: "Enter your name",
-                  ),
-              SizedBox(height: 12),
-              Text(
-                'Koordinat',
-                style: Constant.primaryTextStyle.copyWith(
-                  fontSize: 14,
-                  fontWeight: Constant.medium,
-                ),
-              ),
-              SizedBox(
-                height: 8,
-              ),
-              Row(
-                children: [
-                  Expanded(child: splitTextField(latC, 'latitude')),
-                  SizedBox(
-                    width: 12,
-                  ),
-                  Expanded(child: splitTextField(lonC, 'longitude')),
-                ],
-              ),
-              SizedBox(height: 12),
-              Text(
-                'Select From Map',
-                style: Constant.primaryTextStyle.copyWith(
-                  fontSize: 14,
-                  fontWeight: Constant.medium,
-                ),
-              ),
-              SizedBox(
-                height: 8,
-              ),
-              SizedBox(
-                height: 186,
-                width: double.infinity,
-                child: FlutterMap(
-                  options: MapOptions(
-                    initialCenter: _initialPosition,
-                    initialZoom: 14.4746,
-                    onTap: (tapPosition, point) {
-                      _onMapTapped(point);
-                    },
-                  ),
-                  children: [
-                    TileLayer(
-                      urlTemplate:
-                          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                      subdomains: ['a', 'b', 'c'],
-                    ),
-                    MarkerLayer(markers: _markers.toList())
-                  ],
-                ),
-              ),
-              SizedBox(height: 12),
-              CustomTextField.borderTextField(
-                controller: p.npwpC,
-                labelText: "No NPWP",
-                hintText: "NPWP",
-                // hintText: "Enter your name",
-              ),
-              SizedBox(height: 12),
-              CustomTextField.borderTextField(
-                controller: p.ktpC,
-                labelText: "No. KTP / Identitas",
-                hintText: "KTP",
-                // hintText: "Enter your name",
-              ),
-              SizedBox(height: 12),
-              Text(
-                'Rekening Bank',
-                style: Constant.primaryTextStyle.copyWith(
-                  fontSize: 14,
-                  fontWeight: Constant.medium,
-                ),
-              ),
-              SizedBox(
-                height: 8,
-              ),
-              Row(
-                children: [
-                  Expanded(flex: 1, child: splitTextField(latC, 'Bank')),
-                  SizedBox(
-                    width: 4,
-                  ),
-                  Expanded(flex: 2, child: splitTextField(lonC, 'No Rekening')),
-                ],
-              ),
-              SizedBox(height: 12),
-              CustomTextField.borderTextField(
-                controller: p.bankAccountC,
-                labelText: "Rekening Atas Nama",
-                hintText: "Atas Nama",
-                // hintText: "Enter your name",
-              ),
-              SizedBox(
-                height: 12,
-              ),
-              fileButton(title: 'File NPWP', onChoose: (_) {}),
-              SizedBox(
-                height: 12,
-              ),
-              fileButton(title: 'File No. KTP / Identitas', onChoose: (_) {}),
-              SizedBox(
-                height: 12,
-              ),
-              fileButton(title: 'File Buku Rekening', onChoose: (_) {}),
-              SizedBox(
-                height: 12,
-              ),
-              fileButton(title: 'File SP SKP', onChoose: (_) {}),
-              SizedBox(
-                height: 32,
-              )
-            ],
+
+      bottomNavigationBar: AdminSaveBar(
+        accentColor: _accent,
+        gradient: _gradient,
+        onSave: _save,
+      ),
+    );
+  }
+}
+
+
+// ── Bank Row ──────────────────────────────────────────────────────────────────
+class _BankRow extends StatelessWidget {
+  final TextEditingController bankNameC, bankNumberC;
+  const _BankRow({required this.bankNameC, required this.bankNumberC});
+
+  @override
+  Widget build(BuildContext context) {
+    InputDecoration _dec(String hint) => InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(fontSize: 12, color: Color(0xffA0AEC0)),
+      filled: true,
+      fillColor: const Color(0xffF8F9FC),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xffE2E4E9))),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xffE2E4E9))),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xff10B981), width: 1.5)),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Bank & No. Rekening', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xff4A5568))),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Expanded(flex: 1, child: TextFormField(controller: bankNameC, style: const TextStyle(fontSize: 13), decoration: _dec('Nama Bank'))),
+            const SizedBox(width: 10),
+            Expanded(flex: 2, child: TextFormField(controller: bankNumberC, style: const TextStyle(fontSize: 13), decoration: _dec('No. Rekening'))),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// ── File Button ───────────────────────────────────────────────────────────────
+class _FileButton extends StatefulWidget {
+  final String title;
+  final Color accent;
+  final List<Color> gradient;
+  final Function(XFile) onChoose;
+  const _FileButton({required this.title, required this.accent, required this.gradient, required this.onChoose});
+
+  @override
+  State<_FileButton> createState() => _FileButtonState();
+}
+
+class _FileButtonState extends State<_FileButton> {
+  String? _fileName;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () async {
+        final result = await FilePicker.platform.pickFiles(allowMultiple: false);
+        if (result != null) {
+          final file = result.files.singleOrNull;
+          if (file != null) {
+            setState(() => _fileName = file.name);
+            widget.onChoose(file.xFile);
+          }
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: _fileName != null ? widget.accent.withOpacity(0.06) : const Color(0xffF8F9FC),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: _fileName != null ? widget.accent.withOpacity(0.3) : const Color(0xffE2E4E9),
           ),
         ),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.white,
-        child: CustomButton.mainButton(
-          'Simpan',
-          borderRadius: BorderRadius.circular(12),
-          () async {
-            // await context
-            //     .read<AddressProvider>()
-            //     .sendAddress(withLoading: true, isEdit: widget.isEdit)
-            //     .then((value) async {
-            //   Utils.showSuccess(
-            //       msg: "Sukses ${widget.isEdit ? "Edit" : "Tambah"} Alamat");
-            //   await Future.delayed(Duration(seconds: 2));
-            //
-            //   Navigator.pop(context, true);
-            //   p.clearAddressForm();
-            //   return true;
-            // }).onError((error, stackTrace) async {
-            //   Utils.showFailed(
-            //       msg: "Gagal ${widget.isEdit ? "Edit" : "Tambah"} Alamat");
-            //   await Future.delayed(Duration(seconds: 2));
-            //   return false;
-            // });
-          },
-          // margin: EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: widget.accent.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                _fileName != null ? Icons.check_circle_outline_rounded : Icons.upload_file_outlined,
+                color: widget.accent, size: 16,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(widget.title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xff4A5568))),
+                  if (_fileName != null) ...[
+                    const SizedBox(height: 2),
+                    Text(_fileName!, style: TextStyle(fontSize: 11, color: widget.accent), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ] else
+                    const Text('Tap untuk memilih file', style: TextStyle(fontSize: 11, color: Color(0xffA0AEC0))),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: const Color(0xffA0AEC0), size: 18),
+          ],
         ),
       ),
     );

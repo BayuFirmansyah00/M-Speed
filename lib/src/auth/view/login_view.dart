@@ -13,6 +13,26 @@ import 'package:sizer/sizer.dart';
 import '../../../../common/helper/constant.dart';
 import '../provider/auth_provider.dart';
 
+class _LoginHeaderClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0, size.height - 40);
+    path.quadraticBezierTo(
+      size.width / 2,
+      size.height,
+      size.width,
+      size.height - 40,
+    );
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
 class LoginView extends StatefulWidget {
   @override
   State<LoginView> createState() => _LoginViewState();
@@ -28,100 +48,129 @@ class _LoginViewState extends BaseState<LoginView> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+
+    Widget header() {
+      return ClipPath(
+        clipper: _LoginHeaderClipper(),
+        child: Container(
+          height: 26.h,
+          width: 100.w,
+          color: Constant.primaryColor,
+        ),
+      );
+    }
+
+    Widget logoBadge() {
+      return Container(
+        padding: EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.12),
+              blurRadius: 16,
+              offset: Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Image.asset(
+          'assets/icons/ic-mspeed-rectangle2.png',
+          scale: 6,
+        ),
+      );
+    }
+
     Widget form() {
       return Padding(
-        padding: EdgeInsets.only(top: 13),
+        padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
         child: Form(
           key: auth.loginKey,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Container(
-                margin: EdgeInsets.only(top: 45),
-                child: Center(
-                    child: Image.asset(
-                  'assets/icons/ic-mspeed-rectangle2.png',
-                  scale: 7,
-                )),
-              ),
-              SizedBox(height: 15),
               Center(
                 child: Text(
-                  "Selamat Datang di M-Speed",
+                  "Selamat Datang Kembali",
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.black,
-                      fontWeight: FontWeight.w600),
+                    fontSize: 20,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-              SizedBox(
-                height: 15,
-              ),
-              Container(
-                padding: EdgeInsets.only(left: 35),
+              SizedBox(height: 6),
+              Center(
                 child: Text(
-                  "Email",
+                  "Masuk ke akun M-Speed kamu untuk melanjutkan",
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.black,
-                      fontWeight: FontWeight.normal),
+                    fontSize: 13,
+                    color: Constant.grayColor,
+                    fontWeight: FontWeight.normal,
+                  ),
                 ),
               ),
-              SizedBox(
-                height: 5,
-              ),
+              SizedBox(height: 32),
               CustomTextField.borderTextField(
-                padding: EdgeInsets.symmetric(horizontal: 30),
                 controller: auth.usernameC,
-                fillColor: Colors.white,
+                fillColor: Color(0xffF5F6FA),
                 hintColor: Constant.grayColor,
-                hintText: "Email",
-                labelFontSize: 20,
-                labelFontWeight: FontWeight.bold,
-                labelColor: Constant.grayColor,
-                borderColor: Constant.grayColor,
-              ),
-              SizedBox(height: 15),
-              Container(
-                padding: EdgeInsets.only(left: 35),
-                child: Text(
-                  "Password",
-                  style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.black,
-                      fontWeight: FontWeight.normal),
+                hintText: "Masukkan email kamu",
+                labelText: "Email",
+                labelFontSize: 13,
+                labelFontWeight: FontWeight.w600,
+                labelColor: Colors.black,
+                borderColor: Color(0xffE2E4E9),
+                required: false,
+                borderRadius: BorderRadius.circular(14),
+                prefix: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Icon(
+                    Icons.mail_outline_rounded,
+                    color: Constant.grayColor,
+                    size: 20,
+                  ),
                 ),
               ),
-              SizedBox(
-                height: 5,
-              ),
+              SizedBox(height: 16),
               CustomTextField.borderTextField(
-                padding: EdgeInsets.symmetric(horizontal: 30),
                 controller: auth.passC,
-                fillColor: Colors.white,
+                fillColor: Color(0xffF5F6FA),
                 hintColor: Constant.grayColor,
-                hintText: "Password",
-                labelFontSize: 20,
-                labelFontWeight: FontWeight.bold,
-                labelColor: Constant.grayColor,
-                borderColor: Constant.grayColor,
+                hintText: "Masukkan password kamu",
+                labelText: "Password",
+                labelFontSize: 13,
+                labelFontWeight: FontWeight.w600,
+                labelColor: Colors.black,
+                borderColor: Color(0xffE2E4E9),
+                required: false,
+                borderRadius: BorderRadius.circular(14),
                 obscureText: auth.obscurePass,
                 onEditingComplete: () async {
                   await context.read<AuthProvider>().login(context);
                 },
+                prefix: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Icon(
+                    Icons.lock_outline_rounded,
+                    color: Constant.grayColor,
+                    size: 20,
+                  ),
+                ),
                 suffixIcon: InkWell(
                   onTap: () => auth.toggleObscurePass(),
                   child: Icon(
                     auth.obscurePass ? Icons.visibility_off : Icons.visibility,
                     color: Constant.grayColor,
+                    size: 20,
                   ),
                 ),
               ),
               SizedBox(height: 10),
-              Container(
-                padding: EdgeInsets.only(right: 27),
-                width: 100.w,
+              Align(
+                alignment: Alignment.centerRight,
                 child: InkWell(
                   onTap: () async {
                     Navigator.push(
@@ -131,60 +180,63 @@ class _LoginViewState extends BaseState<LoginView> {
                   },
                   child: Text(
                     "Lupa Password?",
-                    textAlign: TextAlign.right,
                     style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         color: Constant.primaryColor,
                         fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
-              SizedBox(height: 10),
+              SizedBox(height: 24),
               CustomButton.mainButton(
                 "Sign In",
                 () async {
                   await context.read<AuthProvider>().login(context);
                 },
                 textStyle: TextStyle(
-                    fontSize: 14,
+                    fontSize: 15,
                     color: Colors.white,
-                    fontWeight: FontWeight.w500),
-                contentPadding: EdgeInsets.all(10),
-                borderRadius: BorderRadius.circular(10),
-                margin: EdgeInsets.symmetric(horizontal: 30),
+                    fontWeight: FontWeight.w600),
+                contentPadding: EdgeInsets.symmetric(vertical: 15),
+                borderRadius: BorderRadius.circular(14),
+                margin: EdgeInsets.zero,
               ),
-              SizedBox(height: 10),
-              InkWell(
-                onTap: () async {
-                  // Navigator.push(
-                  //     context,
-                  //     MaterialPageRoute(
-                  //         builder: (context) => SplashView()));
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Belum Punya Akun Vendor? ",
-                      textAlign: TextAlign.right,
+              SizedBox(height: 28),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Divider(color: Color(0xffE2E4E9), thickness: 1),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      "Vendor Baru?",
                       style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.black,
-                          fontWeight: FontWeight.w500),
-                    ),InkWell(
-                      onTap: () {
-                        CusNav.nPush(context, SellerRegisterView());
-                      },
-                      child: Text(
-                        " Daftar",
-                        textAlign: TextAlign.right,
-                        style: TextStyle(
-                            fontSize: 14,
-                            color: Constant.primaryColor,
-                            fontWeight: FontWeight.w600),
+                        fontSize: 12,
+                        color: Constant.grayColor,
                       ),
                     ),
-                  ],
+                  ),
+                  Expanded(
+                    child: Divider(color: Color(0xffE2E4E9), thickness: 1),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16),
+              CustomButton.secondaryButton(
+                "Daftar Sebagai Vendor",
+                () {
+                  CusNav.nPush(context, SellerRegisterView());
+                },
+                color: Constant.primaryColor,
+                contentPadding: EdgeInsets.symmetric(vertical: 13),
+                borderRadius: BorderRadius.circular(14),
+                margin: EdgeInsets.zero,
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  color: Constant.primaryColor,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -196,34 +248,22 @@ class _LoginViewState extends BaseState<LoginView> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
-        child: Stack(
+        physics: ClampingScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              height: 100.h,
-              width: 100.w,
-              padding: EdgeInsets.only(bottom: 6.h),
-              decoration: BoxDecoration(
-                color: Constant.primaryColor,
-                // image: DecorationImage(
-                //   image: AssetImage(
-                //       'assets/images/img-bg-login.png',), // Ganti dengan URL gambar Anda
-                //   fit: BoxFit.fill, // Menyesuaikan ukuran gambar dengan Container
-                // ),
-              ),
-              child: Image.asset(
-                'assets/images/img-bg-login.png',
-                fit: BoxFit.fill,
-              ),
+            Stack(
+              alignment: Alignment.bottomCenter,
+              clipBehavior: Clip.none,
+              children: [
+                header(),
+                Positioned(
+                  bottom: -32,
+                  child: logoBadge(),
+                ),
+              ],
             ),
-            Positioned(
-                top: 72.h,
-                left: 0,
-                right: 0,
-                child: Center(
-                    child: Image.asset(
-                  'assets/images/img-under-login.png',
-                  scale: 2.8,
-                ))),
+            SizedBox(height: 48),
             form(),
           ],
         ),

@@ -56,6 +56,7 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
 
   String? profilePic;
   String? name;
+  String? email;
 
   List<FlSpot> graphList = [];
 
@@ -96,7 +97,8 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
     var userId = await prefs.getString(Constant.kSetPrefId);
     var firstName = await prefs.getString(Constant.kSetPrefFirstName);
     var lastName = await prefs.getString(Constant.kSetPrefLastName);
-    name = (firstName ?? '') + ' ' + (lastName ?? '');
+    name = ((firstName ?? '') + ' ' + (lastName ?? '')).trim();
+    email = await prefs.getString(Constant.kSetPrefEmail);
     Map<String, String> body = {'status': selectedPeriodeData ?? '0'};
     if (selectedPeriodeData == '1' && selectedDate != null)
       body.addAll({

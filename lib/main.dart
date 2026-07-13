@@ -12,6 +12,8 @@ import 'package:mspeed/src/admin/user/provider/admin_form_manager_provider.dart'
 import 'package:mspeed/src/admin/user/provider/admin_form_audit_provider.dart';
 import 'package:mspeed/src/admin/user/provider/admin_form_penerima_provider.dart';
 import 'package:mspeed/src/admin/user/provider/admin_form_seller_provider.dart';
+import 'package:mspeed/src/admin/user/provider/admin_form_manager_provider.dart';
+import 'package:mspeed/src/admin/user/provider/admin_form_audit_provider.dart';
 import 'package:mspeed/src/admin/user/provider/admin_user_provider.dart';
 import 'package:mspeed/src/auth/provider/register_provider.dart';
 import 'package:mspeed/src/auth/view/confirmation_view.dart';
@@ -87,6 +89,52 @@ part 'common/routes.dart';
 void main() async {
   runZonedGuarded(() async {
     await WidgetsFlutterBinding.ensureInitialized();
+
+    // Global EasyLoading configuration
+    EasyLoading.instance
+      ..loadingStyle = EasyLoadingStyle.custom
+      ..maskType = EasyLoadingMaskType.black
+      ..backgroundColor = Colors.transparent
+      ..boxShadow = []
+      ..dismissOnTap = false
+      ..indicatorWidget = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.12),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 44,
+              height: 44,
+              child: CircularProgressIndicator(
+                strokeWidth: 4,
+                valueColor: AlwaysStoppedAnimation<Color>(Constant.primaryColor),
+                backgroundColor: Constant.primaryColor.withOpacity(0.12),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Mohon tunggu...',
+              style: TextStyle(
+                color: Color(0xff100629),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                decoration: TextDecoration.none,
+              ),
+            ),
+          ],
+        ),
+      );
 
     await requestPermission(Permission.notification);
 
@@ -285,6 +333,10 @@ class MyApp extends StatelessWidget {
                   create: (context) => AdminFormKeuanganProvider()),
               ChangeNotifierProvider<AdminFormPenerimaProvider>(
                   create: (context) => AdminFormPenerimaProvider()),
+              ChangeNotifierProvider<AdminFormManagerProvider>(
+                  create: (context) => AdminFormManagerProvider()),
+              ChangeNotifierProvider<AdminFormAuditProvider>(
+                  create: (context) => AdminFormAuditProvider()),
               ChangeNotifierProvider<NegoSellerProvider>(
                   create: (context) => NegoSellerProvider()),
               ChangeNotifierProvider<ProductProvider>(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mspeed/common/component/custom_appbar.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
+import 'package:mspeed/common/helper/Constant.dart';
 import 'package:mspeed/src/admin/transaksi/model/order_admin_model.dart';
 import 'package:mspeed/src/admin/transaksi/provider/transaction_admin_provider.dart';
 import 'package:mspeed/src/admin/transaksi/view/detail_pesanan_admin_view.dart';
@@ -15,32 +15,22 @@ class DataOrderAdminView extends StatefulWidget {
 }
 
 class _DataOrderAdminViewState extends State<DataOrderAdminView> {
-  // Palet Warna Identitas
-  final Color appRed = const Color(0xFFED1C24);
-  final Color oceanBlue = const Color(0xFF0096C7);
-  final Color orangeAcc = const Color(0xFFFF9800);
-
-  OrderAdminModel data = OrderAdminModel();
-  bool _isLoading = true;
+  static const _gradient = [Color(0xffF97316), Color(0xffEA580C)];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final p = context.read<TransactionAdminProvider>();
-      p.searchOrderC.clear();
-      refresh();
-    });
+    refresh();
+    final p = context.read<TransactionAdminProvider>();
+    p.searchOrderC.clear();
   }
 
-  Future<void> refresh({String q = ''}) async {
-    setState(() => _isLoading = true);
-    try {
-      // Kita matikan withLoading (global blocker) agar UX lebih baik
-      await context.read<TransactionAdminProvider>().fetchList2(withLoading: false, search: q);
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+  OrderAdminModel data = OrderAdminModel();
+
+  void refresh({String q = ''}) {
+    context
+        .read<TransactionAdminProvider>()
+        .fetchList2(withLoading: true, search: q);
   }
 
   @override
@@ -49,167 +39,304 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
     final searchC = context.read<TransactionAdminProvider>().searchOrderC;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F9),
-      appBar: CustomAppBar.appBar(
-        context,
-        'Data Order',
-        color: Colors.white,
-        isCenter: true,
-        textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Column(
-        children: [
-          _buildSearchBar(searchC),
-          Expanded(
-            child: _isLoading
-                ? Center(child: CircularProgressIndicator(color: appRed))
-                : (data.data == null || data.data!.isEmpty)
-                    ? _buildEmptyState()
-                    : RefreshIndicator(
-                        color: appRed,
-                        onRefresh: () => refresh(),
-                        child: ListView.separated(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          itemCount: data.data?.length ?? 0,
-                          separatorBuilder: (_, __) => const SizedBox(height: 12),
-                          itemBuilder: (context, index) {
-                            final model = data.data?[index];
-                            return _buildOrderCard(model);
-                          },
+      backgroundColor: const Color(0xffF5F6FA),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          refresh(q: searchC.text);
+        },
+        child: CustomScrollView(
+          slivers: [
+            // ── Gradient SilverAppBar ──
+            SliverAppBar(
+              pinned: true,
+              expandedHeight: 120,
+              backgroundColor: _gradient[1],
+              surfaceTintColor: Colors.transparent,
+              leading: IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+              ),
+              flexibleSpace: FlexibleSpaceBar(
+                background: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: _gradient,
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        right: -20,
+                        top: -20,
+                        child: Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.08),
+                            shape: BoxShape.circle,
+                          ),
                         ),
                       ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearchBar(TextEditingController controller) {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF3F4F6),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
-        child: TextField(
-          controller: controller,
-          onSubmitted: (val) => refresh(q: val),
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            hintText: "Cari nomor order...",
-            hintStyle: const TextStyle(color: Colors.black45, fontSize: 14),
-            prefixIcon: Icon(Icons.search, color: appRed),
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.receipt_long_outlined, size: 72, color: orangeAcc.withOpacity(0.5)),
-          const SizedBox(height: 16),
-          const Text(
-            "Belum ada pesanan",
-            style: TextStyle(fontSize: 16, color: Colors.black54, fontWeight: FontWeight.w600),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOrderCard(dynamic model) {
-    final totalOrderStr = model?.total ?? '0';
-    final totalOrder = int.tryParse(totalOrderStr.split('.')[0]) ?? 0;
-
-    return InkWell(
-      onTap: () {
-        CusNav.nPush(context, DetailPesananAdminView(transaction_id: model?.ID ?? ""));
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            )
-          ],
-          border: Border(left: BorderSide(color: oceanBlue, width: 4)),
-        ),
-        child: Column(
-          children: [
-            // Baris Atas: No Order & Total (Informasi paling penting)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Nomor Order', style: TextStyle(color: Colors.black54, fontSize: 11)),
-                      const SizedBox(height: 2),
-                      Text(
-                        model?.nomorOrder ?? '-',
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 60, 20, 16),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.18),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.assignment_rounded,
+                                  color: Colors.white, size: 22),
+                            ),
+                            const SizedBox(width: 12),
+                            const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Data Order',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  'Riwayat dan status semua pesanan masuk',
+                                  style: TextStyle(
+                                      fontSize: 12, color: Colors.white70),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    const Text('Total Harga', style: TextStyle(color: Colors.black54, fontSize: 11)),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Rp ${Utils.thousandSeparator(totalOrder, symbol: '')}',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: appRed),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Divider(height: 1, color: Color(0xFFEEEEEE)),
+              ),
             ),
 
-            // Baris Bawah: Buyer, Seller, Tanggal
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: _buildInfoColumn(Icons.person_outline, 'Buyer / Penerima', '${model?.BuyerName ?? '-'}\n${model?.PenerimaName ?? '-'}'),
+            // ── Search Bar ──
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: searchC,
+                    onSubmitted: (val) {
+                      refresh(q: val);
+                    },
+                    textInputAction: TextInputAction.search,
+                    style: const TextStyle(fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'Cari berdasarkan no order atau nama...',
+                      hintStyle:
+                          const TextStyle(color: Color(0xffA0AEC0), fontSize: 13),
+                      prefixIcon: const Icon(Icons.search_rounded,
+                          color: Color(0xffA0AEC0), size: 20),
+                      suffixIcon: searchC.text.isNotEmpty
+                          ? GestureDetector(
+                              onTap: () {
+                                searchC.clear();
+                                refresh();
+                              },
+                              child: const Icon(Icons.close_rounded,
+                                  color: Color(0xffA0AEC0), size: 18),
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                    ),
+                  ),
                 ),
-                Expanded(
-                  flex: 2,
-                  child: _buildInfoColumn(Icons.storefront_outlined, 'Seller', model?.SellerName ?? '-'),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: _buildInfoColumn(Icons.calendar_today_outlined, 'Tanggal', model?.tglTtdSuratPesanan ?? '-'),
-                ),
-              ],
+              ),
+            ),
+
+            // ── Data List ──
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              sliver: (data.data?.isEmpty ?? true)
+                  ? const SliverFillRemaining(
+                      child: Center(
+                        child: Text(
+                          'Tidak ada data order.',
+                          style: TextStyle(color: Color(0xff8A93A3)),
+                        ),
+                      ),
+                    )
+                  : SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final model = data.data?[index];
+                          if (model == null) return const SizedBox.shrink();
+                          return _OrderCard(
+                            model: model,
+                            onTap: () {
+                              CusNav.nPush(
+                                context,
+                                DetailPesananAdminView(
+                                  transaction_id: model.ID ?? "",
+                                ),
+                              );
+                            },
+                          );
+                        },
+                        childCount: data.data?.length ?? 0,
+                      ),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Order Card Widget ────────────────────────────────────────────────────────
+class _OrderCard extends StatelessWidget {
+  final OrderAdminModelData model;
+  final VoidCallback onTap;
+
+  const _OrderCard({required this.model, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header (No order & Tanggal)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xffF97316).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.assignment_rounded,
+                            color: Color(0xffF97316), size: 16),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        model.nomorOrder ?? '-',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            color: Color(0xff100629)),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xffF5F6FA),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_today_rounded,
+                            size: 10, color: Color(0xff8A93A3)),
+                        const SizedBox(width: 4),
+                        Text(
+                          model.tglTtdSuratPesanan ?? '-',
+                          style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xff8A93A3)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: Color(0xffF0F0F0)),
+            // Body Info (Buyer, Seller, Penerima)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      _buildInfoIcon(Icons.person_outline_rounded,
+                          Colors.blue, 'Buyer', model.BuyerName ?? '-'),
+                      const SizedBox(width: 16),
+                      _buildInfoIcon(Icons.storefront_rounded,
+                          Colors.green, 'Seller', model.SellerName ?? '-'),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: _buildInfoIcon(Icons.person_pin_rounded,
+                            Colors.purple, 'Penerima', model.PenerimaName ?? '-'),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const Text(
+                            'Total Pembayaran',
+                            style: TextStyle(
+                                fontSize: 11, color: Color(0xff8A93A3)),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Rp ${Utils.thousandSeparator(
+                              int.parse(
+                                  model.total?.split('.').firstOrNull ?? '0'),
+                              symbol: '',
+                            )}',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 15,
+                                color: Color(0xffEA580C)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -217,25 +344,45 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
     );
   }
 
-  Widget _buildInfoColumn(IconData icon, String title, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 12, color: orangeAcc),
-            const SizedBox(width: 4),
-            Text(title, style: const TextStyle(color: Colors.black54, fontSize: 11)),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black87),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
+  Widget _buildInfoIcon(
+      IconData icon, Color iconColor, String label, String value) {
+    return Expanded(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.08),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: iconColor, size: 14),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style:
+                      const TextStyle(fontSize: 10, color: Color(0xff8A93A3)),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xff100629)),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

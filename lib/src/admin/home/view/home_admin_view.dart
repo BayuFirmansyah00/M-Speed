@@ -9,7 +9,7 @@ import 'package:mspeed/common/component/custom_dropdown.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/common/helper/constant.dart';
 import 'package:mspeed/generated/assets.dart';
-import 'package:mspeed/src/admin/home/model/home_admin_model.dart';
+
 import 'package:mspeed/src/admin/home/view/home_admin_graph_view.dart';
 import 'package:mspeed/src/admin/home/view/home_admin_transaction_graph.dart';
 import 'package:mspeed/src/auth/provider/auth_provider.dart';
@@ -81,55 +81,107 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
     // final tableTransaksi =
     //     context.watch<AdminHomeProvider>().homeAdminModel.data?.transaksi;
     PreferredSizeWidget appBar() {
+      final nameToShow = (p.name != null && p.name!.trim().isNotEmpty) ? p.name! : 'Admin M-Speed';
+      final emailToShow = (p.email != null && p.email!.trim().isNotEmpty) ? p.email! : 'administrator@mspeed.id';
+
       return AppBar(
         surfaceTintColor: Colors.white,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
-        toolbarHeight: kToolbarHeight + 8,
+        toolbarHeight: kToolbarHeight + 16,
         elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            color: const Color(0xffE4E6EF),
+            height: 1,
+          ),
+        ),
         leading: Padding(
           padding: const EdgeInsets.only(left: 16),
-          child: Image.asset(Assets.iconsIcSellerProfile, scale: 2),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Constant.primaryColor, Constant.primaryColor.withOpacity(0.8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Constant.primaryColor.withOpacity(0.24),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.admin_panel_settings_rounded, color: Colors.white, size: 20),
+          ),
         ),
-        leadingWidth: 56,
+        leadingWidth: 60,
         titleSpacing: 12,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Selamat datang',
-              style: TextStyle(color: Color(0xff6D7588), fontSize: 14),
+              nameToShow,
+              style: const TextStyle(
+                color: Color(0xff100629),
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.2,
+              ),
             ),
-            Constant.xSizedBox4,
-            Text(p.name ?? '', style: Constant.blackBold16),
-            Constant.xSizedBox4,
+            const SizedBox(height: 2),
+            Text(
+              emailToShow,
+              style: const TextStyle(
+                color: Color(0xff8A93A3),
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ],
         ),
         actions: <Widget>[
-          IconButton(
-            onPressed: () {
-              handleTap(() async {
-                Utils.showYesNoDialog(
-                  context: context,
-                  title: "Konfirmasi",
-                  desc: "Apakah Anda Yakin ingin Keluar",
-                  yesCallback: () async {
-                    handleTap(() async {
-                      await context.read<AuthProvider>().logout();
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (context) => LoginView()),
-                        (Route<dynamic> route) => false,
-                      );
-                    });
-                  },
-                  noCallback: () {
-                    Navigator.pop(context);
-                  },
-                );
-              });
-            },
-            icon: Icon(Icons.logout, size: 24, color: Constant.primaryColor),
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: IconButton(
+              style: IconButton.styleFrom(
+                backgroundColor: const Color(0xffED1C24).withOpacity(0.08),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () {
+                handleTap(() async {
+                  Utils.showYesNoDialog(
+                    context: context,
+                    title: "Konfirmasi",
+                    desc: "Apakah Anda Yakin ingin Keluar?",
+                    yesCallback: () async {
+                      handleTap(() async {
+                        await context.read<AuthProvider>().logout();
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => LoginView()),
+                          (Route<dynamic> route) => false,
+                        );
+                      });
+                    },
+                    noCallback: () {
+                      Navigator.pop(context);
+                    },
+                  );
+                });
+              },
+              icon: const Icon(
+                Icons.power_settings_new_rounded,
+                size: 20,
+                color: Color(0xffED1C24),
+              ),
+            ),
           ),
         ],
       );
@@ -210,40 +262,61 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
       required String icon,
       required String title,
       required String subtitle,
-      required Color bgColor,
-      required Color titleColor,
+      required List<Color> gradientColors,
+      required Color iconBg,
+      required Color countColor,
     }) {
       return Container(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
         decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(8),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: gradientColors,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: gradientColors.last.withOpacity(0.22),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.asset(
-              icon,
-              width: 35,
-              height: 35,
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Image.asset(
+                icon,
+                width: 18,
+                height: 18,
+              ),
             ),
-            Constant.xSizedBox8,
+            const SizedBox(height: 12),
             Text(
               title,
               textAlign: TextAlign.left,
               style: TextStyle(
-                color: titleColor,
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
+                color: countColor,
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
               ),
             ),
+            const SizedBox(height: 3),
             Text(
               subtitle,
               textAlign: TextAlign.left,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Color(0xff6D7588),
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -253,12 +326,52 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
 
     Widget headerInfo2() {
       return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Jumlah User Terdaftar'),
-            Constant.xSizedBox8,
+            Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xffBF83FF), Color(0xff6C47FF)],
+                    ),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Text(
+                  'Jumlah User Terdaftar',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xff100629),
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xffF3E8FF),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${model?.totalUser ?? '0'} total',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xffBF83FF),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -266,29 +379,32 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                   child: headerInfoItem2(
                     icon: Assets.iconsIcAdminTotalUser,
                     title: model?.totalUser ?? '0',
-                    bgColor: Color(0xffF3E8FF),
-                    titleColor: Color(0xffBF83FF),
+                    gradientColors: const [Color(0xffFAF0FF), Color(0xffF0E2FF)],
+                    iconBg: Colors.white.withOpacity(0.75),
+                    countColor: Color(0xffBF83FF),
                     subtitle: 'Total User',
                   ),
                 ),
-                Constant.xSizedBox8,
+                const SizedBox(width: 10),
                 Expanded(
                   child: headerInfoItem2(
                     icon: Assets.iconsIcAdminSeller,
                     title: model?.totalSeller ?? '0',
                     subtitle: 'Seller',
-                    bgColor: Color(0xffDCFCE7),
-                    titleColor: Color(0xff1ABC62),
+                    gradientColors: const [Color(0xffF0FFF7), Color(0xffDCFCE7)],
+                    iconBg: Colors.white.withOpacity(0.75),
+                    countColor: Color(0xff1ABC62),
                   ),
                 ),
-                Constant.xSizedBox8,
+                const SizedBox(width: 10),
                 Expanded(
                   child: headerInfoItem2(
                     icon: Assets.iconsIcAdminBuyer,
                     title: model?.totalBuyer ?? '0',
                     subtitle: 'Buyer',
-                    bgColor: Color(0xffFFF4DE),
-                    titleColor: Color(0xffFF947A),
+                    gradientColors: const [Color(0xffFFFBF0), Color(0xffFFF4DE)],
+                    iconBg: Colors.white.withOpacity(0.75),
+                    countColor: Color(0xffFF947A),
                   ),
                 ),
               ],
@@ -383,476 +499,716 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
     //   );
     // }
 
-    TableRow favouriteItem({
-      required int index,
-      required HomeAdminModelDataTproduk? data,
-    }) {
-      return TableRow(
-        decoration: BoxDecoration(color: Colors.transparent),
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 8, top: 8),
-            child: Text(
-              '#${index + 1}',
-              textAlign: TextAlign.left,
-              style: TextStyle(
-                color: Color(0xff100629),
-                fontSize: 12,
-              ),
+
+    void _showBuyerSheet(List items) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        isDismissible: true,
+        enableDrag: true,
+        barrierColor: Colors.black.withOpacity(0.5),
+        backgroundColor: Colors.transparent,
+        builder: (_) => DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          maxChildSize: 0.92,
+          minChildSize: 0.4,
+          builder: (_, sc) => Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                Container(width: 40, height: 4, decoration: BoxDecoration(color: Color(0xffE4E6EF), borderRadius: BorderRadius.circular(4))),
+                const SizedBox(height: 14),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Container(width: 36, height: 36, decoration: BoxDecoration(color: Constant.primaryColor.withOpacity(0.12), borderRadius: BorderRadius.circular(10)), child: Icon(Icons.people_alt_rounded, color: Constant.primaryColor, size: 18)),
+                      const SizedBox(width: 10),
+                      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        const Text('Transaksi Buyer', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xff100629))),
+                        Text('${items.length} buyer', style: TextStyle(fontSize: 12, color: Constant.primaryColor)),
+                      ]),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Divider(height: 1, color: Color(0xffF0F0F0)),
+                Expanded(
+                  child: ListView.separated(
+                    controller: sc,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1, indent: 60, endIndent: 16, color: Color(0xffF0F0F0)),
+                    itemBuilder: (_, i) {
+                      final item = items[i];
+                      final initial = (item?.email ?? '-').isNotEmpty ? (item?.email ?? '-')[0].toUpperCase() : '?';
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        child: Row(
+                          children: [
+                            Container(width: 34, height: 34, decoration: BoxDecoration(color: Constant.primaryColor.withOpacity(0.12), shape: BoxShape.circle), alignment: Alignment.center,
+                              child: Text(initial, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Constant.primaryColor))),
+                            const SizedBox(width: 12),
+                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              Text(item?.email ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xff100629))),
+                              const SizedBox(height: 2),
+                              Text('\${item?.qty} transaksi', style: const TextStyle(fontSize: 11, color: Color(0xff8A93A3))),
+                            ])),
+                            const SizedBox(width: 8),
+                            Text(Utils.thousandSeparator(int.parse(item?.harga ?? '0')), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Constant.primaryColor)),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              data?.nama ?? '',
-              textAlign: TextAlign.left,
-              style: TextStyle(
-                color: Color(0xff100629),
-                fontSize: 12,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              data?.qty ?? '',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Color(0xff100629),
-                fontSize: 12,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 8, right: 4),
-            child: Text(
-              Utils.thousandSeparator(int.parse(data?.harga ?? '')),
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                color: Color(0xff100629),
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ],
+        ),
       );
-    }
-
-    List<TableRow> tableFavouriteProduct() {
-      return List.generate(model?.tproduk?.length ?? 0, (i) {
-        final item = model?.tproduk?[i];
-        return favouriteItem(index: i, data: item);
-      });
-    }
-
-    TableRow buyerItem(
-        {required int index, required HomeAdminModelDataTbuyer? data}) {
-      return TableRow(
-        decoration: BoxDecoration(color: Colors.transparent),
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 8, top: 8),
-            child: Text(
-              '#${index + 1}',
-              textAlign: TextAlign.left,
-              style: TextStyle(
-                color: Color(0xff100629),
-                fontSize: 12,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              data?.email ?? '',
-              textAlign: TextAlign.left,
-              style: TextStyle(
-                color: Color(0xff100629),
-                fontSize: 12,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              data?.qty ?? '',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Color(0xff100629),
-                fontSize: 12,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 8, right: 4),
-            child: Text(
-              Utils.thousandSeparator(int.parse(data?.harga ?? '')),
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                color: Color(0xff100629),
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-
-    List<TableRow> tableBuyerTransaction() {
-      return List.generate(model?.tbuyer?.length ?? 0, (i) {
-        final item = model?.tbuyer?[i];
-        return buyerItem(index: i, data: item);
-      });
     }
 
     Widget buyerTransaction() {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      final items = model?.tbuyer ?? [];
+      final preview = items.take(3).toList();
+      return Container(
+        margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 18, offset: const Offset(0, 6))],
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Transaksi Buyer'),
-            Constant.xSizedBox8,
-            Table(
-              border: TableBorder.all(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(5)),
-              columnWidths: const <int, TableColumnWidth>{
-                0: IntrinsicColumnWidth(flex: 0.5),
-                1: FlexColumnWidth(),
-                2: FlexColumnWidth(),
-                3: FlexColumnWidth(),
-              },
-              defaultVerticalAlignment: TableCellVerticalAlignment.top,
-              children: [
-                // title
-                TableRow(
-                  decoration: BoxDecoration(color: Color(0xffDEEDFF)),
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [Constant.primaryColor.withOpacity(0.07), Constant.primaryColor.withOpacity(0.13)]),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Row(
+                children: [
+                  Container(width: 38, height: 38,
+                    decoration: BoxDecoration(color: Constant.primaryColor.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
+                    child: Icon(Icons.people_alt_rounded, color: Constant.primaryColor, size: 20)),
+                  const SizedBox(width: 12),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    const Text('Transaksi Buyer', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xff100629))),
+                    const SizedBox(height: 2),
+                    const Text('Daftar transaksi per buyer', style: TextStyle(fontSize: 11, color: Color(0xff96A5B8))),
+                  ])),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(color: Constant.primaryColor.withOpacity(0.12), borderRadius: BorderRadius.circular(20)),
+                    child: Text('${items.length} buyer', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Constant.primaryColor)),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: Color(0xffF0F0F0)),
+            if (items.isEmpty)
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
+                child: Text('Belum ada data', style: TextStyle(color: Color(0xff8A93A3), fontSize: 13)),
+              )
+            else
+              ...List.generate(preview.length, (i) {
+                final item = preview[i];
+                final isLast = i == preview.length - 1 && items.length <= 3;
+                final initial = (item?.email ?? '-').isNotEmpty ? (item?.email ?? '-')[0].toUpperCase() : '?';
+                return Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 8),
-                      child: Text(
-                        '#',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xff100629),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      child: Row(
+                        children: [
+                          Container(width: 34, height: 34,
+                            decoration: BoxDecoration(color: Constant.primaryColor.withOpacity(0.12), shape: BoxShape.circle),
+                            alignment: Alignment.center,
+                            child: Text(initial, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Constant.primaryColor))),
+                          const SizedBox(width: 12),
+                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text(item?.email ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xff100629))),
+                            const SizedBox(height: 2),
+                            Text('${item?.qty} transaksi', style: const TextStyle(fontSize: 11, color: Color(0xff8A93A3))),
+                          ])),
+                          const SizedBox(width: 8),
+                          Text(Utils.thousandSeparator(int.parse(item?.harga ?? '0')), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Constant.primaryColor)),
+                        ],
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 8),
-                      child: Text(
-                        'Email',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xff100629),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 8),
-                      child: Text(
-                        'Qty',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xff100629),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 8),
-                      child: Text(
-                        'Amount',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xff100629),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
+                    if (!isLast) const Divider(height: 1, indent: 60, endIndent: 16, color: Color(0xffF0F0F0)),
                   ],
+                );
+              }),
+            if (items.length > 3)
+              GestureDetector(
+                onTap: () => _showBuyerSheet(items),
+                child: Container(
+                  margin: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  decoration: BoxDecoration(
+                    color: Constant.primaryColor.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Constant.primaryColor.withOpacity(0.2)),
+                  ),
+                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Text('Lihat Selengkapnya', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Constant.primaryColor)),
+                    const SizedBox(width: 4),
+                    Icon(Icons.arrow_forward_rounded, size: 14, color: Constant.primaryColor),
+                  ]),
                 ),
-                // content
-                ...tableBuyerTransaction(),
-              ],
-            ),
+              )
+            else
+              const SizedBox(height: 8),
           ],
         ),
       );
     }
 
     Widget productSellingGraph() {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+      return Container(
+        margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              height: 16,
+            // ── Header gradient accent ──
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xffFFF8EF), Color(0xffFFF3E4)],
+                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: const Color(0xffFF9900).withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.shopping_bag_rounded,
+                      color: Color(0xffF58B2B),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Jumlah Pembelian Barang',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xff100629),
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Trend bulanan per produk',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Color(0xff96A5B8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      SizedBox(
+                          width: 18,
+                          child: Image.asset(Assets.iconsIcQuantityLegend)),
+                      const SizedBox(width: 5),
+                      const Text(
+                        'Qty',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xffF58B2B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            Text('Jumlah Pembelian Barang'),
-            HomeAdminGraphView(),
-            Constant.xSizedBox4,
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                    width: 30,
-                    child: Image.asset(Assets.iconsIcQuantityLegend)),
-                Constant.xSizedBox8,
-                Text('Quantity', style: TextStyle(color: Color(0xff96A5B8))),
-              ],
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Divider(height: 1, color: Color(0xffF0F0F0)),
             ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: HomeAdminGraphView(),
+            ),
+            const SizedBox(height: 12),
           ],
         ),
       );
     }
 
     Widget totalTransactionGraph() {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+      return Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              height: 16,
+            // ── Header gradient accent ──
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xffF0FFF9), Color(0xffDCFCE7)],
+                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: const Color(0xff1ABC62).withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.receipt_long_rounded,
+                      color: Color(0xff1ABC62),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Jumlah Transaksi Seluruh Buyer',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xff100629),
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Ringkasan transaksi buyer',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Color(0xff96A5B8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xff1ABC62).withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'Live',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xff1ABC62),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            Text('Jumlah Transaksi Seluruh Buyer'),
-            HomeAdminTransactionGraph(),
-            Constant.xSizedBox4,
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Divider(height: 1, color: Color(0xffF0F0F0)),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: HomeAdminTransactionGraph(),
+            ),
+            const SizedBox(height: 12),
           ],
+        ),
+      );
+    }
+
+    void _showFavouriteSheet(List items) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        isDismissible: true,
+        enableDrag: true,
+        barrierColor: Colors.black.withOpacity(0.5),
+        backgroundColor: Colors.transparent,
+        builder: (_) => DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          maxChildSize: 0.92,
+          minChildSize: 0.4,
+          builder: (_, sc) => Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                Container(width: 40, height: 4, decoration: BoxDecoration(color: Color(0xffE4E6EF), borderRadius: BorderRadius.circular(4))),
+                const SizedBox(height: 14),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Container(width: 36, height: 36, decoration: BoxDecoration(color: const Color(0xffFFF4DE), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.star_rounded, color: Color(0xffFF947A), size: 18)),
+                      const SizedBox(width: 10),
+                      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        const Text('Produk Terfavorit', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xff100629))),
+                        Text('${items.length} produk', style: const TextStyle(fontSize: 12, color: Color(0xffFF947A))),
+                      ]),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Divider(height: 1, color: Color(0xffF0F0F0)),
+                Expanded(
+                  child: ListView.separated(
+                    controller: sc,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0xffF0F0F0)),
+                    itemBuilder: (_, i) {
+                      final item = items[i];
+                      final rankColors = [Color(0xffFFD700), Color(0xffC0C0C0), Color(0xffCD7F32)];
+                      final rankColor = i < 3 ? rankColors[i] : const Color(0xffE4E6EF);
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        child: Row(
+                          children: [
+                            Container(width: 30, height: 30, decoration: BoxDecoration(color: rankColor.withOpacity(0.15), shape: BoxShape.circle), alignment: Alignment.center,
+                              child: Text('#${i+1}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: rankColor))),
+                            const SizedBox(width: 12),
+                            Expanded(child: Text(item?.nama ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xff100629)))),
+                            const SizedBox(width: 8),
+                            Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: const Color(0xffF5F6FA), borderRadius: BorderRadius.circular(8)),
+                              child: Text('${item?.qty} pcs', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xff6D7588)))),
+                            const SizedBox(width: 8),
+                            Text(Utils.thousandSeparator(int.parse(item?.harga ?? '0')), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xffFF947A))),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       );
     }
 
     Widget favouriteProduct() {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      final items = model?.tproduk ?? [];
+      final preview = items.take(3).toList();
+      return Container(
+        margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 18, offset: const Offset(0, 6))],
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Produk Terfavorit'),
-            Constant.xSizedBox8,
-            Table(
-              border: TableBorder.all(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(5)),
-              columnWidths: const <int, TableColumnWidth>{
-                0: IntrinsicColumnWidth(flex: 0.5),
-                1: FlexColumnWidth(),
-                2: FlexColumnWidth(),
-                3: FlexColumnWidth(),
-              },
-              defaultVerticalAlignment: TableCellVerticalAlignment.top,
-              children: [
-                // title
-                TableRow(
-                  decoration: BoxDecoration(color: Color(0xffFFEEDE)),
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [Color(0xffFFFBF5), Color(0xffFFF4DE)]),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Row(
+                children: [
+                  Container(width: 38, height: 38, decoration: BoxDecoration(color: const Color(0xffFF947A).withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
+                    child: const Icon(Icons.star_rounded, color: Color(0xffFF947A), size: 20)),
+                  const SizedBox(width: 12),
+                  const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('Produk Terfavorit', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xff100629))),
+                    SizedBox(height: 2),
+                    Text('Ranking produk paling banyak dibeli', style: TextStyle(fontSize: 11, color: Color(0xff96A5B8))),
+                  ])),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(color: const Color(0xffFF947A).withOpacity(0.12), borderRadius: BorderRadius.circular(20)),
+                    child: Text('${items.length} produk', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xffFF947A))),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: Color(0xffF0F0F0)),
+            if (items.isEmpty)
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
+                child: Text('Belum ada data', style: TextStyle(color: Color(0xff8A93A3), fontSize: 13)),
+              )
+            else
+              ...List.generate(preview.length, (i) {
+                final item = preview[i];
+                final isLast = i == preview.length - 1 && items.length <= 3;
+                final rankColors = [Color(0xffFFD700), Color(0xffC0C0C0), Color(0xffCD7F32)];
+                final rankColor = i < 3 ? rankColors[i] : const Color(0xffE4E6EF);
+                return Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 8),
-                      child: Text(
-                        '#',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xff100629),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      child: Row(
+                        children: [
+                          Container(width: 30, height: 30, decoration: BoxDecoration(color: rankColor.withOpacity(0.15), shape: BoxShape.circle), alignment: Alignment.center,
+                            child: Text('#${i+1}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: rankColor))),
+                          const SizedBox(width: 12),
+                          Expanded(child: Text(item?.nama ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xff100629)))),
+                          const SizedBox(width: 8),
+                          Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: const Color(0xffF5F6FA), borderRadius: BorderRadius.circular(8)),
+                            child: Text('${item?.qty} pcs', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xff6D7588)))),
+                          const SizedBox(width: 8),
+                          Text(Utils.thousandSeparator(int.parse(item?.harga ?? '0')), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xffFF947A))),
+                        ],
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 8),
-                      child: Text(
-                        'Product',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xff100629),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 8),
-                      child: Text(
-                        'Sales Qty',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xff100629),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 8),
-                      child: Text(
-                        'Amount',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xff100629),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
+                    if (!isLast) const Divider(height: 1, indent: 56, endIndent: 16, color: Color(0xffF0F0F0)),
                   ],
+                );
+              }),
+            if (items.length > 3)
+              GestureDetector(
+                onTap: () => _showFavouriteSheet(items),
+                child: Container(
+                  margin: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  decoration: BoxDecoration(
+                    color: const Color(0xffFF947A).withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xffFF947A).withOpacity(0.2)),
+                  ),
+                  child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Text('Lihat Selengkapnya', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xffFF947A))),
+                    SizedBox(width: 4),
+                    Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xffFF947A)),
+                  ]),
                 ),
-                // content
-                ...tableFavouriteProduct(),
-              ],
-            ),
+              )
+            else
+              const SizedBox(height: 8),
           ],
         ),
       );
     }
 
-    TableRow sellerItem(
-        {required int index, required HomeAdminModelDataTseller? data}) {
-      return TableRow(
-        decoration: BoxDecoration(color: Colors.transparent),
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 8, top: 8),
-            child: Text(
-              '#${index + 1}',
-              textAlign: TextAlign.left,
-              style: TextStyle(
-                color: Color(0xff100629),
-                fontSize: 12,
-              ),
+
+    void _showSellerSheet(List items) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        isDismissible: true,
+        enableDrag: true,
+        barrierColor: Colors.black.withOpacity(0.5),
+        backgroundColor: Colors.transparent,
+        builder: (_) => DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          maxChildSize: 0.92,
+          minChildSize: 0.4,
+          builder: (_, sc) => Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                Container(width: 40, height: 4, decoration: BoxDecoration(color: Color(0xffE4E6EF), borderRadius: BorderRadius.circular(4))),
+                const SizedBox(height: 14),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Container(width: 36, height: 36, decoration: BoxDecoration(color: const Color(0xffF3E8FF), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.storefront_rounded, color: Color(0xff9B59B6), size: 18)),
+                      const SizedBox(width: 10),
+                      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        const Text('Penjualan Seller', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xff100629))),
+                        Text('${items.length} seller', style: const TextStyle(fontSize: 12, color: Color(0xff9B59B6))),
+                      ]),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Divider(height: 1, color: Color(0xffF0F0F0)),
+                Expanded(
+                  child: ListView.separated(
+                    controller: sc,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: items.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1, indent: 60, endIndent: 16, color: Color(0xffF0F0F0)),
+                    itemBuilder: (_, i) {
+                      final item = items[i];
+                      final initial = (item?.email ?? '-').isNotEmpty ? (item?.email ?? '-')[0].toUpperCase() : '?';
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        child: Row(
+                          children: [
+                            Container(width: 34, height: 34, decoration: const BoxDecoration(color: Color(0xffF3E8FF), shape: BoxShape.circle), alignment: Alignment.center,
+                              child: Text(initial, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xff9B59B6)))),
+                            const SizedBox(width: 12),
+                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              Text(item?.email ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xff100629))),
+                              const SizedBox(height: 2),
+                              Text('${item?.qty} penjualan', style: const TextStyle(fontSize: 11, color: Color(0xff8A93A3))),
+                            ])),
+                            const SizedBox(width: 8),
+                            Text(Utils.thousandSeparator(int.parse(item?.harga ?? '0')), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xff9B59B6))),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              data?.email ?? '',
-              textAlign: TextAlign.left,
-              style: TextStyle(
-                color: Color(0xff100629),
-                fontSize: 12,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              data?.qty ?? '',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Color(0xff100629),
-                fontSize: 12,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 8, right: 4),
-            child: Text(
-              Utils.thousandSeparator(int.parse(data?.harga ?? '')),
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                color: Color(0xff100629),
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ],
+        ),
       );
     }
 
-    List<TableRow> tableSeller() {
-      return List.generate(model?.tseller?.length ?? 0, (i) {
-        final item = model?.tseller?[i];
-        return sellerItem(index: i, data: item);
-      });
-    }
-
     Widget sellerTransaction() {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      final items = model?.tseller ?? [];
+      final preview = items.take(3).toList();
+      return Container(
+        margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 18, offset: const Offset(0, 6))],
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Penjualan Seller'),
-            Constant.xSizedBox8,
-            Table(
-              border: TableBorder.all(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(5)),
-              columnWidths: const <int, TableColumnWidth>{
-                0: IntrinsicColumnWidth(flex: 0.5),
-                1: FlexColumnWidth(),
-                2: FlexColumnWidth(),
-                3: FlexColumnWidth(),
-              },
-              defaultVerticalAlignment: TableCellVerticalAlignment.top,
-              children: [
-                // title
-                TableRow(
-                  decoration: BoxDecoration(color: Color(0xFFEEDEFF)),
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+                  colors: [Color(0xffFDF5FF), Color(0xffF3E8FF)]),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Row(
+                children: [
+                  Container(width: 38, height: 38, decoration: BoxDecoration(color: const Color(0xff9B59B6).withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
+                    child: const Icon(Icons.storefront_rounded, color: Color(0xff9B59B6), size: 20)),
+                  const SizedBox(width: 12),
+                  const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('Penjualan Seller', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xff100629))),
+                    SizedBox(height: 2),
+                    Text('Rekap penjualan per seller', style: TextStyle(fontSize: 11, color: Color(0xff96A5B8))),
+                  ])),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(color: const Color(0xff9B59B6).withOpacity(0.12), borderRadius: BorderRadius.circular(20)),
+                    child: Text('${items.length} seller', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xff9B59B6))),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: Color(0xffF0F0F0)),
+            if (items.isEmpty)
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
+                child: Text('Belum ada data', style: TextStyle(color: Color(0xff8A93A3), fontSize: 13)),
+              )
+            else
+              ...List.generate(preview.length, (i) {
+                final item = preview[i];
+                final isLast = i == preview.length - 1 && items.length <= 3;
+                final initial = (item?.email ?? '-').isNotEmpty ? (item?.email ?? '-')[0].toUpperCase() : '?';
+                return Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 8),
-                      child: Text(
-                        '#',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xff100629),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      child: Row(
+                        children: [
+                          Container(width: 34, height: 34, decoration: const BoxDecoration(color: Color(0xffF3E8FF), shape: BoxShape.circle), alignment: Alignment.center,
+                            child: Text(initial, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xff9B59B6)))),
+                          const SizedBox(width: 12),
+                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text(item?.email ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xff100629))),
+                            const SizedBox(height: 2),
+                            Text('${item?.qty} penjualan', style: const TextStyle(fontSize: 11, color: Color(0xff8A93A3))),
+                          ])),
+                          const SizedBox(width: 8),
+                          Text(Utils.thousandSeparator(int.parse(item?.harga ?? '0')), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xff9B59B6))),
+                        ],
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 8),
-                      child: Text(
-                        'Email',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xff100629),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 8),
-                      child: Text(
-                        'Qty',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xff100629),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 8),
-                      child: Text(
-                        'Amount',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Color(0xff100629),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
+                    if (!isLast) const Divider(height: 1, indent: 60, endIndent: 16, color: Color(0xffF0F0F0)),
                   ],
+                );
+              }),
+            if (items.length > 3)
+              GestureDetector(
+                onTap: () => _showSellerSheet(items),
+                child: Container(
+                  margin: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  decoration: BoxDecoration(
+                    color: const Color(0xff9B59B6).withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xff9B59B6).withOpacity(0.2)),
+                  ),
+                  child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Text('Lihat Selengkapnya', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xff9B59B6))),
+                    SizedBox(width: 4),
+                    Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xff9B59B6)),
+                  ]),
                 ),
-                // content
-                ...tableSeller(),
-              ],
-            ),
+              )
+            else
+              const SizedBox(height: 8),
           ],
         ),
       );
@@ -1085,232 +1441,474 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
     Widget body() {
       return SafeArea(
         child: Container(
-          color: Colors.white,
+          color: const Color(0xffF5F6FA),
           child: RefreshIndicator(
             onRefresh: () async {
               await getData();
             },
             child: ListView(
+              padding: const EdgeInsets.only(bottom: 24),
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-                  child: CustomDropdown.normalDropdown(
-                    selectedItem: p.selectedPeriodeData,
-                    list: p.periodeData.entries
-                        .map((item) => DropdownMenuItem(
-                              child: Text(
-                                item.key,
-                                style: TextStyle(color: Constant.primaryColor),
-                              ),
-                              value: item.value,
-                            ))
-                        .toList(),
-                    onChanged: (v) async {
-                      if (v == 'Periode Data Harian') await harian();
-                      if (v == 'Periode Data Bulanan') await bulanan();
-                      if (v == 'Periode Data Tahunan') await tahunan();
-                      p.selectedPeriodeData = v;
-                      await context
-                          .read<AdminHomeProvider>()
-                          .fetchHome(withLoading: true);
-
-                      log('INI SELECTED DATE' + p.selectedDate.toString());
-                      log('INI SELECTED MONTH' + p.selectedMonth.toString());
-                      log('INI SELECTED YEAR' + p.selectedYear.toString());
-                    },
-                    borderColor: Constant.primaryColor,
-                    activeBorderColor: Constant.primaryColor,
-                    iconColor: Constant.primaryColor,
-                    borderWidth: 1,
-                    activeBorderWidth: 1,
+                // ── Filter Card ──────────────────────────────────
+                Container(
+                  margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
+
+                      // ── Header ──
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
                         child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Radio(
-                              value: 0,
-                              groupValue: p.filterType,
-                              visualDensity:
-                                  VisualDensity(vertical: -4, horizontal: -4),
-                              onChanged: (value) {
-                                if (p.filterType != value) {
-                                  setState(() {
-                                    p.filterType = 0;
-                                  });
-                                  p.selectedSellerBuyer = null;
-                                  p.selectedSellerBuyerId = null;
-                                  setState(() {});
-                                  p.fetchSellers(withLoading: true);
-                                }
-                              },
+                            Row(
+                              children: [
+                                Container(
+                                  width: 3,
+                                  height: 16,
+                                  decoration: BoxDecoration(
+                                    color: Constant.primaryColor,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Filter Data',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xff100629),
+                                  ),
+                                ),
+                              ],
                             ),
-                            Text(
-                              'Filter Seller',
-                              style: TextStyle(fontSize: 13),
+                            // Badge selected periode
+                            if (p.selectedPeriodeData != null &&
+                                p.selectedPeriodeData != '0')
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color:
+                                      Constant.primaryColor.withOpacity(0.10),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  p.periodeData.entries
+                                      .firstWhere(
+                                        (e) => e.value == p.selectedPeriodeData,
+                                        orElse: () => const MapEntry('', ''),
+                                      )
+                                      .key,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: Constant.primaryColor,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+
+                      // ── Periode Chip Row ──
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'PERIODE',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xff8A93A3),
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: p.periodeData.entries
+                                  .map((entry) {
+                                final isSelected =
+                                    p.selectedPeriodeData == entry.value;
+                                final isLast =
+                                    entry.key == p.periodeData.keys.last;
+                                return Expanded(
+                                  child: Padding(
+                                    padding:
+                                        EdgeInsets.only(right: isLast ? 0 : 6),
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        final v = entry.value;
+                                        if (v == '1') await harian();
+                                        if (v == '2') await bulanan();
+                                        if (v == '3') await tahunan();
+                                        p.selectedPeriodeData = v;
+                                        await context
+                                            .read<AdminHomeProvider>()
+                                            .fetchHome(withLoading: true);
+                                        setState(() {});
+                                        log('SELECTED DATE: ' +
+                                            p.selectedDate.toString());
+                                        log('SELECTED MONTH: ' +
+                                            p.selectedMonth.toString());
+                                        log('SELECTED YEAR: ' +
+                                            p.selectedYear.toString());
+                                      },
+                                      child: AnimatedContainer(
+                                        duration:
+                                            const Duration(milliseconds: 180),
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 9),
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? Constant.primaryColor
+                                              : const Color(0xffF5F6FA),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? Constant.primaryColor
+                                                : const Color(0xffE4E6EF),
+                                            width: isSelected ? 1.5 : 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          entry.key,
+                                          textAlign: TextAlign.center,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                            color: isSelected
+                                                ? Colors.white
+                                                : const Color(0xff6D7588),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
                             ),
                           ],
                         ),
                       ),
-                      Expanded(
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Row(
-                            children: [
-                              Radio(
-                                value: 1,
-                                groupValue: p.filterType,
-                                visualDensity:
-                                    VisualDensity(vertical: -4, horizontal: -4),
-                                onChanged: (value) {
-                                  if (p.filterType != value) {
-                                    setState(() {
-                                      p.filterType = 1;
-                                    });
-                                    p.selectedSellerBuyer = null;
-                                    p.selectedSellerBuyerId = null;
+
+                      const SizedBox(height: 14),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Divider(height: 1, color: Color(0xffF0F0F0)),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // ── Segmented Toggle Seller / Buyer ──
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'FILTER BERDASARKAN',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xff8A93A3),
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xffF5F6FA),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                    color: const Color(0xffE4E6EF), width: 1),
+                              ),
+                              child: Row(
+                                children: [
+                                  // Seller
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        if (p.filterType != 0) {
+                                          setState(() => p.filterType = 0);
+                                          p.selectedSellerBuyer = null;
+                                          p.selectedSellerBuyerId = null;
+                                          p.fetchSellers(withLoading: true);
+                                        }
+                                      },
+                                      child: AnimatedContainer(
+                                        duration:
+                                            const Duration(milliseconds: 200),
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 10),
+                                        decoration: BoxDecoration(
+                                          color: p.filterType == 0
+                                              ? Colors.white
+                                              : Colors.transparent,
+                                          borderRadius:
+                                              BorderRadius.circular(9),
+                                          boxShadow: p.filterType == 0
+                                              ? [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.08),
+                                                    blurRadius: 8,
+                                                    offset:
+                                                        const Offset(0, 2),
+                                                  ),
+                                                ]
+                                              : [],
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.storefront_rounded,
+                                              size: 14,
+                                              color: p.filterType == 0
+                                                  ? Constant.primaryColor
+                                                  : const Color(0xff8A93A3),
+                                            ),
+                                            const SizedBox(width: 5),
+                                            Text(
+                                              'Seller',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: p.filterType == 0
+                                                    ? FontWeight.w700
+                                                    : FontWeight.w500,
+                                                color: p.filterType == 0
+                                                    ? Constant.primaryColor
+                                                    : const Color(0xff8A93A3),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  // Buyer
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        if (p.filterType != 1) {
+                                          setState(() => p.filterType = 1);
+                                          p.selectedSellerBuyer = null;
+                                          p.selectedSellerBuyerId = null;
+                                          p.fetchBuyers(withLoading: true);
+                                        }
+                                      },
+                                      child: AnimatedContainer(
+                                        duration:
+                                            const Duration(milliseconds: 200),
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 10),
+                                        decoration: BoxDecoration(
+                                          color: p.filterType == 1
+                                              ? Colors.white
+                                              : Colors.transparent,
+                                          borderRadius:
+                                              BorderRadius.circular(9),
+                                          boxShadow: p.filterType == 1
+                                              ? [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.08),
+                                                    blurRadius: 8,
+                                                    offset:
+                                                        const Offset(0, 2),
+                                                  ),
+                                                ]
+                                              : [],
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.person_rounded,
+                                              size: 14,
+                                              color: p.filterType == 1
+                                                  ? Constant.primaryColor
+                                                  : const Color(0xff8A93A3),
+                                            ),
+                                            const SizedBox(width: 5),
+                                            Text(
+                                              'Buyer',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: p.filterType == 1
+                                                    ? FontWeight.w700
+                                                    : FontWeight.w500,
+                                                color: p.filterType == 1
+                                                    ? Constant.primaryColor
+                                                    : const Color(0xff8A93A3),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // ── Search Dropdown ──
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'PILIH ${p.filterType == 0 ? 'SELLER' : 'BUYER'}',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xff8A93A3),
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            CustomDropdown.searchDropdown(
+                              list: p.userData
+                                  .map((e) => e.name1 ?? '-')
+                                  .toList(),
+                              hintText:
+                                  'Cari ${p.filterType == 0 ? 'seller' : 'buyer'}...',
+                              onChanged: (v) {
+                                var index = p.userData
+                                    .indexWhere((e) => e.name1 == v);
+                                if (index != -1 &&
+                                    p.userData[index].id != null) {
+                                  setState(() {
+                                    p.selectedSellerBuyer = v;
+                                    p.selectedSellerBuyerId =
+                                        p.userData[index].id;
+                                  });
+                                }
+                              },
+                              selectedItem: p.selectedSellerBuyer,
+                              borderColor: const Color(0xffE4E6EF),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // ── Tombol Filter & Reset ──
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  handleTap(() async {
+                                    await getData();
                                     setState(() {});
-                                    p.fetchBuyers(withLoading: true);
-                                  }
+                                  });
                                 },
+                                child: Container(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 13),
+                                  decoration: BoxDecoration(
+                                    color: Constant.primaryColor,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Constant.primaryColor
+                                            .withOpacity(0.28),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.tune_rounded,
+                                          size: 15, color: Colors.white),
+                                      SizedBox(width: 6),
+                                      Text(
+                                        'Terapkan Filter',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                              Text(
-                                'Filter Buyer',
-                                style: TextStyle(fontSize: 13),
+                            ),
+                            const SizedBox(width: 10),
+                            GestureDetector(
+                              onTap: () async {
+                                p.selectedPeriodeData = '0';
+                                p.selectedSellerBuyer = null;
+                                p.selectedSellerBuyerId = null;
+                                p.filterType = 0;
+                                p.userData.clear();
+                                setState(() {});
+                                await p.fetchHome(withLoading: true);
+                                await p.fetchSellers(withLoading: false);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(13),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xffF5F6FA),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: const Color(0xffE4E6EF),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.refresh_rounded,
+                                  size: 18,
+                                  color: Constant.primaryColor,
+                                ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  child:
-                      // Theme(
-                      //   data: ThemeData(scaffoldBackgroundColor: Colors.white),
-                      //   child: DropdownSearch<String>(
-                      //     popupProps: PopupProps.dialog(
-                      //       showSearchBox: true,
-                      //       showSelectedItems: true,
-                      //       dialogProps: DialogProps(backgroundColor: Colors.white),
-                      //     ),
-                      //     items: p.userData.map((e) => e.name1 ?? '-').toList(),
-                      //     selectedItem: p.selectedSellerBuyer,
-                      //     dropdownButtonProps: DropdownButtonProps(
-                      //       icon: const Icon(
-                      //         Icons.keyboard_arrow_down,
-                      //         color: Color(0xffB9B9B9),
-                      //       ),
-                      //     ),
-                      //     validator: (value) {
-                      //       return null;
-                      //     },
-                      //     dropdownDecoratorProps: DropDownDecoratorProps(
-                      //       dropdownSearchDecoration: InputDecoration(
-                      //         isDense: true,
-                      //         contentPadding: EdgeInsets.zero,
-                      //         hintText:
-                      //             'Pilih ${p.filterType == 0 ? 'Seller' : 'Buyer'}',
-                      //         hintStyle: TextStyle(
-                      //             color: Colors.black26 /*, fontSize: 12*/),
-                      //         filled: true,
-                      //         fillColor: Colors.white,
-                      //         suffixIconColor: Constant.primaryColor,
-                      //         hoverColor: Constant.primaryColor,
-                      //         focusColor: Constant.primaryColor,
-                      //         prefix: SizedBox(width: 12),
-                      //         border: OutlineInputBorder(
-                      //           borderSide: BorderSide(color: Color(0xffB9B9B9)),
-                      //           borderRadius: BorderRadius.circular(10),
-                      //         ),
-                      //         enabledBorder: OutlineInputBorder(
-                      //           borderSide: BorderSide(color: Color(0xffB9B9B9)),
-                      //           borderRadius: BorderRadius.circular(10),
-                      //         ),
-                      //         focusedBorder: OutlineInputBorder(
-                      //           borderSide: BorderSide(color: Color(0xffB9B9B9)),
-                      //           borderRadius: BorderRadius.circular(10),
-                      //         ),
-                      //       ),
-                      //     ),
-                      //     onChanged: (v) {
-                      //       var index = p.userData.indexWhere((e) => e.name1 == v);
-                      //       if (index != -1 && p.userData[index].id != null) {
-                      //         p.selectedSellerBuyer = v;
-                      //         p.selectedSellerBuyerId = p.userData[index].id;
-                      //       }
-                      //       setState(() {});
-                      //     },
-                      //     clearButtonProps: ClearButtonProps(
-                      //       icon: Icon(Icons.clear, size: 17, color: Colors.black),
-                      //     ),
-                      //   ),
-                      // ),
-                      CustomDropdown.searchDropdown(
-                    list: p.userData.map((e) => e.name1 ?? '-').toList(),
-                    hintText: 'Pilih ${p.filterType == 0 ? 'Seller' : 'Buyer'}',
-                    onChanged: (v) {
-                      var index = p.userData.indexWhere((e) => e.name1 == v);
-                      if (index != -1 && p.userData[index].id != null) {
-                        setState(() {
-                          p.selectedSellerBuyer = v;
-                          p.selectedSellerBuyerId = p.userData[index].id;
-                        });
-                      }
-                    },
-                    selectedItem: p.selectedSellerBuyer,
-                  ),
-                ),
-                CustomButton.mainButton('Filter',
-                    margin: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                    borderRadius: BorderRadius.circular(12), () async {
-                  handleTap(() async {
-                    await getData();
-                    setState(() {});
-                  });
-                }),
-                SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: InkWell(
-                    onTap: () async {
-                      p.selectedPeriodeData = '0';
-                      p.selectedSellerBuyer = null;
-                      p.selectedSellerBuyerId = null;
-                      p.filterType = 0;
-                      p.userData.clear();
-                      setState(() {});
-                      await p.fetchHome(withLoading: true);
-                      await p.fetchSellers(withLoading: false);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 20),
-                      child: Text(
-                        'Reset filter',
-                        style: TextStyle(
-                          color: Constant.primaryColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 8),
-                Container(
-                  child: Divider(
-                    color: Colors.grey.withOpacity(0.2),
-                    thickness: 5,
-                  ),
-                ),
+
+                // ── Stats ─────────────────────────────────────────
                 headerInfo2(),
+                // ── Graphs ────────────────────────────────────────
                 productSellingGraph(),
                 totalTransactionGraph(),
+                // ── Tables ────────────────────────────────────────
                 favouriteProduct(),
                 buyerTransaction(),
                 sellerTransaction(),
@@ -1322,7 +1920,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
     }
 
     return Scaffold(
-      backgroundColor: Color(0XFFED1C24),
+      backgroundColor: Colors.white,
       appBar: appBar(),
       body: body(),
     );

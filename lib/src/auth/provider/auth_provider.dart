@@ -104,6 +104,8 @@ class AuthProvider extends BaseController with ChangeNotifier {
               Constant.kSetPrefRoles, model.jenis?.jenis ?? '');
           await prefs.setString(
               Constant.kSetPrefSubditId, model.jenis?.subditId ?? '');
+          await prefs.setString(
+              Constant.kSetPrefEmail, model.jenis?.email ?? '');
           // await prefs.setString(
           //     Constant.kSetPrefCompany, model.jenis?.companyName ?? '');
           log("JENIS : ${model.jenis?.jenis}");
