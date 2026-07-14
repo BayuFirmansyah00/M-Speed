@@ -62,7 +62,7 @@ class WishlistProvider extends BaseController with ChangeNotifier {
     // if (wishlistSearchController.text.isNotEmpty)
     //   body.addAll({'search': wishlistSearchController.text});
     final response =
-        await get(Constant.BASE_API_FULL + '/getbuyerwishlist', body: body);
+        await get(Constant.BASE_API_FULL + '/wishlists', body: body);
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       // setWishlistModel = WishlistModel.fromJson(jsonDecode(response.body));
@@ -153,7 +153,7 @@ class WishlistProvider extends BaseController with ChangeNotifier {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     String userId = prefs.getString(Constant.kSetPrefId) ?? '';
 
-    final response = await post(Constant.BASE_API_FULL + '/followseller',
+    final response = await post(Constant.BASE_API_FULL + '/follows',
         body: {'buyer_id': userId, 'seller_id': sellerId});
 
     if (response.statusCode == 201 || response.statusCode == 200) {
@@ -187,8 +187,8 @@ class WishlistProvider extends BaseController with ChangeNotifier {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     String userId = prefs.getString(Constant.kSetPrefId) ?? '';
 
-    final response = await post(Constant.BASE_API_FULL + '/unfollowseller',
-        body: {'buyer_id': userId, 'seller_id': sellerId});
+    final response = await delete(Constant.BASE_API_FULL + '/follows/$sellerId',
+        body: {'buyer_id': userId});
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       // setWishlistModel = WishlistModel.fromJson(jsonDecode(response.body));

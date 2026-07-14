@@ -61,7 +61,7 @@ class _PdfSignatureScreenState extends BaseState<UploadLampiranView> {
             ),
           InkWell(
             onTap: () async {
-              final result = await FilePicker.platform.pickFiles(
+              final result = await FilePicker.pickFiles(
                 allowMultiple: false,
               );
               if (result != null) {
@@ -415,7 +415,7 @@ class _FileButtonState extends State<FileButton> {
           ),
         InkWell(
           onTap: () async {
-            final result = await FilePicker.platform.pickFiles(
+            final result = await FilePicker.pickFiles(
               allowMultiple: false,
             );
             if (result != null) {

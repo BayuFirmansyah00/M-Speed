@@ -53,7 +53,7 @@ class _FileButtonWidgetState extends State<FileButtonWidget> {
           InkWell(
             onTap: () async {
               final result =
-                  await FilePicker.platform.pickFiles(allowMultiple: false);
+                  await FilePicker.pickFiles(allowMultiple: false);
               if (result != null) {
                 final file = result.files.singleOrNull;
                 print('Selected file: ${result.files.singleOrNull?.name}');

@@ -70,12 +70,14 @@ listenForegroundNotificationPayload(BuildContext context) async {
     }
   }
 
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings,
-      onDidReceiveNotificationResponse: (payload) async {
-    _consumePayload(
-        jsonEncode(jsonDecode((payload.payload) ?? '{}')['data'] ?? '{}'),
-        false);
-  });
+  await flutterLocalNotificationsPlugin.initialize(
+    settings: initializationSettings,
+    onDidReceiveNotificationResponse: (payload) async {
+      _consumePayload(
+          jsonEncode(jsonDecode((payload.payload) ?? '{}')['data'] ?? '{}'),
+          false);
+    },
+  );
   // ios configuration
   FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
     alert: true, // Required to display a heads up notification
@@ -158,13 +160,15 @@ initLocalNotification(BuildContext context) async {
       ?.createNotificationChannel(androidChannel);
 
   androidFlutterLocalNotificationsPlugin
-      ?.initialize(initializationSettingsAndroid);
+      ?.initialize(settings: initializationSettingsAndroid);
 
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings,
-      onDidReceiveNotificationResponse: (payload) async {
-    _consumePayload(
-        jsonEncode(jsonDecode(payload.payload ?? '{}')['data'] ?? '{}'), false);
-  });
+  await flutterLocalNotificationsPlugin.initialize(
+    settings: initializationSettings,
+    onDidReceiveNotificationResponse: (payload) async {
+      _consumePayload(
+          jsonEncode(jsonDecode(payload.payload ?? '{}')['data'] ?? '{}'), false);
+    },
+  );
   // ios configuration
   FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
     alert: true, // Required to display a heads up notification
@@ -187,10 +191,10 @@ initLocalNotification(BuildContext context) async {
     log("payload listen init =>" + jsonEncode(message));
     try {
       await flutterLocalNotificationsPlugin.show(
-        0,
-        event.notification?.title ?? 'Ragasport',
-        event.notification?.body ?? 'Notifikasi Baru',
-        notificationDetails,
+        id: 0,
+        title: event.notification?.title ?? 'Ragasport',
+        body: event.notification?.body ?? 'Notifikasi Baru',
+        notificationDetails: notificationDetails,
         payload: jsonEncode(message),
       );
       // if (message != null) {
@@ -224,17 +228,17 @@ Future<void> firebaseBackgroundMsgHandler(RemoteMessage event) async {
 
   if (androidFlutterLocalNotificationsPlugin != null && Platform.isAndroid) {
     androidFlutterLocalNotificationsPlugin?.show(
-      event.hashCode,
-      title,
-      desc,
+      id: event.hashCode,
+      title: title,
+      body: desc,
       notificationDetails: notificationDetails.android,
       payload: jsonEncode({'data': event.data}),
     );
   } else {
     iosFlutterLocalNotificationPlugin?.show(
-      event.hashCode,
-      title,
-      desc,
+      id: event.hashCode,
+      title: title,
+      body: desc,
       notificationDetails: notificationDetails.iOS,
       payload: jsonEncode({'data': event.data}),
     );
@@ -251,17 +255,17 @@ firebaseForegroundMsgHandler(RemoteMessage event) async {
 
   if (androidFlutterLocalNotificationsPlugin != null && Platform.isAndroid) {
     androidFlutterLocalNotificationsPlugin?.show(
-      event.hashCode,
-      title,
-      desc,
+      id: event.hashCode,
+      title: title,
+      body: desc,
       notificationDetails: notificationDetails.android,
       payload: jsonEncode({'data': event.data}),
     );
   } else {
     iosFlutterLocalNotificationPlugin?.show(
-      event.hashCode,
-      title,
-      desc,
+      id: event.hashCode,
+      title: title,
+      body: desc,
       notificationDetails: notificationDetails.iOS,
       payload: jsonEncode({'data': event.data}),
     );

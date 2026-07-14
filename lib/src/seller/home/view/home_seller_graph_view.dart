@@ -66,7 +66,7 @@ class _HomeSellerGraphViewState extends State<HomeSellerGraphView> {
       }
 
       return SideTitleWidget(
-        axisSide: meta.axisSide,
+        meta: meta,
         child: text,
       );
     }

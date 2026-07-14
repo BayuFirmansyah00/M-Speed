@@ -142,7 +142,7 @@ class _ChatPersonViewState extends State<ChatPesananKomplainView> {
     }
 
     Future<void> _pickFile() async {
-      FilePickerResult? result = await FilePicker.platform.pickFiles();
+      FilePickerResult? result = await FilePicker.pickFiles();
       if (result != null) {
         setState(() {
           chosenFile = ChosenFile(false, result.files.single.path!,

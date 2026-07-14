@@ -95,7 +95,7 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
     var userId = await prefs.getString(Constant.kSetPrefId);
     Map<String, String> body = {'seller_id': userId ?? ''};
     final response = await get(
-      Constant.BASE_API_FULL + '/getprodukseller',
+      Constant.BASE_API_FULL + '/products',
       body: body,
     );
 
@@ -130,8 +130,7 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
     Map<String, String> body = {'produk_id': productId};
     final response = await get(
-      Constant.BASE_API_FULL + '/getprodukdetailseller',
-      body: body,
+      Constant.BASE_API_FULL + '/products/$productId',
     );
 
     if (response.statusCode == 201 || response.statusCode == 200) {
@@ -204,7 +203,7 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
       };
 
       if (isEdit) {
-        body['produk_id'] = data?.produk?.ID ?? '0';
+        body['_method'] = 'PUT'; // Laravel multipart update
       }
 
       // Prepare file uploads
@@ -277,7 +276,7 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
 
       // Perform API request
       final response = await post(
-        '${Constant.BASE_API_FULL}/${isEdit ? 'edit' : 'create'}produkseller',
+        '${Constant.BASE_API_FULL}/products${isEdit ? '/${data?.produk?.ID ?? 0}' : ''}',
         body: body,
         files: files,
       );
@@ -422,9 +421,8 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
   }) async {
     if (withLoading) loading(true);
 
-    final response = await post(
-      Constant.BASE_API_FULL + '/deleteprodukseller',
-      body: {'produk_id': productId},
+    final response = await delete(
+      Constant.BASE_API_FULL + '/products/$productId',
     );
 
     if (response.statusCode == 201 || response.statusCode == 200) {
@@ -448,7 +446,7 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
   Future<void> fetchKategori({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/getallkategori');
+    final response = await get(Constant.BASE_API_FULL + '/categories');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       kategoriModel = KategoriModel.fromJson(jsonDecode(response.body));

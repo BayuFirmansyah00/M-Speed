@@ -272,7 +272,7 @@ class ShoppingCartProvider extends BaseController with ChangeNotifier {
 
       // Melakukan request ke API
       final response =
-          await get(Constant.BASE_API_FULL + '/getcartbuyer', body: param);
+          await get(Constant.BASE_API_FULL + '/carts', body: param);
 
       if (response.statusCode == 200) {
         // Mengubah response JSON menjadi model ShoppingCartModel
@@ -347,7 +347,7 @@ class ShoppingCartProvider extends BaseController with ChangeNotifier {
     };
 
     final response =
-        await post(Constant.BASE_API_FULL + '/addtocartbuyer', body: param);
+        await post(Constant.BASE_API_FULL + '/carts', body: param);
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       await Utils.showSuccess(msg: "Produk berhasil ditambahkan ke cart");
@@ -381,7 +381,7 @@ class ShoppingCartProvider extends BaseController with ChangeNotifier {
     };
 
     final response =
-        await post(Constant.BASE_API_FULL + '/editqtycartbuyer', body: param);
+        await post(Constant.BASE_API_FULL + '/carts/${cartId}', body: {'_method': 'PUT', 'qty': qty.toString()});
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       fetchShoppingCart(context);
@@ -398,9 +398,7 @@ class ShoppingCartProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     final response =
-        await post(Constant.BASE_API_FULL + '/deletecartbuyer', body: {
-      'cart_id': cartId,
-    });
+        await delete(Constant.BASE_API_FULL + '/carts/$cartId');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       fetchShoppingCart(context);
@@ -460,8 +458,7 @@ class ShoppingCartProvider extends BaseController with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     String? subditId = await prefs.getString(Constant.kSetPrefSubditId) ?? "";
 
-    final response = await get(Constant.BASE_API_FULL + '/getdpp',
-        // subdit ud 7 coba force
+    final response = await get(Constant.BASE_API_FULL + '/sub-direktorates',
         body: {'subdit_id': subditId});
 
     if (response.statusCode == 201 || response.statusCode == 200) {
