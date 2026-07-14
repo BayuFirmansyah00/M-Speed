@@ -207,7 +207,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
         const SizedBox(height: 14),
         DotsIndicator(
           dotsCount: 3,
-          position: p.currentIndex,
+          position: p.currentIndex.toDouble(),
           decorator: DotsDecorator(
             color: _C.txt3.withValues(alpha: 0.3),
             activeColor: _C.primary,
