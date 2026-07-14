@@ -230,7 +230,7 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
   Future<void> fetchKota({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/getallkota');
+    final response = await get(Constant.BASE_API_FULL + '/cities');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       kotaModel = KotaModel.fromJson(jsonDecode(response.body));
@@ -249,7 +249,7 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
   Future<void> fetchProvinsi({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/getprovinsi');
+    final response = await get(Constant.BASE_API_FULL + '/provinces');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       provinsiModel = ProvinsiModel.fromJson(jsonDecode(response.body));
@@ -272,8 +272,7 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
     var userId = await prefs.getString(Constant.kSetPrefId);
 
     final response = await get(
-      Constant.BASE_API_FULL + '/getprofilseller',
-      body: {'seller_id': '$userId'},
+      Constant.BASE_API_FULL + '/seller-datas/$userId',
     );
 
     if (response.statusCode == 201 || response.statusCode == 200) {
@@ -368,7 +367,7 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
     var userId = await prefs.getString(Constant.kSetPrefId);
 
     Map<String, String> body = {
-      'sellerID': '$userId',
+      '_method': 'PUT', // For Laravel Multipart Update
       'nama': companyNameC.text,
       'nama_pemilik': ownerNameC.text,
       'email': emailC.text,
@@ -436,7 +435,7 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
     if (spSkpFile != null) await addFile(File(spSkpFile!.path), 'sp_pkp');
 
     final response = await post(
-      Constant.BASE_API_FULL + '/editprofileseller',
+      Constant.BASE_API_FULL + '/seller-datas/$userId',
       body: body,
       files: files,
     );

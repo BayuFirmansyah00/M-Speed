@@ -65,29 +65,23 @@ class RegisterProvider extends BaseController with ChangeNotifier {
         'email': emailC.text,
         'password': passwordC.text,
       };
-      final response =
-          await post(Constant.BASE_API_FULL + '/createaccount', body: param);
-
-      if (response.statusCode == 201) {
-        final p = context.read<AuthProvider>();
-        p.usernameC.text = emailC.text;
-        p.passC.text = passwordC.text;
-        await p.login(context);
-        companyNameC.clear();
-        ownerNameC.clear();
-        roleC.clear();
-        addressC.clear();
-        emailC.clear();
-        passwordC.clear();
-        confirmPasswordC.clear();
-        loading(false);
-        CusNav.nPushAndRemoveUntil(context, LoginView());
-      } else {
-        final message = jsonDecode(response.body)["messages"]["result"];
-        loading(false);
-        Utils.showFailed(msg: message);
-        throw Exception(message);
-      }
+      // DUMMY DATA IMPLEMENTATION FOR REGISTER (Endpoint belum ada di Laravel)
+      await Future.delayed(Duration(seconds: 1)); // Simulate network request
+      
+      final p = context.read<AuthProvider>();
+      p.usernameC.text = emailC.text;
+      p.passC.text = passwordC.text;
+      await p.login(context);
+      
+      companyNameC.clear();
+      ownerNameC.clear();
+      roleC.clear();
+      addressC.clear();
+      emailC.clear();
+      passwordC.clear();
+      confirmPasswordC.clear();
+      loading(false);
+      CusNav.nPushAndRemoveUntil(context, LoginView());
     } else {
       loading(false);
       Utils.showFailed(msg: 'Harap Lengkapi Form');

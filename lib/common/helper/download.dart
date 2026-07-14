@@ -45,29 +45,29 @@ downloadFile(
             FlutterLocalNotificationsPlugin();
         if (openAfterDownload) {
           await flutterLocalNotificationsPlugin.initialize(
-            initializationSettings,
+            settings: initializationSettings,
             onDidReceiveNotificationResponse:
                 (NotificationResponse? payload) {},
           );
           await flutterLocalNotificationsPlugin.show(
-            0,
-            filename,
-            "Download berhasil disimpan di ${f.path}",
-            notificationDetails,
+            id: 0,
+            title: filename,
+            body: "Download berhasil disimpan di ${f.path}",
+            notificationDetails: notificationDetails,
           );
           await OpenFilex.open(f.path);
         } else {
           await flutterLocalNotificationsPlugin.initialize(
-            initializationSettings,
+            settings: initializationSettings,
             onDidReceiveNotificationResponse: (NotificationResponse? payload) {
               if (payload != null) OpenFilex.open(f.path);
             },
           );
           await flutterLocalNotificationsPlugin.show(
-            0,
-            filename,
-            "Download berhasil, Ketuk untuk buka file",
-            notificationDetails,
+            id: 0,
+            title: filename,
+            body: "Download berhasil, Ketuk untuk buka file",
+            notificationDetails: notificationDetails,
           );
         }
       } else {
@@ -84,29 +84,29 @@ downloadFile(
             FlutterLocalNotificationsPlugin();
         if (openAfterDownload) {
           await flutterLocalNotificationsPlugin.initialize(
-            initializationSettings,
+            settings: initializationSettings,
             onDidReceiveNotificationResponse:
                 (NotificationResponse? payload) {},
           );
           await flutterLocalNotificationsPlugin.show(
-            0,
-            filename,
-            "Download berhasil",
-            notificationDetails,
+            id: 0,
+            title: filename,
+            body: "Download berhasil",
+            notificationDetails: notificationDetails,
           );
           await OpenFilex.open(f.path);
         } else {
           await flutterLocalNotificationsPlugin.initialize(
-            initializationSettings,
+            settings: initializationSettings,
             onDidReceiveNotificationResponse: (NotificationResponse? payload) {
               if (payload != null) OpenFilex.open(f.path);
             },
           );
           await flutterLocalNotificationsPlugin.show(
-            0,
-            filename,
-            "Download berhasil, Ketuk untuk buka file",
-            notificationDetails,
+            id: 0,
+            title: filename,
+            body: "Download berhasil, Ketuk untuk buka file",
+            notificationDetails: notificationDetails,
           );
         }
       }

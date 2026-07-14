@@ -23,14 +23,19 @@ class CustomDropdownSearch {
           showSelectedItems: true,
           dialogProps: DialogProps(backgroundColor: Colors.white),
         ),
-        items: list,
+        items: (f, cs) => list,
         selectedItem: selectedItem,
-        dropdownButtonProps: DropdownButtonProps(
-          icon: icon ??
-              const Icon(
-                Icons.keyboard_arrow_down,
-                color: Color(0xffB9B9B9),
-              ),
+        suffixProps: DropdownSuffixProps(
+          dropdownButtonProps: DropdownButtonProps(
+            iconClosed: icon ??
+                const Icon(
+                  Icons.keyboard_arrow_down,
+                  color: Color(0xffB9B9B9),
+                ),
+          ),
+          clearButtonProps: ClearButtonProps(
+            icon: Icon(Icons.clear, size: 17, color: Colors.black),
+          ),
         ),
         validator: (value) {
           if (required && value?.isNotEmpty != true) {
@@ -38,8 +43,8 @@ class CustomDropdownSearch {
           }
           return null;
         },
-        dropdownDecoratorProps: DropDownDecoratorProps(
-          dropdownSearchDecoration: inputDecoration ??
+        decoratorProps: DropDownDecoratorProps(
+          decoration: inputDecoration ??
               InputDecoration(
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
@@ -69,10 +74,7 @@ class CustomDropdownSearch {
                 ),
               ),
         ),
-        onChanged: onChanged,
-        clearButtonProps: ClearButtonProps(
-          icon: Icon(Icons.clear, size: 17, color: Colors.black),
-        ),
+        onSelected: onChanged,
       ),
     );
   }
@@ -94,14 +96,19 @@ class CustomDropdownSearch {
           showSelectedItems: true,
           dialogProps: DialogProps(backgroundColor: Colors.white),
         ),
-        items: list,
+        items: (f, cs) => list,
         selectedItem: selectedItem,
-        dropdownButtonProps: DropdownButtonProps(
-          icon: icon ??
-              const Icon(
-                Icons.keyboard_arrow_down,
-                color: Color(0xffB9B9B9),
-              ),
+        suffixProps: DropdownSuffixProps(
+          dropdownButtonProps: DropdownButtonProps(
+            iconClosed: icon ??
+                const Icon(
+                  Icons.keyboard_arrow_down,
+                  color: Color(0xffB9B9B9),
+                ),
+          ),
+          clearButtonProps: ClearButtonProps(
+            icon: Icon(Icons.clear, size: 17, color: Colors.black),
+          ),
         ),
         validator: (value) {
           if (required && value?.isNotEmpty != true) {
@@ -109,8 +116,8 @@ class CustomDropdownSearch {
           }
           return null;
         },
-        dropdownDecoratorProps: DropDownDecoratorProps(
-          dropdownSearchDecoration: inputDecoration ??
+        decoratorProps: DropDownDecoratorProps(
+          decoration: inputDecoration ??
               InputDecoration(
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
@@ -136,10 +143,7 @@ class CustomDropdownSearch {
                 ),
               ),
         ),
-        onChanged: onChanged,
-        clearButtonProps: ClearButtonProps(
-          icon: Icon(Icons.clear, size: 17, color: Colors.black),
-        ),
+        onSelected: onChanged,
       ),
     );
   }
@@ -156,14 +160,19 @@ class CustomDropdownSearch {
     return DropdownSearch<String>(
       popupProps:
           PopupProps.menu(showSearchBox: false, showSelectedItems: true),
-      items: list,
+      items: (f, cs) => list,
       selectedItem: selectedItem,
-      dropdownButtonProps: DropdownButtonProps(
-        icon: icon ??
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 6, 0, 24),
-              child: const Icon(Icons.arrow_drop_down, color: Colors.black87),
-            ),
+      suffixProps: DropdownSuffixProps(
+        dropdownButtonProps: DropdownButtonProps(
+          iconClosed: icon ??
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 6, 0, 24),
+                child: const Icon(Icons.arrow_drop_down, color: Colors.black87),
+              ),
+        ),
+        clearButtonProps: ClearButtonProps(
+          icon: Icon(Icons.clear, size: 17, color: Colors.black),
+        ),
       ),
       validator: (value) {
         if (required && value?.isNotEmpty != true) {
@@ -171,8 +180,8 @@ class CustomDropdownSearch {
         }
         return null;
       },
-      dropdownDecoratorProps: DropDownDecoratorProps(
-        dropdownSearchDecoration: inputDecoration ??
+      decoratorProps: DropDownDecoratorProps(
+        decoration: inputDecoration ??
             InputDecoration(
                 hintText: hint,
                 hintStyle: TextStyle(color: Colors.black26),
@@ -184,10 +193,7 @@ class CustomDropdownSearch {
                     borderSide:
                         BorderSide(color: Constant.primaryColor, width: .5))),
       ),
-      onChanged: onChanged,
-      clearButtonProps: ClearButtonProps(
-        icon: Icon(Icons.clear, size: 17, color: Colors.black),
-      ),
+      onSelected: onChanged,
     );
   }
 

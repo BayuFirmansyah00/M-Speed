@@ -1,13 +1,8 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:mspeed/common/component/custom_navigator.dart';
-import 'package:mspeed/src/admin/home/view/admin_main_home.dart';
 import 'package:mspeed/src/auth/model/firebase_token_model.dart';
-import 'package:mspeed/src/buyer/home/view/main_home.dart';
-import 'package:mspeed/src/keuangan/home/view/main_home_keuangan_view.dart';
-import 'package:mspeed/src/penerima/home/view/dashboard_pesanan_view.dart';
 import 'package:mspeed/src/seller/home/view/seller_main_home.dart';
-import 'package:mspeed/src/seller/profil/view/profile_edit_seller_view.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -74,62 +69,26 @@ class AuthProvider extends BaseController with ChangeNotifier {
       loading(true);
       if (loginKey.currentState!.validate()) {
         FocusManager.instance.primaryFocus?.unfocus();
-        String? fcmId;
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        fcmId = prefs.getString(Constant.kSetPrefFcmToken);
-        Map<String, String> param = {
-          // 'username': "19950601831",
-          // 'username': "adminatria",
-          // 'password': "123456",
-          'email': usernameC.text,
-          'password': passC.text,
-          // 'device_id': fcmId ?? '-1',
-        };
-        final response =
-            await post(Constant.BASE_API_FULL + '/login', body: param);
+        // DUMMY DATA IMPLEMENTATION FOR LOGIN (Endpoint belum ada di Laravel)
+        await Future.delayed(Duration(seconds: 1)); // Simulate network request
+        
+        // Set dummy response to shared preferences
+        await prefs.setString(Constant.kSetPrefId, "1");
+        await prefs.setString(Constant.kSetPrefToken, "dummy_sanctum_token_12345");
+        await prefs.setString(Constant.kSetPrefFirstName, "Dummy");
+        await prefs.setString(Constant.kSetPrefLastName, "User");
+        await prefs.setString(Constant.kSetPrefRoles, "SELLER"); // Set as SELLER for testing
+        await prefs.setString(Constant.kSetPrefSubditId, "1");
+        
+        log("JENIS : SELLER (DUMMY)");
+        // Navigate based on dummy role
+        CusNav.nPushReplace(context, SellerMainHome());
+        // Jika butuh profile edit: CusNav.nPush(context, ProfileEditSellerView());
 
-        if (response.statusCode == 201 || response.statusCode == 200) {
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          final model = LoginModel.fromJson(jsonDecode(response.body));
-
-          // set to shared preferences
-          await prefs.setString(Constant.kSetPrefId, "${model.jenis?.ID ?? 0}");
-          await prefs.setString(
-              Constant.kSetPrefToken, model.jenis?.password ?? '');
-          await prefs.setString(
-              Constant.kSetPrefFirstName, model.jenis?.firstname ?? '');
-          await prefs.setString(
-              Constant.kSetPrefLastName, model.jenis?.lastname ?? '');
-          await prefs.setString(
-              Constant.kSetPrefRoles, model.jenis?.jenis ?? '');
-          await prefs.setString(
-              Constant.kSetPrefSubditId, model.jenis?.subditId ?? '');
-          // await prefs.setString(
-          //     Constant.kSetPrefCompany, model.jenis?.companyName ?? '');
-          log("JENIS : ${model.jenis?.jenis}");
-          if (model.jenis?.jenis == 'SELLER') {
-            CusNav.nPushReplace(context, SellerMainHome());
-            if (model.jenis?.kelengkapan == '0')
-              CusNav.nPush(context, ProfileEditSellerView());
-          } else if (model.jenis?.jenis == 'PENERIMA')
-            CusNav.nPushReplace(context, DashboardPesananView());
-          else if (model.jenis?.jenis == 'KEUANGAN')
-            CusNav.nPushReplace(context, MainHomeKeuanganView());
-          else if (model.jenis?.jenis == 'ADMIN')
-            CusNav.nPushReplace(context, AdminMainHome());
-          else
-            CusNav.nPushReplace(context, MainHome());
-
-          usernameC.clear();
-          passC.clear();
-          loading(false);
-        } else {
-          final message = jsonDecode(response.body)["messages"]["result"];
-          loading(false);
-          Utils.showFailed(msg: message);
-          // return LoginModel();
-          throw Exception(message);
-        }
+        usernameC.clear();
+        passC.clear();
+        loading(false);
       } else {
         loading(false);
         Utils.showFailed(msg: 'Harap Lengkapi Form');

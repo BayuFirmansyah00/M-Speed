@@ -66,7 +66,7 @@ class _HomeAdminGraphViewState extends State<HomeAdminGraphView> {
       }
 
       return SideTitleWidget(
-        axisSide: meta.axisSide,
+        meta: meta,
         child: text,
       );
     }

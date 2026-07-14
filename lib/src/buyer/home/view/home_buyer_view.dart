@@ -355,7 +355,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView> {
               bottom: 20,
               child: DotsIndicator(
                 dotsCount: 3,
-                position: p.currentIndex,
+                position: p.currentIndex.toDouble(),
                 decorator: DotsDecorator(
                   color: Colors.white.withOpacity(0.5),
                   activeColor: Colors.white,

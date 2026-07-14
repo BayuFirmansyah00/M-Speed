@@ -72,7 +72,7 @@ class BaseController<S extends BaseState> {
     if (headers != null) h.addAll(headers as Map<String, String>);
 
     final uri = Uri.parse(url);
-    final bodyUri = Uri.https(uri.authority, uri.path, body);
+    final bodyUri = uri.replace(queryParameters: body);
 
     log("==== PARAMETERS ====");
     log("URL : $url");
@@ -261,12 +261,11 @@ class BaseController<S extends BaseState> {
         log("FILES KEY $i : ${files[i].field}");
         log("FILES NAME $i : ${files[i].filename}");
       }
-      Response response = await http.Response.fromStream(
-        await req.send(),
-      ).timeout(
-        Duration(minutes: 1),
-        onTimeout: () => http.Response("Timeout", 504),
-      );
+      Response response = await http.Response.fromStream(await req.send())
+          .timeout(
+            Duration(minutes: 1),
+            onTimeout: () => http.Response("Timeout", 504),
+          );
       log("RESPONSE POST FILE $url : ${response.body}");
       log("====================");
 
@@ -440,12 +439,11 @@ class BaseController<S extends BaseState> {
       log("==== PARAMETERS ====");
       log("URL : $url");
       log("BODY : $body");
-      Response response = await http.Response.fromStream(
-        await req.send(),
-      ).timeout(
-        Duration(minutes: 1),
-        onTimeout: () => http.Response("Timeout", 504),
-      );
+      Response response = await http.Response.fromStream(await req.send())
+          .timeout(
+            Duration(minutes: 1),
+            onTimeout: () => http.Response("Timeout", 504),
+          );
       log("RESPONSE PUT FILE $url : ${response.body}");
       log("====================");
 
@@ -527,7 +525,7 @@ class BaseController<S extends BaseState> {
     if (headers != null) h.addAll(headers as Map<String, String>);
 
     final uri = Uri.parse(url);
-    final bodyUri = Uri.https(uri.authority, uri.path, body);
+    final bodyUri = uri.replace(queryParameters: body);
 
     log("==== PARAMETERS ====");
     log("URL : $url");

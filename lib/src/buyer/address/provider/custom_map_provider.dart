@@ -58,7 +58,7 @@ class CustomMapProvider extends BaseController with ChangeNotifier {
 
   Future<String> getPlacemarks(double lat, double long) async {
     try {
-      List<Placemark> placemarks = await placemarkFromCoordinates(lat, long);
+      List<Placemark> placemarks = await Geocoding().placemarkFromCoordinates(lat, long);
 
       var address = '';
 

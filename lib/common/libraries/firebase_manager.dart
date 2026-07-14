@@ -47,7 +47,7 @@ class FirebaseManager {
     );
 
     flutterLocalNotificationsPlugin.initialize(
-      InitializationSettings(
+      settings: InitializationSettings(
         android: initializationSettingsAndroid,
         iOS: initializationSettingsDarwin,
       ),
@@ -67,10 +67,10 @@ class FirebaseManager {
       print("payload =>" + jsonEncode(message));
       try {
         flutterLocalNotificationsPlugin.show(
-          0,
-          event.notification?.title ?? 'M-Speed',
-          event.notification?.body ?? 'Notifikasi Baru',
-          notifDetail,
+          id: 0,
+          title: event.notification?.title ?? 'M-Speed',
+          body: event.notification?.body ?? 'Notifikasi Baru',
+          notificationDetails: notifDetail,
           payload: jsonEncode(message),
         );
       } catch (e) {
@@ -191,11 +191,11 @@ class FirebaseManager {
     final payload = {"id": id.toString(), "type": "absent"};
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
-      id,
-      'M-Speed',
-      tag,
-      alarmDate,
-      const NotificationDetails(
+      id: id,
+      title: 'M-Speed',
+      body: tag,
+      scheduledDate: alarmDate,
+      notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           '1',
           'M-Speed',
@@ -211,9 +211,6 @@ class FirebaseManager {
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      androidAllowWhileIdle: true,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       payload: jsonEncode(payload),
     );
   }

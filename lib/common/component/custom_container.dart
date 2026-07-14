@@ -29,7 +29,7 @@ class CustomContainer {
         boxShadow: [
           if (isShadow)
             BoxShadow(
-              color: Colors.grey.withOpacity(0.5),
+              color: Colors.grey.withValues(alpha: 0.5),
               spreadRadius: 1,
               blurRadius: 1,
               offset: Offset(0, 1), // changes position of shadow
@@ -61,7 +61,7 @@ class CustomContainer {
         boxShadow: [
           if (isShadow)
             BoxShadow(
-              color: Colors.grey.withOpacity(0.5),
+              color: Colors.grey.withValues(alpha: 0.5),
               spreadRadius: 1,
               blurRadius: 1,
               offset: Offset(0, 1), // changes position of shadow
@@ -79,21 +79,14 @@ class CustomContainer {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Image(
-            image: AssetImage(
-              "assets/images/main-image-not-found.png",
-            ),
+            image: AssetImage("assets/images/main-image-not-found.png"),
             width: 275,
           ),
-          SizedBox(
-            height: 15,
-          ),
+          SizedBox(height: 15),
           Text(
             "Data tidak ditemukan!",
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-            ),
-          )
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+          ),
         ],
       ),
     );
@@ -111,42 +104,43 @@ class CustomContainer {
       isScrollControlled: true,
       builder: (context) {
         return DraggableScrollableSheet(
-            controller: controller ?? DraggableScrollableController(),
-            initialChildSize: initialChildSize ?? 0.9,
-            minChildSize: 0.1,
-            maxChildSize: 0.96,
-            expand: false,
-            snap: true,
-            builder: (context, scrollController) {
-              return Container(
-                padding: EdgeInsets.all(12),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(22),
-                    topRight: Radius.circular(22),
+          controller: controller ?? DraggableScrollableController(),
+          initialChildSize: initialChildSize ?? 0.9,
+          minChildSize: 0.1,
+          maxChildSize: 0.96,
+          expand: false,
+          snap: true,
+          builder: (context, scrollController) {
+            return Container(
+              padding: EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(22),
+                  topRight: Radius.circular(22),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 55,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: Colors.grey,
+                      borderRadius: BorderRadius.circular(22),
+                    ),
                   ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 55,
-                      height: 3,
-                      decoration: BoxDecoration(
-                        color: Colors.grey,
-                        borderRadius: BorderRadius.circular(22),
-                      ),
-                    ),
-                    SizedBox(height: 18),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [child],
-                    ),
-                  ],
-                ),
-              );
-            });
+                  SizedBox(height: 18),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [child],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
       },
     );
   }
@@ -216,7 +210,11 @@ class CustomContainer {
         return SingleChildScrollView(
           child: Container(
             padding: EdgeInsets.fromLTRB(
-                12.0, 12.0, 12.0, MediaQuery.of(context).viewInsets.bottom),
+              12.0,
+              12.0,
+              12.0,
+              MediaQuery.of(context).viewInsets.bottom,
+            ),
             decoration: const BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.only(
@@ -248,7 +246,11 @@ class CustomContainer {
           builder: (context, scrollController) {
             return Container(
               padding: EdgeInsets.fromLTRB(
-                  12.0, 12.0, 12.0, MediaQuery.of(context).viewInsets.bottom),
+                12.0,
+                12.0,
+                12.0,
+                MediaQuery.of(context).viewInsets.bottom,
+              ),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
@@ -284,7 +286,11 @@ class CustomContainer {
           builder: (context, scrollController) {
             return Container(
               padding: EdgeInsets.fromLTRB(
-                  12.0, 12.0, 12.0, MediaQuery.of(context).viewInsets.bottom),
+                12.0,
+                12.0,
+                12.0,
+                MediaQuery.of(context).viewInsets.bottom,
+              ),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
@@ -303,46 +309,50 @@ class CustomContainer {
     );
   }
 
-  static showModalBottom2(
-      {required BuildContext context, required Widget child}) async {
+  static showModalBottom2({
+    required BuildContext context,
+    required Widget child,
+  }) async {
     return await showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) {
         return SingleChildScrollView(
-            child: Container(
-          padding:
-              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
           child: Container(
-            padding: EdgeInsets.all(12),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(22),
-                topRight: Radius.circular(22),
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: Container(
+              padding: EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(22),
+                  topRight: Radius.circular(22),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 55,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      color: Colors.grey,
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                  ),
+                  SizedBox(height: 18),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [child],
+                  ),
+                ],
               ),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 55,
-                  height: 3,
-                  decoration: BoxDecoration(
-                    color: Colors.grey,
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                ),
-                SizedBox(height: 18),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [child],
-                ),
-              ],
-            ),
           ),
-        ));
+        );
       },
     );
   }
@@ -374,11 +384,14 @@ class CustomContainer {
       crossAxisSpacing: crossAxisSpacing,
       shrinkWrap: shrinkWrap,
       padding: padding,
-      childAspectRatio: childAspectRatio ??
+      childAspectRatio:
+          childAspectRatio ??
           MediaQuery.of(context).size.width /
               (MediaQuery.of(context).size.height / 1.2),
-      children: List.generate(itemCount, (index) => itemBuilder(context, index))
-          .toList(),
+      children: List.generate(
+        itemCount,
+        (index) => itemBuilder(context, index),
+      ).toList(),
     );
   }
 
@@ -444,22 +457,29 @@ class CustomContainer {
     ScrollController? scrollController,
     EdgeInsetsGeometry? padding,
   }) {
-    return PagedGridView<int, Type>(
-      shrinkWrap: shrinkWrap,
-      addAutomaticKeepAlives: addAutomaticKeepAlives,
-      physics: physics ?? NeverScrollableScrollPhysics(),
-      scrollDirection: scrollDirection,
-      padding: padding,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: crossAxisSpacing,
-        mainAxisSpacing: mainAxisSpacing,
-        childAspectRatio: childAspectRatio ??
-            MediaQuery.of(context).size.width /
-                (MediaQuery.of(context).size.height / 1.2),
-      ),
-      pagingController: pagingController,
-      builderDelegate: builderDelegate,
+    return PagingListener<int, Type>(
+      controller: pagingController,
+      builder: (context, state, fetchNextPage) {
+        return PagedGridView<int, Type>(
+          shrinkWrap: shrinkWrap,
+          addAutomaticKeepAlives: addAutomaticKeepAlives,
+          physics: physics ?? NeverScrollableScrollPhysics(),
+          scrollDirection: scrollDirection,
+          padding: padding,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: crossAxisSpacing,
+            mainAxisSpacing: mainAxisSpacing,
+            childAspectRatio:
+                childAspectRatio ??
+                MediaQuery.of(context).size.width /
+                    (MediaQuery.of(context).size.height / 1.2),
+          ),
+          state: state,
+          fetchNextPage: fetchNextPage,
+          builderDelegate: builderDelegate,
+        );
+      },
     );
   }
 
@@ -490,11 +510,14 @@ class CustomContainer {
       crossAxisSpacing: crossAxisSpacing,
       shrinkWrap: shrinkWrap,
       padding: padding,
-      childAspectRatio: childAspectRatio ??
+      childAspectRatio:
+          childAspectRatio ??
           MediaQuery.of(context).size.width /
               (MediaQuery.of(context).size.height / 1.2),
       children: List.generate(
-          itemCount, (index) => itemBuilder(context, index + indexUp)).toList(),
+        itemCount,
+        (index) => itemBuilder(context, index + indexUp),
+      ).toList(),
     );
   }
 
@@ -525,11 +548,14 @@ class CustomContainer {
       crossAxisSpacing: crossAxisSpacing,
       shrinkWrap: shrinkWrap,
       padding: padding,
-      childAspectRatio: childAspectRatio ??
+      childAspectRatio:
+          childAspectRatio ??
           MediaQuery.of(context).size.width /
               (MediaQuery.of(context).size.height / 4.5),
       children: List.generate(
-          itemCount, (index) => itemBuilder(context, index + indexUp)).toList(),
+        itemCount,
+        (index) => itemBuilder(context, index + indexUp),
+      ).toList(),
     );
   }
 
@@ -582,9 +608,11 @@ class CustomContainer {
     required List<Widget> children,
     required Widget buttonWidget,
   }) {
-    return Column(children: [
-      Expanded(child: ListView(children: children)),
-      buttonWidget,
-    ]);
+    return Column(
+      children: [
+        Expanded(child: ListView(children: children)),
+        buttonWidget,
+      ],
+    );
   }
 }
