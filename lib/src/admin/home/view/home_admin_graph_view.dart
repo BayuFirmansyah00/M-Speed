@@ -31,7 +31,8 @@ class _HomeAdminGraphViewState extends State<HomeAdminGraphView> {
       ];
       final idx = value.toInt();
       return SideTitleWidget(
-        axisSide: meta.axisSide,
+        meta: meta,
+        space: 2,
         child: Text(idx >= 0 && idx < 12 ? months[idx] : '', style: style),
       );
     }
@@ -74,7 +75,6 @@ class _HomeAdminGraphViewState extends State<HomeAdminGraphView> {
           enabled: true,
           touchTooltipData: LineTouchTooltipData(
             getTooltipColor: (_) => const Color(0xff1A1A2E),
-            tooltipRoundedRadius: 10,
             getTooltipItems: (spots) => spots
                 .map((spot) => LineTooltipItem(
                       '${spot.y.toInt()} pcs',
