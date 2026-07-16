@@ -226,7 +226,7 @@ class _FileButtonState extends State<_FileButton> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        final result = await FilePicker.platform.pickFiles(allowMultiple: false);
+        final result = await FilePicker.pickFiles(allowMultiple: false);
         if (result != null) {
           final file = result.files.singleOrNull;
           if (file != null) {

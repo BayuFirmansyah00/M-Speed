@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mspeed/common/base/base_state.dart';
@@ -16,62 +17,68 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../utils/utils.dart';
 import '../../transaction/view/transaction_list_view.dart';
 
-// ─── PALET : M-Speed Premium ──────────────────────────────────
+// ─── PALET WARNA ──────────────────────────────────────────────
 class _C {
-  static const primary   = Color(0xFFE50012); // Merah M-Speed
-  static const secondary = Color(0xFF0B4177); // Biru M-Speed
-  static const bg        = Color(0xFFF5F5F7); // Background Apple Grey
+  static const primary   = Color(0xFFE50012);
+  static const primaryBg = Color(0xFFFFEBED);
+  static const navy      = Color(0xFF0B1F4E);
+  static const bg        = Color(0xFFF4F6FB);
   static const card      = Color(0xFFFFFFFF);
-  static const txt1      = Color(0xFF111827);
-  static const txt2      = Color(0xFF6B7280);
-  static const txt3      = Color(0xFF9CA3AF);
-  static const border    = Color(0xFFEEEEEE);
+  static const txt1      = Color(0xFF0D1117);
+  static const txt2      = Color(0xFF4A5568);
+  static const txt3      = Color(0xFF9AA5B1);
+  static const border    = Color(0xFFEEF0F5);
 
-  // Warna per status transaksi
   static const statusColors = [
-    Color(0xFFF58B2B), // Pesanan Baru   – orange
-    Color(0xFF2B64F5), // Diterima       – blue
-    Color(0xFF10B981), // Dikirim        – green
-    Color(0xFF8B5CF6), // Barang Diterima– purple
-    Color(0xFFEC4899), // Proses Bayar   – pink
-    Color(0xFF1ABC62), // Telah Dibayar  – emerald
+    Color(0xFFF59E0B), // Pesanan Baru    – amber
+    Color(0xFF3B82F6), // Diterima        – blue
+    Color(0xFF10B981), // Dikirim         – green
+    Color(0xFF8B5CF6), // Barang Diterima – purple
+    Color(0xFFEC4899), // Proses Bayar    – pink
+    Color(0xFF059669), // Telah Dibayar   – emerald
   ];
 
-  static const statusIcons = [
-    Icons.add_shopping_cart_rounded,
-    Icons.check_circle_outline_rounded,
-    Icons.local_shipping_rounded,
-    Icons.inventory_2_rounded,
-    Icons.payment_rounded,
-    Icons.verified_rounded,
-  ];
 
-  static const shadow = BoxShadow(
-    color: Color(0x0D000000),
-    blurRadius: 12,
-    offset: Offset(0, 4),
+  static BoxShadow get shadow => const BoxShadow(
+    color: Color(0x0E000000),
+    blurRadius: 16,
+    offset: Offset(0, 6),
+  );
+
+  static BoxShadow get shadowPrimary => BoxShadow(
+    color: primary.withValues(alpha: 0.28),
+    blurRadius: 18,
+    offset: const Offset(0, 6),
   );
 }
 
+// ─── MAIN VIEW ────────────────────────────────────────────────
 class AkunSayaView extends StatefulWidget {
   @override
   State<AkunSayaView> createState() => _AkunSayaViewState();
 }
 
 class _AkunSayaViewState extends BaseState<AkunSayaView>
-    with SingleTickerProviderStateMixin {
-  String userId = "";
+    with TickerProviderStateMixin {
+  String userId    = '';
+  String _name     = '';
+  String _email    = '';
+  String _initials = '';
   AkunSayaBuyerModel userModel = AkunSayaBuyerModel();
-  late AnimationController _animCtrl;
-  late Animation<double> _fadeAnim;
+
+  late AnimationController _entranceCtrl;
+  late AnimationController _pulseCtrl;
+  late Animation<double>   _fadeAnim;
+  late Animation<double>   _slideAnim;
+  late Animation<double>   _pulseAnim;
 
   final List<String> statusName = [
-    "Ps. Baru",
-    "Diterima",
-    "Dikirim",
-    "Brg. Diterima",
-    "Proses Bayar",
-    "Telah Dibayar",
+    'Ps. Baru',
+    'Diterima',
+    'Dikirim',
+    'Brg. Diterima',
+    'Proses Bayar',
+    'Telah Dibayar',
   ];
 
   final List<String> imgStatus = [
@@ -86,53 +93,64 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
   @override
   void initState() {
     super.initState();
-    _animCtrl = AnimationController(
+    _entranceCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 800),
     );
-    _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
-    initData();
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat(reverse: true);
+
+    _fadeAnim  = CurvedAnimation(parent: _entranceCtrl, curve: Curves.easeOut);
+    _slideAnim = Tween<double>(begin: 30, end: 0).animate(
+      CurvedAnimation(parent: _entranceCtrl, curve: Curves.easeOutCubic),
+    );
+    _pulseAnim = Tween<double>(begin: 0.9, end: 1.1).animate(
+      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
+    );
+
+    _initData();
   }
 
-  Future<void> initData() async {
+  Future<void> _initData() async {
     final prefs = await SharedPreferences.getInstance();
-    userId = prefs.getString(Constant.kSetPrefId) ?? "";
+    userId = prefs.getString(Constant.kSetPrefId) ?? '';
+
+    final first = prefs.getString(Constant.kSetPrefFirstName) ?? '';
+    final last  = prefs.getString(Constant.kSetPrefLastName)  ?? '';
+    final email = prefs.getString(Constant.kSetPrefEmail)     ?? '—';
+    final fullName = '$first $last'.trim();
+
+    // Inisial dari nama
+    final parts = fullName.trim().split(' ');
+    String initials = '';
+    if (parts.isNotEmpty && parts[0].isNotEmpty) initials += parts[0][0];
+    if (parts.length > 1 && parts[1].isNotEmpty) initials += parts[1][0];
+
     if (mounted) {
-      final akunBuyer = context.read<ProfileProvider>().akunBuyerModel;
-      if (akunBuyer.data == null || akunBuyer.result != "success") {
-        context.read<ProfileProvider>().fetchBuyer(
-          context,
-          withLoading: false,
-          idBuyer: userId,
-        );
-      }
+      setState(() {
+        _name     = fullName.isNotEmpty ? fullName : 'Pengguna';
+        _email    = email;
+        _initials = initials.toUpperCase();
+      });
+
       final p = context.read<ProfileProvider>();
-      List<String> years = List.generate(
-        2024 - 1900 + 1,
-        (index) => (1900 + index).toString(),
-      );
-      for (int i = years.length - 1; i >= 0; i--) {
-        p.timeList?.add(years[i]);
+      if (p.akunBuyerModel.data == null || p.akunBuyerModel.result != 'success') {
+        p.fetchBuyer(context, withLoading: false, idBuyer: userId);
       }
-      _animCtrl.forward();
+
+      List<String> years = List.generate(2024 - 1900 + 1, (i) => (1900 + i).toString());
+      for (int i = years.length - 1; i >= 0; i--) p.timeList?.add(years[i]);
+
+      _entranceCtrl.forward();
     }
-  }
-
-  Future<String> getName() async {
-    final prefs = await SharedPreferences.getInstance();
-    String first = prefs.getString(Constant.kSetPrefFirstName) ?? "";
-    String last  = prefs.getString(Constant.kSetPrefLastName) ?? "";
-    return "$first $last".trim();
-  }
-
-  Future<String> getEmail() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(Constant.kSetPrefEmail) ?? "—";
   }
 
   @override
   void dispose() {
-    _animCtrl.dispose();
+    _entranceCtrl.dispose();
+    _pulseCtrl.dispose();
     super.dispose();
   }
 
@@ -142,35 +160,45 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
 
     return Scaffold(
       backgroundColor: _C.bg,
-      body: FadeTransition(
-        opacity: _fadeAnim,
-        child: RefreshIndicator(
-          color: _C.primary,
-          backgroundColor: _C.card,
-          onRefresh: () async {
-            await context.read<ProfileProvider>().fetchBuyer(
-              context,
-              withLoading: true,
-              idBuyer: userId,
-            );
-          },
+      body: RefreshIndicator(
+        color: _C.primary,
+        backgroundColor: _C.card,
+        strokeWidth: 2.5,
+        displacement: 48,
+        onRefresh: () async {
+          await context.read<ProfileProvider>().fetchBuyer(
+            context,
+            withLoading: false,
+            idBuyer: userId,
+          );
+        },
+        child: FadeTransition(
+          opacity: _fadeAnim,
           child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
+            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
             slivers: [
-              _buildSliverHeader(),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    const SizedBox(height: 20),
-                    _buildOrderStats(),
-                    const SizedBox(height: 16),
-                    _buildSettingsGroup(),
-                    const SizedBox(height: 32),
-                  ]),
+              _buildSliverAppBar(),
+              SliverToBoxAdapter(
+                child: AnimatedBuilder(
+                  animation: _slideAnim,
+                  builder: (_, child) => Transform.translate(
+                    offset: Offset(0, _slideAnim.value),
+                    child: child,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 20),
+                        _buildOrderStats(),
+                        const SizedBox(height: 14),
+                        _buildMenuGroup(),
+                        const SizedBox(height: 120),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-              const SliverToBoxAdapter(child: SizedBox(height: 120)),
             ],
           ),
         ),
@@ -178,135 +206,65 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
     );
   }
 
-  // ─── Sliver Header dengan gradient ───────────────────────────
-  Widget _buildSliverHeader() {
+  // ─── SLIVER APP BAR ───────────────────────────────────────────
+  Widget _buildSliverAppBar() {
     return SliverAppBar(
-      expandedHeight: 240,
-      pinned: false,
+      expandedHeight: 260,
+      pinned: true,
       floating: false,
       snap: false,
       elevation: 0,
       scrolledUnderElevation: 0,
-      backgroundColor: _C.secondary,
-      // Collapsed: tampilkan nama user
-      title: AnimatedBuilder(
-        animation: const AlwaysStoppedAnimation(0),
-        builder: (context, _) {
-          return FutureBuilder<String>(
-            future: getName(),
-            builder: (context, snap) => Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.35),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.person_rounded,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  snap.data ?? 'Akun Saya',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    fontSize: 16,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+      backgroundColor: _C.navy,
+      title: Text(
+        _name.isNotEmpty ? _name : 'Akun Saya',
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+          letterSpacing: -0.2,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
       centerTitle: true,
       flexibleSpace: FlexibleSpaceBar(
-        background: _buildProfileHeader(),
         collapseMode: CollapseMode.parallax,
+        background: _buildProfileBanner(),
       ),
     );
   }
 
-  Widget _buildProfileHeader() {
+  // ─── PROFILE BANNER ───────────────────────────────────────────
+  Widget _buildProfileBanner() {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF072A5C), Color(0xFF0B4177), Color(0xFF1565C0)],
+          colors: [Color(0xFF060F2E), Color(0xFF0B1F4E), Color(0xFF1A3A7C)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
       ),
       child: Stack(
         children: [
-          // Dekorasi bulat besar kanan atas
+          // ── Dekorasi pattern ────────────────────────────────
+          _circle(size: 240, x: -80, y: -80, alpha: 0.05),
+          _circle(size: 160, x: null, xRight: -40, y: null, yBottom: -40, alpha: 0.06),
+          _circle(size: 70, x: null, xRight: 90, y: 60, alpha: 0.08),
+          // Garis dekoratif
           Positioned(
-            top: -60,
-            right: -60,
+            top: 120,
+            left: 0,
+            right: 0,
             child: Container(
-              width: 220,
-              height: 220,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.06),
-              ),
+              height: 1,
+              color: Colors.white.withValues(alpha: 0.04),
             ),
           ),
-          // Bulat kecil kiri tengah
-          Positioned(
-            bottom: 30,
-            left: -40,
-            child: Container(
-              width: 140,
-              height: 140,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.05),
-              ),
-            ),
-          ),
-          // Bulat kecil tengah
-          Positioned(
-            top: 60,
-            right: 80,
-            child: Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.08),
-              ),
-            ),
-          ),
-          // Garis dekoratif diagonal
-          Positioned(
-            bottom: -10,
-            right: -20,
-            child: Transform.rotate(
-              angle: -0.3,
-              child: Container(
-                width: 150,
-                height: 2,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-          ),
-          // Konten utama
+          // ── Konten utama ────────────────────────────────────
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 56, 24, 20),
+              padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -314,118 +272,15 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Avatar dengan glowing ring
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Outer glow ring
-                          Container(
-                            width: 82,
-                            height: 82,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                width: 2,
-                              ),
-                            ),
-                          ),
-                          // Avatar
-                          Container(
-                            width: 72,
-                            height: 72,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.white.withValues(alpha: 0.35),
-                                  Colors.white.withValues(alpha: 0.15),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.6),
-                                width: 2,
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.person_rounded,
-                              color: Colors.white,
-                              size: 36,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 18),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Label kecil
-                            Text(
-                              'PROFIL SAYA',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white.withValues(alpha: 0.6),
-                                letterSpacing: 1.5,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            // Nama user
-                            FutureBuilder<String>(
-                              future: getName(),
-                              builder: (context, snap) => Text(
-                                snap.data ?? 'Memuat...',
-                                style: const TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                  letterSpacing: -0.5,
-                                  height: 1.1,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            // Badge member
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _C.primary.withValues(alpha: 0.85),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                ),
-                              ),
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.verified_rounded,
-                                      size: 12, color: Colors.white),
-                                  SizedBox(width: 5),
-                                  Text(
-                                    'Member M-Speed',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                      letterSpacing: 0.2,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      // Avatar dengan pulse ring
+                      _buildAvatar(),
+                      const SizedBox(width: 20),
+                      Expanded(child: _buildUserInfo()),
                     ],
                   ),
+                  const SizedBox(height: 20),
+                  // ── Info bar bawah ──────────────────────────
+                  _buildInfoBar(),
                 ],
               ),
             ),
@@ -435,228 +290,499 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
     );
   }
 
-  // ─── Ringkasan Transaksi ──────────────────────────────────────
+  Widget _buildAvatar() {
+    return AnimatedBuilder(
+      animation: _pulseAnim,
+      builder: (_, child) => Container(
+        width: 84,
+        height: 84,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: _C.primary.withValues(alpha: 0.3 * (_pulseAnim.value - 0.9) / 0.2),
+              blurRadius: 24,
+              spreadRadius: 4,
+            ),
+          ],
+        ),
+        child: child,
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Outer ring animasi
+          Container(
+            width: 84,
+            height: 84,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.15),
+                width: 2,
+              ),
+            ),
+          ),
+          // Avatar circle
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [Color(0xFFE50012), Color(0xFFFF4D5B)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [_C.shadowPrimary],
+              border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+            ),
+            child: Center(
+              child: Text(
+                _initials.isNotEmpty ? _initials : '?',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUserInfo() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'PROFIL SAYA',
+          style: TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.w700,
+            color: Colors.white.withValues(alpha: 0.5),
+            letterSpacing: 2,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          _name,
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+            letterSpacing: -0.5,
+            height: 1.1,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Icon(Icons.mail_outline_rounded, size: 10, color: Colors.white),
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                _email,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        // Member badge
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFE50012), Color(0xFFFF4D5B)],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [_C.shadowPrimary],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.verified_rounded, size: 11, color: Colors.white),
+              SizedBox(width: 5),
+              Text(
+                'Member M-Speed',
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.3),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoBar() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.person_outline_rounded, size: 14, color: Colors.white70),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'ID Pengguna: $userId',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () => CusNav.nPush(context, TransactionListView()),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'Lihat Transaksi →',
+                    style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─── RINGKASAN TRANSAKSI ──────────────────────────────────────
   Widget _buildOrderStats() {
-    List<String> statusCount = [
-      userModel.data?.pesananBaru ?? '0',
-      userModel.data?.pesananDiterima ?? '0',
-      userModel.data?.pesananDikirim ?? '0',
-      userModel.data?.barangDiterima?.toString() ?? '0',
+    final statusCount = [
+      userModel.data?.pesananBaru       ?? '0',
+      userModel.data?.pesananDiterima   ?? '0',
+      userModel.data?.pesananDikirim    ?? '0',
+      userModel.data?.barangDiterima?.toString()   ?? '0',
       userModel.data?.prosesPembayaran?.toString() ?? '0',
-      userModel.data?.telahDibayar ?? '0',
+      userModel.data?.telahDibayar      ?? '0',
     ];
 
     return Container(
       decoration: BoxDecoration(
         color: _C.card,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [_C.shadow],
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [_C.shadow],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header section
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(6),
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
-                        color: _C.secondary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF0B1F4E), Color(0xFF1A3A7C)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(11),
                       ),
-                      child: const Icon(
-                        Icons.receipt_long_rounded,
-                        size: 16,
-                        color: _C.secondary,
-                      ),
+                      child: const Icon(Icons.receipt_long_rounded, size: 18, color: Colors.white),
                     ),
-                    const SizedBox(width: 10),
-                    const Text(
-                      'Ringkasan Transaksi',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: _C.txt1,
-                      ),
+                    const SizedBox(width: 12),
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Status Transaksi',
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: _C.txt1),
+                        ),
+                        SizedBox(height: 1),
+                        Text('Pantau semua pesananmu', style: TextStyle(fontSize: 11, color: _C.txt3)),
+                      ],
                     ),
                   ],
                 ),
                 GestureDetector(
                   onTap: () => CusNav.nPush(context, TransactionListView()),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 5,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: _C.primary.withValues(alpha: 0.08),
+                      color: _C.primaryBg,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Text(
-                      'Lihat Semua →',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: _C.primary,
-                      ),
+                    child: const Row(
+                      children: [
+                        Text('Semua', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _C.primary)),
+                        SizedBox(width: 3),
+                        Icon(Icons.arrow_forward_ios_rounded, size: 9, color: _C.primary),
+                      ],
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 140,
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              scrollDirection: Axis.horizontal,
+
+          // Status grid 3x2
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: 6,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                final statusColor = _C.statusColors[index];
-                final count = statusCount[index];
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 1.0,
+              ),
+              itemBuilder: (ctx, i) {
+                final color = _C.statusColors[i];
                 return GestureDetector(
-                  onTap: () => CusNav.nPush(
-                    context,
-                    TransactionListView(initialRoute: index),
-                  ),
-                  child: _StatusCard(
-                    image: imgStatus[index],
-                    label: statusName[index],
-                    count: count,
-                    color: statusColor,
-                    icon: _C.statusIcons[index],
+                  onTap: () => CusNav.nPush(ctx, TransactionListView(initialRoute: i)),
+                  child: AnimatedBuilder(
+                    animation: _entranceCtrl,
+                    builder: (_, child) {
+                      final delay = (0.2 + i * 0.07).clamp(0.0, 0.95);
+                      final t = CurvedAnimation(
+                        parent: _entranceCtrl,
+                        curve: Interval(delay, (delay + 0.4).clamp(0.0, 1.0), curve: Curves.easeOutBack),
+                      );
+                      return Transform.scale(
+                        scale: t.value.clamp(0.0, 1.0),
+                        child: Opacity(opacity: t.value.clamp(0.0, 1.0), child: child),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.07),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: color.withValues(alpha: 0.18), width: 1),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Image.asset(imgStatus[i], width: 20, fit: BoxFit.contain),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            statusCount[i],
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: color,
+                              height: 1,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            statusName[i],
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 9,
+                              color: _C.txt2,
+                              fontWeight: FontWeight.w600,
+                              height: 1.2,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 );
               },
             ),
           ),
-          const SizedBox(height: 16),
         ],
       ),
     );
   }
 
-  // ─── Settings Group ───────────────────────────────────────────
-  Widget _buildSettingsGroup() {
+  // ─── MENU GROUP ───────────────────────────────────────────────
+  Widget _buildMenuGroup() {
+    final menuItems = [
+      _MenuItem(
+        title: 'Transaksi',
+        subtitle: 'Kelola semua pesanan',
+        iconAsset: Assets.svgsIcTransaksi,
+        gradientColors: const [Color(0xFF0B1F4E), Color(0xFF1A3A7C)],
+        onTap: () => CusNav.nPush(context, TransactionListView()),
+      ),
+      _MenuItem(
+        title: 'Pengaturan Akun',
+        subtitle: 'Ubah profil & data diri',
+        iconAsset: Assets.svgsIcPengaturanAkun,
+        gradientColors: const [Color(0xFF059669), Color(0xFF10B981)],
+        onTap: () => CusNav.nPush(context, SettingsView()),
+      ),
+      _MenuItem(
+        title: 'Logout',
+        subtitle: 'Keluar dari akun',
+        iconAsset: Assets.svgsIcLogout,
+        gradientColors: const [Color(0xFFE50012), Color(0xFFFF4D5B)],
+        isDestructive: true,
+        onTap: _handleLogout,
+      ),
+    ];
+
     return Container(
       decoration: BoxDecoration(
         color: _C.card,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [_C.shadow],
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [_C.shadow],
       ),
       child: Column(
-        children: [
-          _menuTile(
-            title: 'Transaksi',
-            iconAsset: Assets.svgsIcTransaksi,
-            subtitle: 'Kelola semua pesanan',
-            color: _C.secondary,
-            onTap: () => CusNav.nPush(context, TransactionListView()),
-          ),
-          _divider(),
-          _menuTile(
-            title: 'Pengaturan Akun',
-            iconAsset: Assets.svgsIcPengaturanAkun,
-            subtitle: 'Ubah profil & lokasi',
-            color: const Color(0xFF10B981),
-            onTap: () => CusNav.nPush(context, SettingsView()),
-          ),
-          _divider(),
-          _menuTile(
-            title: 'Logout',
-            iconAsset: Assets.svgsIcLogout,
-            subtitle: 'Keluar dari akun',
-            color: _C.primary,
-            isDestructive: true,
-            onTap: _handleLogout,
-          ),
-        ],
+        children: List.generate(menuItems.length, (i) {
+          final m = menuItems[i];
+          return Column(
+            children: [
+              _buildMenuTile(m, index: i),
+              if (i < menuItems.length - 1)
+                const Divider(height: 1, indent: 72, endIndent: 16, color: _C.border),
+            ],
+          );
+        }),
       ),
     );
   }
 
-  Widget _divider() =>
-      const Divider(height: 1, indent: 72, endIndent: 16, color: _C.border);
-
-  Widget _menuTile({
-    required String title,
-    required String iconAsset,
-    required VoidCallback onTap,
-    String subtitle = '',
-    Color color = _C.txt1,
-    bool isDestructive = false,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: SvgPicture.asset(
-                  iconAsset,
-                  width: 20,
-                  colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-                ),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: isDestructive ? _C.primary : _C.txt1,
-                    ),
+  Widget _buildMenuTile(_MenuItem m, {required int index}) {
+    return AnimatedBuilder(
+      animation: _entranceCtrl,
+      builder: (_, child) {
+        final delay = (0.5 + index * 0.08).clamp(0.0, 0.95);
+        final t = CurvedAnimation(
+          parent: _entranceCtrl,
+          curve: Interval(delay, (delay + 0.4).clamp(0.0, 1.0), curve: Curves.easeOut),
+        );
+        return Transform.translate(
+          offset: Offset(30 * (1 - t.value), 0),
+          child: Opacity(opacity: t.value.clamp(0.0, 1.0), child: child),
+        );
+      },
+      child: InkWell(
+        onTap: m.onTap,
+        borderRadius: index == 0
+            ? const BorderRadius.vertical(top: Radius.circular(24))
+            : index == 2
+                ? const BorderRadius.vertical(bottom: Radius.circular(24))
+                : BorderRadius.zero,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              // Gradient icon
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: m.gradientColors,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  if (subtitle.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(fontSize: 12, color: _C.txt2),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: m.gradientColors[0].withValues(alpha: 0.35),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
                   ],
-                ],
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    m.iconAsset,
+                    width: 20,
+                    colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                  ),
+                ),
               ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: _C.bg,
-                borderRadius: BorderRadius.circular(8),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      m.title,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: m.isDestructive ? _C.primary : _C.txt1,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      m.subtitle,
+                      style: const TextStyle(fontSize: 12, color: _C.txt3, fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
               ),
-              child: Icon(
-                Icons.chevron_right_rounded,
-                color: _C.txt3,
-                size: 18,
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: _C.bg,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: const Icon(Icons.chevron_right_rounded, color: _C.txt3, size: 18),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
+  // ─── LOGOUT HANDLER ───────────────────────────────────────────
   Future<void> _handleLogout() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
     final isAdmin = prefs.getBool(Constant.kSetPrefIsAdmin) ?? false;
 
     if (isAdmin) {
@@ -664,15 +790,15 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
     } else {
       Utils.showYesNoDialog(
         context: context,
-        title: "Konfirmasi",
-        desc: "Apakah Anda yakin ingin keluar?",
+        title: 'Konfirmasi Logout',
+        desc: 'Apakah Anda yakin ingin keluar dari akun?',
         yesCallback: () async {
           await context.read<AuthProvider>().logout();
           if (mounted) {
             Navigator.pushAndRemoveUntil(
               context,
-              MaterialPageRoute(builder: (context) => LoginView()),
-              (Route<dynamic> route) => false,
+              MaterialPageRoute(builder: (_) => LoginView()),
+              (route) => false,
             );
           }
         },
@@ -681,64 +807,49 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
     }
   }
 
-  void _showLogoutBottomSheet(BuildContext context) {
+  void _showLogoutBottomSheet(BuildContext ctx) {
     showModalBottomSheet(
-      backgroundColor: _C.card,
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (BuildContext bsContext) {
-        return SafeArea(
+      context: ctx,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        margin: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: _C.card,
+          borderRadius: BorderRadius.circular(28),
+        ),
+        child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 40,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: _C.border,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  width: 40, height: 5,
+                  decoration: BoxDecoration(color: _C.border, borderRadius: BorderRadius.circular(10)),
                 ),
                 const SizedBox(height: 20),
                 const Text(
                   'Opsi Keluar',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: _C.txt1,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: _C.txt1),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Pilih tindakan yang ingin dilakukan',
+                  style: TextStyle(fontSize: 13, color: _C.txt3),
                 ),
                 const SizedBox(height: 20),
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _C.secondary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.admin_panel_settings_rounded,
-                      color: _C.secondary,
-                    ),
-                  ),
-                  title: const Text(
-                    'Kembali ke Admin',
-                    style: TextStyle(fontWeight: FontWeight.w600, color: _C.txt1),
-                  ),
-                  subtitle: const Text(
-                    'Beralih ke mode administrator',
-                    style: TextStyle(fontSize: 12, color: _C.txt2),
-                  ),
+                _logoutOption(
+                  ctx: ctx,
+                  icon: Icons.admin_panel_settings_rounded,
+                  title: 'Kembali ke Admin',
+                  subtitle: 'Beralih ke mode administrator',
+                  color: _C.navy,
                   onTap: () {
-                    Navigator.pop(bsContext);
+                    Navigator.pop(ctx);
                     Utils.showYesNoDialog(
                       context: context,
-                      title: "Konfirmasi",
-                      desc: "Apakah Anda Yakin ingin kembali ke Admin?",
+                      title: 'Konfirmasi',
+                      desc: 'Apakah Anda yakin ingin kembali ke Admin?',
                       yesCallback: () async {
                         await context.read<AdminUserProvider>().backToAdmin(context);
                       },
@@ -746,40 +857,24 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
                     );
                   },
                 ),
-                ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _C.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.logout_rounded, color: _C.primary),
-                  ),
-                  title: const Text(
-                    'Logout Total',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: _C.primary,
-                    ),
-                  ),
-                  subtitle: const Text(
-                    'Keluar dari semua sesi',
-                    style: TextStyle(fontSize: 12, color: _C.txt2),
-                  ),
+                const Divider(height: 1, indent: 20, endIndent: 20, color: _C.border),
+                _logoutOption(
+                  ctx: ctx,
+                  icon: Icons.logout_rounded,
+                  title: 'Logout Total',
+                  subtitle: 'Keluar dari semua sesi',
+                  color: _C.primary,
+                  isDestructive: true,
                   onTap: () {
-                    Navigator.pop(bsContext);
+                    Navigator.pop(ctx);
                     Utils.showYesNoDialog(
                       context: context,
-                      title: "Konfirmasi",
-                      desc: "Apakah Anda Yakin ingin keluar sepenuhnya?",
+                      title: 'Konfirmasi',
+                      desc: 'Apakah Anda yakin ingin keluar sepenuhnya?',
                       yesCallback: () async {
                         await context.read<AuthProvider>().logout();
                         if (mounted) {
-                          Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            '/login',
-                            (route) => false,
-                          );
+                          Navigator.pushNamedAndRemoveUntil(context, '/login', (r) => false);
                         }
                       },
                       noCallback: () => Navigator.pop(context),
@@ -789,74 +884,94 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
               ],
             ),
           ),
-        );
-      },
+        ),
+      ),
+    );
+  }
+
+  Widget _logoutOption({
+    required BuildContext ctx,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: isDestructive ? _C.primary : _C.txt1)),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: const TextStyle(fontSize: 12, color: _C.txt3)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: _C.txt3),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper: dekoratif lingkaran transparan
+  Widget _circle({
+    required double size,
+    double? x,
+    double? xRight,
+    double? y,
+    double? yBottom,
+    required double alpha,
+  }) {
+    return Positioned(
+      left: x,
+      right: xRight,
+      top: y,
+      bottom: yBottom,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white.withValues(alpha: alpha),
+        ),
+      ),
     );
   }
 }
 
-// ─── Status Card Widget ───────────────────────────────────────
-class _StatusCard extends StatelessWidget {
-  final String image;
-  final String label;
-  final String count;
-  final Color color;
-  final IconData icon;
+// ─── DATA MODEL MENU ──────────────────────────────────────────
+class _MenuItem {
+  final String title;
+  final String subtitle;
+  final String iconAsset;
+  final List<Color> gradientColors;
+  final VoidCallback onTap;
+  final bool isDestructive;
 
-  const _StatusCard({
-    required this.image,
-    required this.label,
-    required this.count,
-    required this.color,
-    required this.icon,
+  const _MenuItem({
+    required this.title,
+    required this.subtitle,
+    required this.iconAsset,
+    required this.gradientColors,
+    required this.onTap,
+    this.isDestructive = false,
   });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 88,
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Center(child: Image.asset(image, width: 22, fit: BoxFit.contain)),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            count,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 9.5,
-              color: _C.txt2,
-              fontWeight: FontWeight.w500,
-              height: 1.3,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
 }

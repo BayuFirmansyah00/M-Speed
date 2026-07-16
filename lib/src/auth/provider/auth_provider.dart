@@ -85,12 +85,35 @@ class AuthProvider extends BaseController with ChangeNotifier {
           'password': passC.text,
           // 'device_id': fcmId ?? '-1',
         };
-        final response =
-            await post(Constant.BASE_API_FULL + '/login', body: param);
-
-        if (response.statusCode == 201 || response.statusCode == 200) {
+        // --- MULAI BYPASS LOGIN UNTUK TESTING LOKAL ---
+        // final response = await post(Constant.BASE_API_FULL + '/login', body: param);
+        // if (response.statusCode == 201 || response.statusCode == 200) {
+        if (true) { // Selalu anggap sukses
           SharedPreferences prefs = await SharedPreferences.getInstance();
-          final model = LoginModel.fromJson(jsonDecode(response.body));
+          
+          // Tentukan role secara dinamis berdasarkan input email untuk mempermudah testing
+          String roleTesting = "BUYER";
+          String emailInput = usernameC.text.toLowerCase();
+          if (emailInput.contains("admin")) roleTesting = "ADMIN";
+          else if (emailInput.contains("seller")) roleTesting = "SELLER";
+          else if (emailInput.contains("keuangan")) roleTesting = "KEUANGAN";
+          else if (emailInput.contains("penerima")) roleTesting = "PENERIMA";
+
+          // Simulasi response JSON dari backend
+          String dummyResponse = jsonEncode({
+            "result": "success",
+            "jenis": {
+              "ID": "1", // Ganti ID sesuai dengan user yang ada di DB Laravel jika butuh relasi
+              "email": usernameC.text.isNotEmpty ? usernameC.text : "test@test.com",
+              "password": "dummy_token_123", // Token ini akan dikirim di header Authorization Bearer
+              "jenis": roleTesting, // Role disesuaikan otomatis
+              "kelengkapan": "1",
+              "firstname": "Tester",
+              "lastname": roleTesting
+            }
+          });
+          final model = LoginModel.fromJson(jsonDecode(dummyResponse));
+        // --- AKHIR BYPASS LOGIN ---
 
           // set to shared preferences
           await prefs.setString(Constant.kSetPrefId, "${model.jenis?.ID ?? 0}");
@@ -126,7 +149,7 @@ class AuthProvider extends BaseController with ChangeNotifier {
           passC.clear();
           loading(false);
         } else {
-          final message = jsonDecode(response.body)["messages"]["result"];
+          final message = "Terjadi kesalahan (Bypass mode)"; // jsonDecode(response.body)["messages"]["result"];
           loading(false);
           Utils.showFailed(msg: message);
           // return LoginModel();
