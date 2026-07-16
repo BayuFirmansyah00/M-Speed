@@ -54,6 +54,7 @@ class _HomeAdminTransactionGraphState extends State<HomeAdminTransactionGraph> {
                 },
                 touchTooltipData: BarTouchTooltipData(
                   getTooltipColor: (group) => const Color(0xff1A1A2E),
+                  tooltipRoundedRadius: 10,
                   tooltipPadding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   tooltipMargin: 6,

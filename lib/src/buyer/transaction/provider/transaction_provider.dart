@@ -64,45 +64,21 @@ class TransactionProvider extends BaseController with ChangeNotifier {
     String userId = prefs.getString(Constant.kSetPrefId) ?? '1';
 
     final response = await get(
-        Constant.BASE_API_FULL + '/parent-orders',
-        // Note: New API currently doesn't filter by status/buyer_id yet, but we send it as query params via BaseController just in case.
+        Constant.BASE_API_FULL + '/getdaftartransksibuyer',
         body: {"buyer_id": userId, "status": status.toString()});
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       // SharedPreferences prefs = await SharedPreferences.getInstance();
-      
-      // Karena format JSON dari Laravel 11 Resource berbeda (tidak ada result: "success"), kita tangani manual
-      var jsonResponse = jsonDecode(response.body);
-      
-      // Jika struktur adalah PaginatedResource (ada data, links, meta)
-      List<dynamic> dataList = [];
-      if (jsonResponse is Map<String, dynamic> && jsonResponse.containsKey('data')) {
-        dataList = jsonResponse['data'];
-      } else if (jsonResponse is List) {
-        dataList = jsonResponse;
-      }
-      
-      // Mapping manual dari format ParentOrderResource ke DaftarTransaksiBuyerModelData
-      List<DaftarTransaksiBuyerModelData> mappedData = dataList.map((item) {
-        return DaftarTransaksiBuyerModelData(
-          ID: item['id']?.toString(),
-          nomorOrder: item['order_number']?.toString(),
-          status: item['payment_status']?.toString(),
-          SellerNama: item['seller_snapshot'] != null ? item['seller_snapshot']['name']?.toString() : null,
-          total: item['shipping'] != null ? item['shipping']['cost']?.toString() : "0", // Fallback krn total tidak ada
-          Created: item['created_at']?.toString(),
-          detail: [] // Kosongkan detail untuk saat ini (API baru pisah detail)
-        );
-      }).toList();
-
-      final model = DaftarTransaksiBuyerModel(result: "success", data: mappedData);
+      final model =
+          DaftarTransaksiBuyerModel.fromJson(jsonDecode(response.body));
 
       daftarTransaksi[status - 1] = model;
       if (withLoading) loading(false);
       notifyListeners(); // return model;
     } else {
+      final message = jsonDecode(response.body)["messages"]["error"];
       loading(false);
-      throw Exception("Gagal memuat transaksi (Kode: ${response.statusCode})");
+      throw Exception(message);
     }
   }
 
@@ -151,46 +127,21 @@ class TransactionProvider extends BaseController with ChangeNotifier {
     // userId = "148";
 
     final response = await get(
-        Constant.BASE_API_FULL + '/parent-orders/$transaction_id',
-        body: {"user_id": userId});
+        Constant.BASE_API_FULL + '/getdetailtransksibuyer',
+        body: {"user_id": userId, "parent_id": transaction_id});
 
     if (response.statusCode == 201 || response.statusCode == 200) {
-      // Mapping manual response dari Laravel 11 (ParentOrderResource) ke DetailTransaksiBuyerModel
-      var jsonResponse = jsonDecode(response.body);
-      Map<String, dynamic>? dataItem;
-      if (jsonResponse is Map<String, dynamic> && jsonResponse.containsKey('data')) {
-        dataItem = jsonResponse['data'];
-      } else {
-        dataItem = jsonResponse;
-      }
-      
-      if (dataItem != null) {
-        var parentOrder = DetailTransaksiBuyerModelDataParentOrderModel(
-          ID: dataItem['id']?.toString(),
-          nomorOrder: dataItem['order_number']?.toString(),
-          status: dataItem['payment_status']?.toString(),
-          SellerNama: dataItem['seller_snapshot'] != null ? dataItem['seller_snapshot']['name']?.toString() : null,
-          total: dataItem['shipping'] != null ? dataItem['shipping']['cost']?.toString() : "0",
-          Created: dataItem['created_at']?.toString(),
-        );
-        
-        var mappedData = DetailTransaksiBuyerModelData(
-          ParentOrderModel: parentOrder,
-          detail: [], // Kosongkan karena API belum support orderItems
-          timeline: [],
-          title: "Detail Order"
-        );
-        
-        setDetailTransaksi = DetailTransaksiBuyerModel(result: "success", data: mappedData);
-      }
-      
+      // SharedPreferences prefs = await SharedPreferences.getInstance();
+      setDetailTransaksi =
+          DetailTransaksiBuyerModel.fromJson(jsonDecode(response.body));
       notifyListeners();
 
       if (withLoading) loading(false);
       // return model;
     } else {
+      final message = jsonDecode(response.body)["messages"]["error"];
       loading(false);
-      throw Exception("Gagal memuat detail transaksi (Kode: ${response.statusCode})");
+      throw Exception(message);
     }
   }
 

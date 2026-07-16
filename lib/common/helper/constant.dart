@@ -19,8 +19,8 @@ class Constant {
   static const String DOMAIN2 = "mspeed.mitrakaryaprima.com";
   static const String DOMAIN_LOCAL = "10.0.2.2:8000"; // Laravel Local Server via Emulator
   
-  // static const String BASE_API_FULL = "https://${DOMAIN}/api"; // Production
-  static const String BASE_API_FULL = "http://${DOMAIN_LOCAL}/api"; // Local Dev
+  static const String BASE_API_FULL = "https://${DOMAIN}/api"; // Production
+  // static const String BASE_API_FULL = "http://${DOMAIN_LOCAL}/api"; // Local Dev
   static const String BASE_API_FULL2 = "https://${DOMAIN2}/api";
   static const String APP_NAME = "M-Speed";
 

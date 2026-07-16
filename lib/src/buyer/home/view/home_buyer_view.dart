@@ -4,7 +4,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:dots_indicator/dots_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-
+import 'package:dynamic_height_grid_view/dynamic_height_grid_view.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/common/helper/constant.dart';
@@ -20,119 +20,51 @@ import '../../cart/provider/shopping_cart_provider.dart';
 import '../provider/home_provider.dart';
 import 'product_or_seller_search_view.dart';
 
-// ─── PALET WARNA : Ultra-Premium 2026 ─────────────────────────
+// ─── PALET : Ultra-Modern Clean ───────────────────────────
 class _C {
-  // Brand
-  static const primary    = Color(0xFFE50012);
-  static const primaryL   = Color(0xFFFF4D5B); // lighter variant
-  static const primaryBg  = Color(0xFFFFEBED);
-
-  // Background & Surface
-  static const bg         = Color(0xFFF5F7FA);
-  static const surface    = Color(0xFFFFFFFF);
-  static const surfaceAlt = Color(0xFFF0F4F8);
-
-  // Text
-  static const txt1       = Color(0xFF0D1117); // heading
-  static const txt2       = Color(0xFF4A5568); // body
-  static const txt3       = Color(0xFF9AA5B1); // hint/caption
-
-
-
-  // Shadow tokens
-  static BoxShadow shadow1 = BoxShadow(
-    color: const Color(0x0A000000),
-    blurRadius: 12,
-    offset: const Offset(0, 4),
+  static const primary = Color(0xFFE50012);
+  static const primaryLight = Color(0xFFFFEBEE);
+  static const bg = Color(0xFFF9FAFB); // Lebih putih dan bersih (Off-white)
+  static const card = Color(0xFFFFFFFF);
+  static const txt1 = Color(0xFF0F172A); // Slate dark
+  static const txt2 = Color(0xFF64748B); // Slate medium
+  static const txt3 = Color(0xFF94A3B8); // Slate light
+  
+  static const shadowSoft = BoxShadow(
+    color: Color(0x08000000),
+    blurRadius: 15,
+    offset: Offset(0, 5),
   );
-  static BoxShadow shadow2 = BoxShadow(
-    color: const Color(0x14000000),
-    blurRadius: 24,
-    offset: const Offset(0, 8),
-  );
-  static BoxShadow shadowPrimary = BoxShadow(
-    color: primary.withValues(alpha: 0.25),
+  
+  static const shadowHover = BoxShadow(
+    color: Color(0x12000000),
     blurRadius: 20,
-    offset: const Offset(0, 8),
+    offset: Offset(0, 8),
   );
 }
 
-
-
-// ─── KATEGORI GRADIENT PALETTE ────────────────────────────────
-const _catGradients = [
-  [Color(0xFFE50012), Color(0xFFFF6B6B)],   // Consumable - Red
-  [Color(0xFF3B82F6), Color(0xFF60A5FA)],   // APD - Blue
-  [Color(0xFF10B981), Color(0xFF34D399)],   // Tools - Green
-  [Color(0xFFF59E0B), Color(0xFFFBBF24)],   // Stationery - Amber
-  [Color(0xFF8B5CF6), Color(0xFFA78BFA)],   // Services - Purple
-  [Color(0xFF06B6D4), Color(0xFF22D3EE)],   // Other - Cyan
-];
-
-// ─── BADGE PRODUK ─────────────────────────────────────────────
-class _Badge {
-  final String label;
-  final Color color;
-  final Color bg;
-  const _Badge({required this.label, required this.color, required this.bg});
-}
-
-_Badge? _getBadge(int index, dynamic item) {
-  if (item?.terjual != null && (item.terjual is int ? item.terjual : int.tryParse('${item.terjual}') ?? 0) > 50) {
-    return const _Badge(label: 'TERLARIS', color: Color(0xFFDC2626), bg: Color(0xFFFFEBED));
-  }
-  if (index < 3) return const _Badge(label: 'BARU', color: Color(0xFF2563EB), bg: Color(0xFFDBEAFE));
-  return null;
-}
-
-// ─── MAIN VIEW ────────────────────────────────────────────────
 class HomeBuyerView extends StatefulWidget {
   @override
   State<HomeBuyerView> createState() => _HomeBuyerViewState();
 }
 
 class _HomeBuyerViewState extends BaseState<HomeBuyerView>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   final _scroll = ScrollController();
   late AnimationController _shimmer;
-  late AnimationController _entranceAnim;
   String _userName = '';
-  String _greeting = '';
 
   @override
   void initState() {
     super.initState();
-
     _shimmer = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1400),
+      duration: const Duration(milliseconds: 1200),
     )..repeat();
-
-    _entranceAnim = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
-
-    _updateGreeting();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData();
       _loadUser();
-      _entranceAnim.forward();
     });
-  }
-
-  void _updateGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour >= 4 && hour < 11) {
-      _greeting = 'Selamat Pagi';
-    } else if (hour >= 11 && hour < 15) {
-      _greeting = 'Selamat Siang';
-    } else if (hour >= 15 && hour < 19) {
-      _greeting = 'Selamat Sore';
-    } else {
-      _greeting = 'Selamat Malam';
-    }
   }
 
   Future<void> _loadUser() async {
@@ -155,11 +87,9 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
   void dispose() {
     _scroll.dispose();
     _shimmer.dispose();
-    _entranceAnim.dispose();
     super.dispose();
   }
 
-  // ── Shimmer Box ──────────────────────────────────────────────
   Widget _shimBox({double? w, double? h, double r = 16}) => AnimatedBuilder(
     animation: _shimmer,
     builder: (_, __) => Container(
@@ -168,11 +98,11 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(r),
         gradient: LinearGradient(
-          colors: const [Color(0xFFEEF0F3), Color(0xFFF8F9FB), Color(0xFFEEF0F3)],
+          colors: const [Color(0xFFF1F5F9), Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
           stops: [
-            (_shimmer.value - 0.4).clamp(0.0, 1.0),
+            (_shimmer.value - 0.3).clamp(0.0, 1.0),
             _shimmer.value.clamp(0.0, 1.0),
-            (_shimmer.value + 0.4).clamp(0.0, 1.0),
+            (_shimmer.value + 0.3).clamp(0.0, 1.0),
           ],
         ),
       ),
@@ -181,82 +111,60 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
 
   @override
   Widget build(BuildContext context) {
-    final homeP    = context.watch<HomeProvider>();
-    final products = homeP.buyerHomeProductModel.data ?? [];
-    final categories = homeP.kategoriModel?.data ?? [];
-    final cartTotal  = context.watch<ShoppingCartProvider>().countQtyCartItem();
+    final products = context.watch<HomeProvider>().buyerHomeProductModel.data ?? [];
+    final p = context.watch<HomeProvider>();
+    final categories = context.watch<HomeProvider>().kategoriModel?.data ?? [];
+    final cartTotal = context.watch<ShoppingCartProvider>().countQtyCartItem();
 
     return Scaffold(
       backgroundColor: _C.bg,
-      body: RefreshIndicator(
-        color: _C.primary,
-        strokeWidth: 2.5,
-        displacement: 40,
-        onRefresh: () async {
-          await context.read<HomeProvider>().getHomeProducts(withLoading: false);
-          await context.read<HomeProvider>().fetchKategori(withLoading: false);
-          await context.read<ShoppingCartProvider>().fetchShoppingCart(context, withLoading: false);
-        },
-        child: CustomScrollView(
-          controller: _scroll,
-          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-          slivers: [
-            // ── Hero Header ──────────────────────────────────
-            _buildHeroHeader(cartTotal),
-
-            // ── Banner Carousel ──────────────────────────────
-            SliverToBoxAdapter(child: _buildBanner(homeP)),
-
-            // ── Section: Kategori ────────────────────────────
-            SliverToBoxAdapter(child: _sectionHead('Kategori Pilihan', icon: Icons.grid_view_rounded, onTap: () {})),
-            SliverToBoxAdapter(child: _buildCategories(categories)),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 28)),
-
-            // ── Section: Produk ──────────────────────────────
-            SliverToBoxAdapter(
-              child: _sectionHead(
-                'Semua Produk',
-                icon: Icons.storefront_rounded,
-                onTap: () => CusNav.nPush(context, ProductOrSellerSearchView()),
-              ),
+      body: CustomScrollView(
+        controller: _scroll,
+        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        slivers: [
+          _buildHeroHeader(cartTotal),
+          SliverToBoxAdapter(child: const SizedBox(height: 16)),
+          SliverToBoxAdapter(child: _banner(p)),
+          SliverToBoxAdapter(child: const SizedBox(height: 24)),
+          SliverToBoxAdapter(child: _sectionHead('Kategori Pilihan', onTap: () {})),
+          SliverToBoxAdapter(child: _categories(categories)),
+          SliverToBoxAdapter(child: const SizedBox(height: 24)),
+          SliverToBoxAdapter(
+            child: _sectionHead(
+              'Rekomendasi Untukmu',
+              onTap: () => CusNav.nPush(context, ProductOrSellerSearchView()),
             ),
-
-            if (products.isEmpty)
-              SliverFillRemaining(hasScrollBody: false, child: _buildEmpty())
-            else
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                sliver: SliverGrid(
-                  delegate: SliverChildBuilderDelegate(
-                    (ctx, i) => _buildProductCard(products, i),
-                    childCount: products.length < 20 ? products.length : 20,
-                  ),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 14,
-                    childAspectRatio: 0.56,
+          ),
+          products.isEmpty
+              ? SliverFillRemaining(child: _empty())
+              : SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                    child: DynamicHeightGridView(
+                      physics: const NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount: products.length < 20 ? products.length : 20,
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 14,
+                      mainAxisSpacing: 16,
+                      builder: (ctx, i) => _productCard(products, i),
+                    ),
                   ),
                 ),
-              ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 120)),
-          ],
-        ),
+          const SliverToBoxAdapter(child: SizedBox(height: 110)),
+        ],
       ),
     );
   }
 
-  // ─── HERO HEADER ──────────────────────────────────────────
+  // ─── HERO HEADER + SEARCH BAR ─────────────────────────────
   Widget _buildHeroHeader(int cartTotal) {
     return SliverPersistentHeader(
       pinned: false,
       delegate: _HeroHeaderDelegate(
-        minHeight: MediaQuery.of(context).padding.top + 72,
-        maxHeight: MediaQuery.of(context).padding.top + 172,
+        minHeight: MediaQuery.of(context).padding.top + 70, // Fixed overflow by ensuring minHeight is large enough for collapsed state
+        maxHeight: MediaQuery.of(context).padding.top + 160,
         userName: _userName,
-        greeting: _greeting,
         cartTotal: cartTotal,
         onChat: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChatListView())),
         onCart: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ShoppingCartView())),
@@ -265,55 +173,46 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
     );
   }
 
-  Widget _buildBanner(HomeProvider p) {
-    final banners = [
-      Assets.imagesHomeHeader,
-      Assets.imagesHomeHeader,
-      Assets.imagesHomeHeader,
-    ];
+  // ─── BANNER ───────────────────────────────────────────────
+  Widget _banner(HomeProvider p) {
     return Column(
       children: [
-        const SizedBox(height: 16),
-        CarouselSlider.builder(
-          itemCount: banners.length,
+        CarouselSlider(
           options: CarouselOptions(
             autoPlay: true,
-            height: 200, // Diperbesar dari 160 ke 200
-            viewportFraction: 0.95, // Dibuat lebih lebar (dari 0.9 ke 0.95)
+            height: 160,
+            viewportFraction: 0.88,
             enlargeCenterPage: true,
-            enlargeFactor: 0.1, // Dikurangi agar tidak terlalu menyusut di samping
-            autoPlayCurve: Curves.easeOutCubic,
-            autoPlayAnimationDuration: const Duration(milliseconds: 800),
+            enlargeFactor: 0.18,
+            autoPlayCurve: Curves.easeOutExpo,
             onPageChanged: (i, _) => setState(() => p.currentIndex = i),
           ),
-          itemBuilder: (ctx, i, realIdx) {
+          items: [
+            Assets.imagesHomeHeader,
+            Assets.imagesHomeHeader,
+            Assets.imagesHomeHeader,
+          ].map((img) {
             return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4), // Jarak tipis antar banner
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [_C.shadow1],
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: const [_C.shadowHover],
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Image.asset(
-                  banners[i],
-                  fit: BoxFit.cover, // Ensures image fills the larger area
-                  width: double.infinity,
-                ),
+                borderRadius: BorderRadius.circular(24),
+                child: Image.asset(img, fit: BoxFit.cover, width: double.infinity),
               ),
             );
-          },
+          }).toList(),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         DotsIndicator(
-          dotsCount: banners.length,
+          dotsCount: 3,
           position: p.currentIndex.toDouble(),
           decorator: DotsDecorator(
             color: _C.txt3.withValues(alpha: 0.3),
             activeColor: _C.primary,
             size: const Size(6, 6),
-            activeSize: const Size(20, 6),
-            spacing: const EdgeInsets.symmetric(horizontal: 4),
+            activeSize: const Size(22, 6),
             activeShape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(4),
             ),
@@ -324,50 +223,25 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
   }
 
   // ─── SECTION HEADER ───────────────────────────────────────
-  Widget _sectionHead(String title, {required VoidCallback onTap, required IconData icon}) {
+  Widget _sectionHead(String title, {required VoidCallback onTap}) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 16, 14),
       child: Row(
         children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [_C.primary, _C.primaryL],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 16, color: Colors.white),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
-              color: _C.txt1,
-              letterSpacing: -0.4,
-            ),
-          ),
+          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: _C.txt1, letterSpacing: -0.5)),
           const Spacer(),
           GestureDetector(
             onTap: onTap,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: _C.primaryBg,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                children: const [
-                  Text('Lihat', style: TextStyle(fontSize: 12, color: _C.primary, fontWeight: FontWeight.w700)),
-                  SizedBox(width: 4),
-                  Icon(Icons.arrow_forward_ios_rounded, size: 10, color: _C.primary),
-                ],
-              ),
+            child: Row(
+              children: [
+                const Text('Lihat', style: TextStyle(fontSize: 13, color: _C.primary, fontWeight: FontWeight.w600)),
+                const SizedBox(width: 4),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(color: _C.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+                  child: const Icon(Icons.arrow_forward_ios_rounded, size: 10, color: _C.primary),
+                ),
+              ],
             ),
           ),
         ],
@@ -375,7 +249,8 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
     );
   }
 
-  Widget _buildCategories(List categories) {
+  // ─── KATEGORI ─────────────────────────────────────────────
+  Widget _categories(List categories) {
     final icons = [
       Assets.iconsIcConsumable,
       Assets.iconsIcApd,
@@ -384,26 +259,6 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
       Assets.assetsIconsIcServices,
       Assets.iconsIcOther,
     ];
-
-    if (categories.isEmpty) {
-      return SizedBox(
-        height: 110,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          physics: const BouncingScrollPhysics(),
-          itemCount: 6,
-          separatorBuilder: (_, __) => const SizedBox(width: 16),
-          itemBuilder: (_, __) => Column(
-            children: [
-              _shimBox(w: 64, h: 64, r: 18),
-              const SizedBox(height: 8),
-              _shimBox(w: 50, h: 10, r: 6),
-            ],
-          ),
-        ),
-      );
-    }
 
     return SizedBox(
       height: 110,
@@ -416,74 +271,43 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
         itemBuilder: (ctx, i) {
           final cat = categories[i];
           final icon = i < icons.length ? icons[i] : Assets.iconsIcOther;
-          final gradPair = _catGradients[i % _catGradients.length];
-          // Use the primary color of the gradient for a soft pastel background
-          final softBg = gradPair[0].withValues(alpha: 0.12);
-
-          return AnimatedBuilder(
-            animation: _entranceAnim,
-            builder: (_, child) {
-              final delay = (0.2 + i * 0.08).clamp(0.0, 1.0);
-              final t = CurvedAnimation(
-                parent: _entranceAnim,
-                curve: Interval(delay, (delay + 0.4).clamp(0.0, 1.0), curve: Curves.easeOutBack),
-              );
-              return Transform.translate(
-                offset: Offset(0, 30 * (1 - t.value)),
-                child: Opacity(opacity: t.value.clamp(0.0, 1.0), child: child),
-              );
+          
+          return GestureDetector(
+            onTap: () async {
+              final map = context.read<HomeProvider>().kategoriMap;
+              final name = cat?.nama ?? '';
+              if (map.containsKey(name)) {
+                map.updateAll((k, v) => false);
+                map[name] = true;
+              }
+              await CusNav.nPush(context, ProductOrSellerSearchView());
             },
-            child: GestureDetector(
-              onTap: () async {
-                final map = context.read<HomeProvider>().kategoriMap;
-                final name = cat?.nama ?? '';
-                if (map.containsKey(name)) {
-                  map.updateAll((k, v) => false);
-                  map[name] = true;
-                }
-                await CusNav.nPush(context, ProductOrSellerSearchView());
-              },
-              child: SizedBox(
-                width: 72,
-                child: Column(
-                  children: [
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color: softBg,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: gradPair[0].withValues(alpha: 0.1),
-                          width: 1,
-                        ),
-                      ),
-                      child: Center(
-                        child: Image.asset(
-                          icon, 
-                          width: 36, 
-                          height: 36,
-                          // Render gambar icon aslinya (tanpa di-tint putih) agar warnanya lebih hidup
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      cat?.nama ?? '',
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: _C.txt1,
-                        fontWeight: FontWeight.w700,
-                        height: 1.15,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                  ],
+            child: Column(
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: _C.card,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: const [_C.shadowSoft],
+                  ),
+                  child: Center(
+                    child: Image.asset(icon, width: 32, height: 32),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: 74,
+                  child: Text(
+                    cat?.nama ?? '',
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 11, color: _C.txt2, fontWeight: FontWeight.w600, height: 1.2),
+                  ),
+                ),
+              ],
             ),
           );
         },
@@ -492,241 +316,117 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
   }
 
   // ─── PRODUCT CARD ─────────────────────────────────────────
-  Widget _buildProductCard(List products, int i) {
+  Widget _productCard(List products, int i) {
     final item = products[i];
-    final badge = _getBadge(i, item);
-
     return GestureDetector(
       onTap: () => CusNav.nPush(context, DetailProductView(id: item?.ID ?? '')),
-      child: AnimatedBuilder(
-        animation: _entranceAnim,
-        builder: (_, child) {
-          final delay = (0.3 + (i * 0.04)).clamp(0.0, 0.9);
-          final t = CurvedAnimation(
-            parent: _entranceAnim,
-            curve: Interval(delay, (delay + 0.4).clamp(0.0, 1.0), curve: Curves.easeOut),
-          );
-          return Transform.translate(
-            offset: Offset(0, 40 * (1 - t.value)),
-            child: Opacity(opacity: t.value.clamp(0.0, 1.0), child: child),
-          );
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            color: _C.surface,
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: [_C.shadow1, _C.shadow2],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Gambar + Badge ───────────────────────────
-              Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
-                    child: AspectRatio(
-                      aspectRatio: 1,
-                      child: CachedNetworkImage(
-                        imageUrl: item?.foto ?? '',
-                        fit: BoxFit.cover,
-                        cacheManager: CacheManager(Config(
-                          'ms_${item?.ID ?? i}',
-                          stalePeriod: const Duration(days: 7),
-                        )),
-                        placeholder: (_, __) => _shimBox(h: double.infinity, r: 0),
-                        errorWidget: (_, __, ___) => Container(
-                          color: _C.surfaceAlt,
-                          child: const Center(
-                            child: Icon(Icons.image_not_supported_rounded, color: _C.txt3, size: 32),
-                          ),
-                        ),
-                      ),
-                    ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: _C.card,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [_C.shadowSoft],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Gambar
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: CachedNetworkImage(
+                  imageUrl: item?.foto ?? '',
+                  fit: BoxFit.cover,
+                  cacheManager: CacheManager(Config('ms_${item?.ID ?? i}', stalePeriod: const Duration(days: 7))),
+                  placeholder: (_, __) => _shimBox(h: double.infinity, r: 0),
+                  errorWidget: (_, __, ___) => Container(
+                    color: _C.bg,
+                    child: const Center(child: Icon(Icons.image_not_supported_rounded, color: _C.txt3, size: 28)),
                   ),
-                  // Badge (BARU / TERLARIS)
-                  if (badge != null)
-                    Positioned(
-                      top: 10,
-                      left: 10,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: badge.bg,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: badge.color.withValues(alpha: 0.3), width: 1),
-                        ),
-                        child: Text(
-                          badge.label,
-                          style: TextStyle(
-                            fontSize: 9,
-                            color: badge.color,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-
-              // ── Info Produk ──────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Nama Produk
-                    Text(
-                      item?.nama ?? '-',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: _C.txt1,
-                        height: 1.3,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-
-                    // Harga
-                    Text(
-                      'Rp ${Utils.thousandSeparatorFromString(item?.harga ?? '0')}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        color: _C.primary,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-
-                    // Kategori chip + Toko (satu baris)
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: _C.primaryBg,
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Text(
-                            item?.NamaKategori ?? '-',
-                            style: const TextStyle(
-                              fontSize: 9,
-                              color: _C.primary,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 5),
-
-                    // Store
-                    Row(
-                      children: [
-                        const Icon(Icons.storefront_rounded, size: 11, color: _C.txt3),
-                        const SizedBox(width: 3),
-                        Expanded(
-                          child: Text(
-                            item?.SellerNama ?? '-',
-                            style: const TextStyle(fontSize: 10, color: _C.txt2, fontWeight: FontWeight.w600),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-
-                    // Rating & Terjual
-                    Row(
-                      children: [
-                        const Icon(Icons.star_rounded, size: 11, color: Color(0xFFF59E0B)),
-                        const SizedBox(width: 2),
-                        const Text('4.9', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: _C.txt2)),
-                        const Text(' · ', style: TextStyle(fontSize: 10, color: _C.txt3)),
-                        Flexible(
-                          child: Text(
-                            '${item?.terjual ?? 0} terjual',
-                            style: const TextStyle(fontSize: 10, color: _C.txt2),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+            // Info
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item?.nama ?? '-',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _C.txt1, height: 1.3),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Rp ${Utils.thousandSeparatorFromString(item?.harga ?? '0')}',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: _C.primary),
+                  ),
+                  const SizedBox(height: 10),
+                  // Kategori & Store
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(color: _C.primaryLight, borderRadius: BorderRadius.circular(6)),
+                        child: Text(
+                          item?.NamaKategori ?? '-',
+                          style: const TextStyle(fontSize: 9, color: _C.primary, fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.storefront_rounded, size: 14, color: _C.txt3),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          item?.SellerNama ?? '-',
+                          style: const TextStyle(fontSize: 11, color: _C.txt2, fontWeight: FontWeight.w500),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(Icons.star_rounded, size: 12, color: Colors.amber),
+                      const SizedBox(width: 4),
+                      Text('4.9', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _C.txt2)),
+                      const Text(' • ', style: TextStyle(fontSize: 11, color: _C.txt3)),
+                      Text('${item?.terjual ?? 0} terjual', style: const TextStyle(fontSize: 11, color: _C.txt2)),
+                    ],
+                  )
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   // ─── EMPTY STATE ──────────────────────────────────────────
-  Widget _buildEmpty() {
+  Widget _empty() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Ilustrasi
           Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [_C.primaryBg, _C.primaryBg.withValues(alpha: 0.5)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.inventory_2_rounded, color: _C.primary, size: 56),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(color: _C.primary.withValues(alpha: 0.05), shape: BoxShape.circle),
+            child: const Icon(Icons.inventory_2_rounded, color: _C.primary, size: 48),
           ),
-          const SizedBox(height: 24),
-          const Text(
-            'Belum Ada Produk',
-            style: TextStyle(
-              color: _C.txt1,
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Produk belum tersedia saat ini.\nCoba refresh halaman.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: _C.txt2, fontSize: 14, height: 1.5),
-          ),
-          const SizedBox(height: 28),
-          GestureDetector(
-            onTap: _loadData,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [_C.primary, _C.primaryL],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [_C.shadowPrimary],
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.refresh_rounded, color: Colors.white, size: 18),
-                  SizedBox(width: 8),
-                  Text('Muat Ulang', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800)),
-                ],
-              ),
-            ),
-          ),
+          const SizedBox(height: 16),
+          const Text('Belum ada produk', style: TextStyle(color: _C.txt1, fontSize: 18, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 6),
+          const Text('Silakan cek kembali nanti', style: TextStyle(color: _C.txt2, fontSize: 14)),
         ],
       ),
     );
@@ -734,12 +434,11 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
 }
 
 
-// ─── HERO HEADER DELEGATE ─────────────────────────────────────
+// ─── HERO HEADER DELEGATE ─────────────────────────────────
 class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double minHeight;
   final double maxHeight;
   final String userName;
-  final String greeting;
   final int cartTotal;
   final VoidCallback onChat;
   final VoidCallback onCart;
@@ -749,7 +448,6 @@ class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.minHeight,
     required this.maxHeight,
     required this.userName,
-    required this.greeting,
     required this.cartTotal,
     required this.onChat,
     required this.onCart,
@@ -761,185 +459,121 @@ class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   double get maxExtent => maxHeight;
 
-  String get _initials {
-    if (userName.isEmpty) return 'M';
-    final parts = userName.trim().split(' ');
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    }
-    return userName[0].toUpperCase();
-  }
-
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    final pct = (shrinkOffset / (maxHeight - minHeight)).clamp(0.0, 1.0);
+    // 0.0 -> fully expanded, 1.0 -> fully collapsed
+    final percent = shrinkOffset / (maxHeight - minHeight);
+    final clampedPercent = percent.clamp(0.0, 1.0);
 
     return Stack(
       children: [
-        // ── 1. Gradient Header Background ──────────────────
-        Positioned.fill(
+        // 1. Red Base (Top part)
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          // Shrink the red background as we scroll, but keep enough for the app bar
+          height: maxHeight - (shrinkOffset * 0.8).clamp(0.0, maxHeight - minHeight),
           child: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFFD10010), Color(0xFFE50012), Color(0xFFFF4444)],
+                colors: [Color(0xFFE50012), Color(0xFFFF4D5B)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-            ),
-            child: CustomPaint(painter: _HeaderPatternPainter()),
-          ),
-        ),
-
-        // ── 2. Rounded Bottom Clipper ───────────────────────
-        Positioned(
-          left: 0, right: 0, bottom: 0,
-          child: Container(
-            height: 28,
-            decoration: const BoxDecoration(
-              color: Color(0xFFF5F7FA),
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(28),
-                topRight: Radius.circular(28),
+                bottomLeft: Radius.circular(32),
+                bottomRight: Radius.circular(32),
               ),
             ),
           ),
         ),
 
-        // ── 3. Greeting + Avatar + Icons ────────────────────
+        // 2. Greeting & Icons (Fade out as we collapse)
         Positioned(
-          top: MediaQuery.of(context).padding.top + 14,
+          top: MediaQuery.of(context).padding.top + 16,
           left: 20,
           right: 20,
           child: Opacity(
-            opacity: (1 - pct * 2).clamp(0.0, 1.0),
+            opacity: 1 - clampedPercent,
             child: Row(
               children: [
-                // Avatar
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.25),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 2),
-                  ),
-                  child: Center(
-                    child: Text(
-                      _initials,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '$greeting,',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.85),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Text(
-                        userName.isNotEmpty ? userName : 'Pengguna',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
-                        ),
+                        'Halo, $userName 👋',
+                        style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -0.5),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Penuhi kebutuhan alatmu',
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13, fontWeight: FontWeight.w500),
                       ),
                     ],
                   ),
                 ),
-                // Chat Icon
-                _HeaderIconBtn(
-                  icon: Icons.chat_bubble_outline_rounded,
-                  badge: '2',
-                  onTap: onChat,
-                ),
-                const SizedBox(width: 10),
-                // Cart Icon
-                _HeaderIconBtn(
-                  icon: Icons.shopping_bag_outlined,
-                  badge: cartTotal > 0 ? '$cartTotal' : null,
-                  onTap: onCart,
-                ),
+                _buildHeaderIcon(Icons.chat_bubble_outline_rounded, '2', onChat),
+                const SizedBox(width: 12),
+                _buildHeaderIcon(Icons.shopping_cart_outlined, cartTotal > 0 ? '$cartTotal' : null, onCart),
               ],
             ),
           ),
         ),
-
-        // ── 4. Search Bar ────────────────────────────────────
+        
+        // 3. Search Bar (Glides and morphs)
+        // Saat expanded, search bar ada di bawah.
+        // Saat collapsed, search bar naik dan menggantikan posisi greeting.
         Positioned(
-          bottom: 34,
-          left: 16,
-          right: 16,
+          bottom: 24 - (clampedPercent * 8), // Sedikit naik saat collapsed
+          left: 20,
+          right: 20,
           child: GestureDetector(
             onTap: onSearch,
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
-                  height: 50,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: pct > 0.5 ? 1.0 : 0.92),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      width: 1.5,
+                    // Saat expanded: putih polos dengan shadow
+                    // Saat collapsed: kaca semi transparan putih
+                    color: Color.lerp(
+                      Colors.white, 
+                      Colors.white.withValues(alpha: 0.95), 
+                      clampedPercent
                     ),
+                    borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.10),
+                        color: Colors.black.withValues(alpha: 0.08),
                         blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
+                        offset: const Offset(0, 10),
+                      )
                     ],
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.5),
+                      width: 1.5,
+                    ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.search_rounded, color: _C.txt3, size: 22),
-                      const SizedBox(width: 10),
+                      const Icon(Icons.search_rounded, color: _C.txt3, size: 24),
+                      const SizedBox(width: 12),
                       const Expanded(
                         child: Text(
                           'Cari sparepart, tools, APD...',
-                          style: TextStyle(
-                            color: _C.txt3,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: TextStyle(color: _C.txt3, fontSize: 14, fontWeight: FontWeight.w500),
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [_C.primary, _C.primaryL],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Text(
-                          'Cari',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(color: _C.primary, borderRadius: BorderRadius.circular(12)),
+                        child: const Text('Cari', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
                       ),
                     ],
                   ),
@@ -952,84 +586,51 @@ class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
     );
   }
 
-  @override
-  bool shouldRebuild(covariant _HeroHeaderDelegate old) =>
-      old.userName != userName ||
-      old.greeting != greeting ||
-      old.cartTotal != cartTotal ||
-      old.minHeight != minHeight ||
-      old.maxHeight != maxHeight;
-}
-
-// ─── HEADER PATTERN PAINTER ───────────────────────────────────
-class _HeaderPatternPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.05)
-      ..style = PaintingStyle.fill;
-
-    // Decorative circles
-    canvas.drawCircle(Offset(size.width * 1.1, size.height * 0.1), size.width * 0.45, paint);
-    paint.color = Colors.white.withValues(alpha: 0.04);
-    canvas.drawCircle(Offset(size.width * 0.85, size.height * 0.9), size.width * 0.35, paint);
-    paint.color = Colors.white.withValues(alpha: 0.03);
-    canvas.drawCircle(Offset(-size.width * 0.1, size.height * 0.5), size.width * 0.3, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter old) => false;
-}
-
-// ─── HEADER ICON BUTTON ───────────────────────────────────────
-class _HeaderIconBtn extends StatelessWidget {
-  final IconData icon;
-  final String? badge;
-  final VoidCallback onTap;
-
-  const _HeaderIconBtn({required this.icon, this.badge, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildHeaderIcon(IconData icon, String? badge, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           Container(
-            width: 42,
-            height: 42,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
+              color: Colors.white.withValues(alpha: 0.2),
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
             ),
-            child: Icon(icon, color: Colors.white, size: 21),
+            child: Icon(icon, color: Colors.white, size: 22),
           ),
           if (badge != null)
             Positioned(
-              top: -3,
-              right: -3,
+              top: -2,
+              right: -2,
               child: Container(
-                width: 18,
-                height: 18,
+                padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 4, offset: const Offset(0, 2)),
-                  ],
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 4, offset: const Offset(0, 2))
+                  ]
                 ),
-                child: Center(
-                  child: Text(
-                    badge!,
-                    style: const TextStyle(color: _C.primary, fontSize: 9, fontWeight: FontWeight.w900),
-                  ),
+                child: Text(
+                  badge,
+                  style: const TextStyle(color: _C.primary, fontSize: 10, fontWeight: FontWeight.w800),
                 ),
               ),
             ),
         ],
       ),
     );
+  }
+
+  @override
+  bool shouldRebuild(covariant _HeroHeaderDelegate oldDelegate) {
+    return oldDelegate.userName != userName || 
+           oldDelegate.cartTotal != cartTotal ||
+           oldDelegate.minHeight != minHeight ||
+           oldDelegate.maxHeight != maxHeight;
   }
 }
