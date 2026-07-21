@@ -94,8 +94,9 @@ class AddressProvider extends BaseController with ChangeNotifier {
   Future<void> fetchAddressPenerimaList({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
+    // GET /api/buyer-addresses — fetch user's buyer addresses
     final response = await get(
-      Constant.BASE_API_FULL + '/getalamatbuyer',
+      Constant.BASE_API_FULL + '/buyer-addresses',
     );
 
     if (response.statusCode == 201 || response.statusCode == 200) {
@@ -113,8 +114,9 @@ class AddressProvider extends BaseController with ChangeNotifier {
   Future<void> fetchAddressList({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
+    // GET /api/buyer-addresses — fetch address book
     final response = await get(
-      Constant.BASE_API_FULL + '/getbukualamatbuyer',
+      Constant.BASE_API_FULL + '/buyer-addresses',
     );
 
     if (response.statusCode == 201 || response.statusCode == 200) {
@@ -132,7 +134,8 @@ class AddressProvider extends BaseController with ChangeNotifier {
   Future<void> fetchAkunPenerima({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/getpenerimabuyer');
+    // GET /api/buyer-addresses — fetch recipients
+    final response = await get(Constant.BASE_API_FULL + '/buyer-addresses');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       akunPenerimaModel = AkunPenerimaModel.fromJson(jsonDecode(response.body));
@@ -182,28 +185,22 @@ class AddressProvider extends BaseController with ChangeNotifier {
   Future<void> setBuyerAddress(
       {bool withLoading = false, bool isEdit = false}) async {
     if (withLoading) loading(true);
-    Map<String, String> param = {
-      "penerima_id": selectedPenerimaID ?? '',
-      "alamat": selectedAddressPenerima ?? ''
-    };
-    final response =
-        await post(Constant.BASE_API_FULL + '/setalamatbuyer', body: param);
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      notifyListeners();
-
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
-    }
+    
+    // NOTE: Di sistem baru, mengatur alamat pengiriman yang dipilih untuk checkout
+    // cukup disimpan di state lokal Flutter, karena ID alamat (`address_id` atau `penerima_id`)
+    // akan dikirim langsung ke endpoint checkout `POST /parent-orders`.
+    // Oleh karena itu, kita tidak perlu memanggil API khusus untuk `setBuyerAddress`.
+    
+    await Future.delayed(Duration(milliseconds: 300));
+    notifyListeners();
+    if (withLoading) loading(false);
   }
 
   Future<void> fetchAddressShippingList({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/address');
+    // GET /api/buyer-addresses — address shipping list
+    final response = await get(Constant.BASE_API_FULL + '/buyer-addresses');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       setAddressShippingListModel =
@@ -244,7 +241,8 @@ class AddressProvider extends BaseController with ChangeNotifier {
       {bool withLoading = false, required String id}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/address/$id');
+    // GET /api/buyer-addresses/{id} — get address detail
+    final response = await get(Constant.BASE_API_FULL + '/buyer-addresses/$id');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       setAddressShippingDetailModel =
@@ -265,19 +263,17 @@ class AddressProvider extends BaseController with ChangeNotifier {
     Map<String, String> param = {
       "name": name.text,
       "phone": phone.text,
-      "country": streetNameModel?.address?.country ?? "",
-      "state": streetNameModel?.address?.state ?? "",
-      "city": streetNameModel?.address?.city ?? "",
-      "address": streetNameModel?.displayName ?? "",
-      "zip_code": streetNameModel?.address?.postcode ?? "",
-      "is_default": mainAddress ? "1" : "0",
-      "title": title.text,
+      "detail": streetNameModel?.displayName ?? "",
+      "status": mainAddress ? "Utama" : "Lainnya",
       "latitude": "${locationCoordinate?.latitude ?? 0}",
       "longitude": "${locationCoordinate?.longitude ?? 0}",
     };
+    if (isEdit) {
+      param['_method'] = 'PUT';
+    }
     final response = await post(
         Constant.BASE_API_FULL +
-            '/address${isEdit ? '/${addressShippingListModelData?.id ?? 0}' : ''}',
+            '/buyer-addresses${isEdit ? '/${addressShippingListModelData?.id ?? 0}' : ''}',
         body: param);
 
     if (response.statusCode == 201 || response.statusCode == 200) {
@@ -294,8 +290,9 @@ class AddressProvider extends BaseController with ChangeNotifier {
   Future<void> deleteAddress({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
+    // DELETE /api/buyer-addresses/{id}
     final response = await delete(Constant.BASE_API_FULL +
-        '/address/${addressShippingListModelData?.id ?? 0}');
+        '/buyer-addresses/${addressShippingListModelData?.id ?? 0}');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       notifyListeners();

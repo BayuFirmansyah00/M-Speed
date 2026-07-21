@@ -81,17 +81,17 @@ class ProdukDetailSellerModelDataProduk {
     this.IDKategori,
   });
   ProdukDetailSellerModelDataProduk.fromJson(Map<String, dynamic> json) {
-    ID = json['ID']?.toString();
-    nama = json['nama']?.toString();
-    harga = json['harga']?.toString();
-    kodeProduk = json['kode_produk']?.toString();
+    ID = json['ID']?.toString() ?? json['id']?.toString();
+    nama = json['nama']?.toString() ?? json['name']?.toString();
+    harga = json['harga']?.toString() ?? json['price']?.toString();
+    kodeProduk = json['kode_produk']?.toString() ?? json['product_code']?.toString();
     size = json['size']?.toString();
     qty = json['qty']?.toString();
-    deskripsi = json['deskripsi']?.toString();
-    SellerID = json['SellerID']?.toString();
+    deskripsi = json['deskripsi']?.toString() ?? json['description']?.toString();
+    SellerID = json['SellerID']?.toString() ?? json['seller']?['id']?.toString();
     hapus = json['hapus']?.toString();
     foto = json['foto']?.toString();
-    IDKategori = json['IDKategori']?.toString();
+    IDKategori = json['IDKategori']?.toString() ?? json['category']?['id']?.toString();
   }
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};

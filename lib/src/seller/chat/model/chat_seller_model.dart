@@ -85,12 +85,12 @@ class ChatSellerModelDataSeller {
     this.subditId,
   });
   ChatSellerModelDataSeller.fromJson(Map<String, dynamic> json) {
-    Buat = json['Buat']?.toString();
-    isichat = json['isichat']?.toString();
-    PengirimID = json['PengirimID']?.toString();
-    PenerimaID = json['PenerimaID']?.toString();
-    dibaca = json['dibaca']?.toString();
-    ID = json['ID']?.toString();
+    Buat = json['Buat']?.toString() ?? json['created_at']?.toString();
+    isichat = json['isichat']?.toString() ?? json['message']?.toString();
+    PengirimID = json['PengirimID']?.toString() ?? json['user']?['id']?.toString();
+    PenerimaID = json['PenerimaID']?.toString() ?? json['seller']?['id']?.toString();
+    dibaca = json['dibaca']?.toString() ?? (json['is_read'] == true || json['is_read'] == 1 ? "1" : "0");
+    ID = json['ID']?.toString() ?? json['id']?.toString();
     email = json['email']?.toString();
     password = json['password']?.toString();
     jenis = json['jenis']?.toString();
@@ -102,7 +102,7 @@ class ChatSellerModelDataSeller {
     tagging = json['tagging']?.toString();
     kegiatanUsaha = json['kegiatan_usaha']?.toString();
     pemilikToko = json['pemilik_toko']?.toString();
-    firstname = json['firstname']?.toString();
+    firstname = json['firstname']?.toString() ?? json['user']?['name']?.toString();
     lastname = json['lastname']?.toString();
     foto = json['foto']?.toString();
     HakAksesID = json['HakAksesID']?.toString();

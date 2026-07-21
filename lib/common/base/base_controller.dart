@@ -150,6 +150,7 @@ class BaseController<S extends BaseState> {
     return response;
   }
 
+
   Future<http.Response> post(
     String url, {
     Map<String, String>? headers,
@@ -331,6 +332,70 @@ class BaseController<S extends BaseState> {
       }
       return response;
     }
+  }
+
+  Future<dynamic> getRest(
+    String url, {
+    Map? headers,
+    Map<String, String?>? body,
+  }) async {
+    final response = await get(url, headers: headers, body: body);
+    final decoded = jsonDecode(response.body);
+
+    if (response.statusCode >= 400) {
+      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan pada server';
+      if (message.toString().toLowerCase().contains("unauthorized")) {
+        BuildContext? context = NavigationService.navigatorKey.currentContext;
+        if (context != null) {
+          CustomAlert.showSnackBar(context, 'Harap Login Ulang', true);
+        }
+      }
+      throw Exception(message);
+    }
+    return decoded;
+  }
+
+  Future<dynamic> postRest(
+    String url, {
+    Map<String, String>? headers,
+    Map<String, dynamic>? body,
+    List<http.MultipartFile>? files,
+  }) async {
+    final response = await post(url, headers: headers, body: body, files: files);
+    final decoded = jsonDecode(response.body);
+
+    if (response.statusCode >= 400) {
+      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan pada server';
+      if (message.toString().toLowerCase().contains("unauthorized")) {
+        BuildContext? context = NavigationService.navigatorKey.currentContext;
+        if (context != null) {
+          CustomAlert.showSnackBar(context, 'Harap Login Ulang', true);
+        }
+      }
+      throw Exception(message);
+    }
+    return decoded;
+  }
+
+  Future<dynamic> deleteRest(
+    String url, {
+    Map<String, String>? headers,
+    Map<String, String>? body,
+  }) async {
+    final response = await delete(url, headers: headers, body: body);
+    final decoded = jsonDecode(response.body);
+
+    if (response.statusCode >= 400) {
+      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan pada server';
+      if (message.toString().toLowerCase().contains("unauthorized")) {
+        BuildContext? context = NavigationService.navigatorKey.currentContext;
+        if (context != null) {
+          CustomAlert.showSnackBar(context, 'Harap Login Ulang', true);
+        }
+      }
+      throw Exception(message);
+    }
+    return decoded;
   }
 
   Future<http.Response> put(

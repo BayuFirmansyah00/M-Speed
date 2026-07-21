@@ -173,7 +173,7 @@ class MasterProvider extends BaseController with ChangeNotifier {
       {bool withLoading = false, String search = ''}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/getallkategori',
+    final response = await get(Constant.BASE_API_FULL + '/categories',
         body: search.isNotEmpty ? {"search": search} : {});
 
     if (response.statusCode == 201 || response.statusCode == 200) {

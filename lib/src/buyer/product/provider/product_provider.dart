@@ -13,16 +13,23 @@ class ProductProvider extends BaseController with ChangeNotifier {
   Future<void> fetchDetailProduct(
       {bool withLoading = false, required String productId}) async {
     if (withLoading) loading(true);
-    Map<String, String> body = {'ID': productId};
+
+    // GET /api/products/{id} — detail produk berdasarkan ID
+    // Response: ProductResource { id, name, product_code, qty, price, size,
+    //           description, seller: {id, name}, category: {id, name} }
     final response =
-        await get(Constant.BASE_API_FULL + '/getbuyerproduk', body: body);
+        await get(Constant.BASE_API_FULL + '/products/$productId');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
-      productModel = ProductModel.fromJson(jsonDecode(response.body));
+      final decoded = jsonDecode(response.body);
+      // Jika response membungkus dalam { data: {...} }
+      final item = decoded['data'] ?? decoded;
+      productModel = ProductModel.fromJson({'data': [item], 'meta': null});
       notifyListeners();
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }

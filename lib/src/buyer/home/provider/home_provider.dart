@@ -43,16 +43,16 @@ class HomeProvider extends BaseController with ChangeNotifier {
   Future<void> fetchHome({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    final response =
-        await post(Constant.BASE_API_FULL + '/dashboard/dashboard/get');
+    // GET /api/dashboard — endpoint dashboard baru Laravel
+    final response = await get(Constant.BASE_API_FULL + '/dashboard');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       setHomeModel = HomeModel.fromJson(jsonDecode(response.body));
       notifyListeners();
-
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -74,49 +74,41 @@ class HomeProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
     buyerProductModel = BuyerProductModel();
 
-    final prefs = await SharedPreferences.getInstance();
-    String? userId = await prefs.getString(Constant.kSetPrefId) ?? "";
-
     final categoryData = kategoriModel?.data ?? [];
-    // selectedCategoryID = [];
     selectedCategory =
         kategoriMap.keys.where((e) => kategoriMap[e] == true).toList();
-
     selectedLocationCategory = kategoriLokasiMap.keys
         .where((e) => kategoriLokasiMap[e] == true)
         .toList();
 
-    // log("KATEGORI SELECTED $selectedCategory");
-    // log("KATEGORI SELECTED $selectedCategoryID");
+    // Mapping nama kategori ke ID (untuk query param category_id)
     selectedCategoryID = categoryData
         .where((item) => selectedCategory.contains(item?.nama))
         .map((item2) => item2?.ID ?? '0')
         .toList();
-    Map<String, String> body = {/*'ID': userId*/};
+
+    // GET /api/products — query params REST standard Laravel
+    Map<String, String> body = {};
     if (searchController.text.isNotEmpty)
-      body.addAll({'search': searchController.text});
+      body['search'] = searchController.text;
     if (minPrice.text.isNotEmpty && maxPrice.text.isNotEmpty) {
-      body.addAll({'min_price': minPrice.text});
-      body.addAll({'max_price': maxPrice.text});
+      body['min_price'] = minPrice.text;
+      body['max_price'] = maxPrice.text;
     }
-
-    if (sort != 0 && sort > 0) body.addAll({'sort': '$sort'});
+    if (sort != 0 && sort > 0) body['sort'] = '$sort';
     for (int i = 0; i < selectedCategoryID.length; i++)
-      body.addAll({'kategori[$i]': selectedCategoryID[i]});
+      body['category_id[$i]'] = selectedCategoryID[i];
+    for (int i = 0; i < selectedLocationCategory.length; i++)
+      body['city[$i]'] = selectedLocationCategory[i];
 
-    for (var i = 0; i < selectedLocationCategory.length; i++) {
-      body.addAll({'kota[$i]': selectedLocationCategory[i]});
-    }
-
-    final response =
-        await get(Constant.BASE_API_FULL + '/getbuyerproduk', body: body);
+    final response = await get(Constant.BASE_API_FULL + '/products', body: body);
     if (response.statusCode == 201 || response.statusCode == 200) {
       buyerProductModel = BuyerProductModel.fromJson(jsonDecode(response.body));
       notifyListeners();
-
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -134,40 +126,34 @@ class HomeProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
     buyerProductModel = BuyerProductModel();
 
-    final prefs = await SharedPreferences.getInstance();
-    String? userId = await prefs.getString(Constant.kSetPrefId) ?? "";
-
     final categoryData = kategoriModel?.data ?? [];
-    // selectedCategoryID = [];
     selectedCategory =
         kategoriMap.keys.where((e) => kategoriMap[e] == true).toList();
-    // log("KATEGORI SELECTED $selectedCategory");
     selectedCategoryID = categoryData
         .where((item) => selectedCategory.contains(item?.nama))
         .map((item2) => item2?.ID ?? '0')
         .toList();
-    Map<String, String> body = {/*'ID': userId*/};
+
+    // GET /api/products — halaman utama (tanpa filter ketat)
+    Map<String, String> body = {};
     if (searchController.text.isNotEmpty)
-      body.addAll({'search': searchController.text});
+      body['search'] = searchController.text;
     if (minPrice.text.isNotEmpty && maxPrice.text.isNotEmpty) {
-      body.addAll({'min_price': minPrice.text});
-      body.addAll({'max_price': maxPrice.text});
+      body['min_price'] = minPrice.text;
+      body['max_price'] = maxPrice.text;
     }
-
-    if (sort != 0 && sort > 0) body.addAll({'sort': '$sort'});
+    if (sort != 0 && sort > 0) body['sort'] = '$sort';
     for (int i = 0; i < selectedCategoryID.length; i++)
-      body.addAll({'kategori[$i]': selectedCategoryID[i]});
+      body['category_id[$i]'] = selectedCategoryID[i];
 
-    final response =
-        await get(Constant.BASE_API_FULL + '/getbuyerproduk', body: body);
+    final response = await get(Constant.BASE_API_FULL + '/products', body: body);
     if (response.statusCode == 201 || response.statusCode == 200) {
-      buyerHomeProductModel =
-          BuyerProductModel.fromJson(jsonDecode(response.body));
+      buyerHomeProductModel = BuyerProductModel.fromJson(jsonDecode(response.body));
       notifyListeners();
-
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -195,22 +181,25 @@ class HomeProvider extends BaseController with ChangeNotifier {
   Future<void> fetchKategoriLokasi({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/getallkota');
+    // GET /api/cities — daftar kota untuk filter lokasi (CityResource: { id, name })
+    final response = await get(Constant.BASE_API_FULL + '/cities');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
-      kategoriLokasiModel =
-          KategoriLokasiModel.fromJson(jsonDecode(response.body));
-      
+      kategoriLokasiModel = KategoriLokasiModel.fromJson(jsonDecode(response.body));
+
       Map<String, bool> tempMap = {};
       for (var k in (kategoriLokasiModel?.data ?? [])) {
-        tempMap[k.kota ?? 'Unknown'] = _kategoriLokasiMap[k.kota ?? 'Unknown'] ?? false;
+        // CityResource mengembalikan 'name', fallback ke 'kota'
+        final cityName = k.name ?? k.kota ?? 'Unknown';
+        tempMap[cityName] = _kategoriLokasiMap[cityName] ?? false;
       }
       kategoriLokasiMap = tempMap;
-      
+
       notifyListeners();
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -219,7 +208,7 @@ class HomeProvider extends BaseController with ChangeNotifier {
   Future<void> fetchKategori({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/getallkategori');
+    final response = await get(Constant.BASE_API_FULL + '/categories');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       kategoriModel = KategoriModel.fromJson(jsonDecode(response.body));

@@ -44,17 +44,17 @@ class NegoSellerModelData {
     this.BuyerName,
   });
   NegoSellerModelData.fromJson(Map<String, dynamic> json) {
-    ID = json['ID']?.toString();
-    nama = json['nama']?.toString();
+    ID = json['ID']?.toString() ?? json['id']?.toString();
+    nama = json['nama']?.toString() ?? json['cart']?['product']?['name']?.toString();
     foto = json['foto']?.toString();
-    qty = json['qty']?.toString();
-    hargaAkhir = json['harga_akhir']?.toString();
-    nego = json['nego']?.toString();
+    qty = json['qty']?.toString() ?? json['cart']?['qty']?.toString();
+    hargaAkhir = json['harga_akhir']?.toString() ?? json['cart']?['final_price']?.toString();
+    nego = json['nego']?.toString() ?? json['value']?.toString();
     nego2 = json['nego2']?.toString();
     nego3 = json['nego3']?.toString();
     SellerID = json['SellerID']?.toString();
-    BuyerID = json['BuyerID']?.toString();
-    BuyerName = json['BuyerName']?.toString();
+    BuyerID = json['BuyerID']?.toString() ?? json['cart']?['buyer']?['id']?.toString();
+    BuyerName = json['BuyerName']?.toString() ?? json['cart']?['buyer']?['name']?.toString();
   }
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};

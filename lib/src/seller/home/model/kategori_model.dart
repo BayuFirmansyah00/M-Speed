@@ -17,8 +17,8 @@ class KategoriModelData {
     this.nama,
   });
   KategoriModelData.fromJson(Map<String, dynamic> json) {
-    ID = json['ID']?.toString();
-    nama = json['nama']?.toString();
+    ID = json['ID']?.toString() ?? json['id']?.toString();
+    nama = json['nama']?.toString() ?? json['name']?.toString();
   }
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};

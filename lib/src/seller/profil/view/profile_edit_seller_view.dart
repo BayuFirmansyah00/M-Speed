@@ -45,8 +45,7 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
     loading(true);
     await p.fetchKota();
     await p.fetchProvinsi();
-    // p.locationCoordinate = LatLng(-7.1144282, 112.4069792);
-    // await p.setMapLocation(PickedData(LatLng(-7.1144282, 112.4069792), ''));
+    await p.fetchProfile(context, withLoading: false);
     await p.initEditProfile();
     // p.geolocatorSubscription =
     //     Geolocator.getPositionStream().listen(await p.geolocatorListener);
@@ -416,11 +415,9 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
                 p.ttd = v;
                 setState(() {});
                 FocusManager.instance.primaryFocus?.unfocus();
-                bool result = await p.addTtdNonPkpSeller(withLoading: true);
-                if (result)
-                  Utils.showSuccess(msg: 'TTD Berhasil');
-                else
-                  Utils.showFailed(msg: 'TTD Gagal');
+                // Fitur TTD Non-PKP belum tersedia di API baru
+                // Endpoint /ttdnonpkpseller tidak ada di Laravel baru
+                Utils.showFailed(msg: 'Fitur TTD belum tersedia di versi ini');
               },
             ),
           );
@@ -506,7 +503,7 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
                   .toList(),
               onChanged: (v) {
                 var index =
-                    p.provinsiModel?.data?.indexWhere((e) => e == v) ?? -1;
+                    p.provinsiModel?.data?.indexWhere((e) => e?.nama == v) ?? -1;
                 if (index != -1 &&
                     p.provinsiModel?.data?[index]?.nama != null) {
                   setState(() {
@@ -538,7 +535,7 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
                   .map((e) => e?.kota ?? 'Unknown City')
                   .toList(),
               onChanged: (v) {
-                var index = p.kotaModel?.data?.indexWhere((e) => e == v) ?? -1;
+                var index = p.kotaModel?.data?.indexWhere((e) => e?.kota == v) ?? -1;
                 if (index != -1 && p.kotaModel?.data?[index]?.kota != null) {
                   setState(() {
                     p.selectedCity = v;
@@ -900,18 +897,10 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
                   label: 'Template Pernyataan',
                   color: Constant.greenColor,
                   onTap: () async {
-                    var url =
-                        await p.fetchTemplateNonPKPSeller(withLoading: true);
-                    if (url != null && url != '')
-                      downloadFile(
-                        context,
-                        url,
-                        filename: 'TemplatePernyataan.pdf',
-                        typeFile: 'pdf',
-                      );
-                    else
-                      Utils.showFailed(
-                          msg: 'URL Download File Tidak Ditemukan');
+                    // Fitur Template Non-PKP belum tersedia di API baru
+                    // Endpoint /templatenonpkpseller tidak ada di Laravel baru
+                    Utils.showFailed(
+                        msg: 'Fitur Template Pernyataan belum tersedia di versi ini');
                   },
                 ),
                 SizedBox(width: 12),

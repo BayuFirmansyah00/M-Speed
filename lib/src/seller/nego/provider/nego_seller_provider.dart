@@ -30,24 +30,30 @@ class NegoSellerProvider extends BaseController with ChangeNotifier {
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var userId = await prefs.getString(Constant.kSetPrefId);
-    Map<String, String> body = {'seller_id': userId ?? ''};
+    String endpoint = Constant.BASE_API_FULL + '/negos?seller_id=${userId ?? ''}';
     if (searchNegoC.text.isNotEmpty) {
-      body.addAll({'search': searchNegoC.text});
+      endpoint += '&search=${searchNegoC.text}';
     }
-    final response = await get(
-      Constant.BASE_API_FULL + '/getrequestnegoseller',
-      body: body,
-    );
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      negoSellerModel = NegoSellerModel.fromJson(jsonDecode(response.body));
+    try {
+      final parsed = await getRest(endpoint);
+      
+      // Jika responsenya berupa List, bungkus jadi Map
+      Map<String, dynamic> dataMap = {};
+      if (parsed is List) {
+        dataMap = {'result': 'success', 'data': parsed};
+      } else if (parsed is Map<String, dynamic> && parsed.containsKey('data')) {
+        dataMap = {'result': 'success', 'data': parsed['data']};
+      } else {
+        dataMap = {'result': 'success', 'data': parsed};
+      }
+
+      negoSellerModel = NegoSellerModel.fromJson(dataMap);
       notifyListeners();
-
+    } catch (e) {
+      throw Exception(e);
+    } finally {
       if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
@@ -74,22 +80,20 @@ class NegoSellerProvider extends BaseController with ChangeNotifier {
         'negoseller3': nego?.nego3 ?? '',
       });
     }
-    final response = await post(
-      Constant.BASE_API_FULL +
-          (isAccept ? '/acceptnegoseller' : '/rejectnegoseller'),
-      body: body,
-    );
+    try {
+      final parsed = await postRest(
+        Constant.BASE_API_FULL + '/negos/$negoId/${isAccept ? 'accept' : 'reject'}',
+        body: body,
+      );
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final result = BaseResponse.from(response);
+      final result = BaseResponse("Berhasil", true, null);
       notifyListeners();
-      await Utils.showSuccess(msg: result.message);
+      await Utils.showSuccess(msg: result.message ?? "Berhasil");
       await Future.delayed(Duration(seconds: 2));
+    } catch (e) {
+      throw Exception(e);
+    } finally {
       if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
@@ -104,23 +108,22 @@ class NegoSellerProvider extends BaseController with ChangeNotifier {
       'nego_id': negoId,
       'harga': negoHargaC.text.replaceAll('.', ''),
     };
-    final response = await post(
-      Constant.BASE_API_FULL + '/negoulangseller',
-      body: body,
-    );
+    try {
+      final parsed = await postRest(
+        Constant.BASE_API_FULL + '/negos/$negoId',
+        body: {'_method': 'PUT', 'value': body['harga']},
+      );
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
       negoHargaC.clear();
       negoHargaN.unfocus();
-      final result = BaseResponse.from(response);
+      final result = BaseResponse("Berhasil", true, null);
       notifyListeners();
-      await Utils.showSuccess(msg: result.message);
+      await Utils.showSuccess(msg: result.message ?? "Berhasil");
       await Future.delayed(Duration(seconds: 2));
+    } catch (e) {
+      throw Exception(e);
+    } finally {
       if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 }

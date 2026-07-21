@@ -230,6 +230,7 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
   Future<void> fetchKota({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
+    // GET /api/cities — response: { data: [{ id, name, province_id }] }
     final response = await get(Constant.BASE_API_FULL + '/cities');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
@@ -237,7 +238,8 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
       notifyListeners();
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -249,6 +251,7 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
   Future<void> fetchProvinsi({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
+    // GET /api/provinces — response: { data: [{ id, name }] }
     final response = await get(Constant.BASE_API_FULL + '/provinces');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
@@ -256,13 +259,15 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
       notifyListeners();
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
   }
 
   ProfileSellerModel profileSellerModel = ProfileSellerModel();
+  String? sellerDataId;
 
   Future<void> fetchProfile(BuildContext context,
       {bool withLoading = true}) async {
@@ -271,77 +276,75 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var userId = await prefs.getString(Constant.kSetPrefId);
 
-    final response = await get(
-      Constant.BASE_API_FULL + '/seller-datas/$userId',
-    );
+    int page = 1;
+    bool found = false;
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      profileSellerModel =
-          ProfileSellerModel.fromJson(jsonDecode(response.body));
-      notifyListeners();
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      if (message.toString().contains("Unauthorized")) {
-        Utils.showFailed(msg: "Unauthorized");
-        Future.delayed(Duration(seconds: 1)).then((value) {
-          Navigator.pushReplacementNamed(context, '/login');
-        });
+    while (!found) {
+      // GET /api/seller-datas — Laravel ResourceCollection dengan pagination
+      final response = await get(
+        Constant.BASE_API_FULL + '/seller-datas?page=$page',
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        final dataList = decoded['data'] as List;
+
+        for (var item in dataList) {
+          // Cari seller data milik user yang sedang login
+          // Laravel SellerDataResource mengembalikan relasi 'user' dengan field 'id'
+          var itemUserId = item['user']?['id']?.toString()
+              ?? item['user_id']?.toString();
+          if (itemUserId == userId) {
+            // Mapping field dari Laravel SellerDataResource ke ProfileSellerModel
+            // Laravel fields: name, company_name, phone, owner_name, photo, cp_name,
+            //                 cp_phone, kbli, completeness, user, category
+            profileSellerModel = ProfileSellerModel.fromJson({
+              "data": {
+                "getSeller": item,
+                // Mapping URL file dari field Laravel
+                "fotoUrl": item['photo'] ?? '',
+                "ktpUrl": item['ktp'] ?? '',
+                "npwpUrl": item['npwp'] ?? '',
+                "nibUrl": item['nib'] ?? '',
+                "bukuRekeningUrl": item['bank_book_file'] ?? item['buku_rekening'] ?? '',
+                "spPkpUrl": item['sp_pkp_file'] ?? item['sp_pkp'] ?? ''
+              }
+            });
+            sellerDataId = item['id'].toString();
+            found = true;
+            break;
+          }
+        }
+
+        if (found) {
+          notifyListeners();
+          if (withLoading) loading(false);
+          break;
+        }
+
+        // Cek apakah masih ada halaman berikutnya
+        final lastPage = decoded['meta']?['last_page'] ?? 1;
+        if (page >= lastPage) {
+          if (withLoading) loading(false);
+          Utils.showFailed(msg: "Data Profil Seller tidak ditemukan");
+          break;
+        }
+        page++;
+      } else {
+        final decoded = jsonDecode(response.body);
+        final message = decoded["message"] ??
+            decoded["messages"]?["error"] ??
+            'Terjadi kesalahan';
+        loading(false);
+        if (message.toString().contains("Unauthorized")) {
+          Utils.showFailed(msg: "Unauthorized");
+          Future.delayed(Duration(seconds: 1)).then((value) {
+            Navigator.pushReplacementNamed(context, '/login');
+          });
+        }
+        throw Exception(message);
       }
-      throw Exception(message);
     }
-  }
-
-  Future<bool> addTtdNonPkpSeller({bool withLoading = false}) async {
-    if (withLoading) loading(true);
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String userId = prefs.getString(Constant.kSetPrefId) ?? '1';
-
-    final file = await getMultipart('signature', ttd!);
-
-    final response = await post(
-      Constant.BASE_API_FULL + '/ttdnonpkpseller',
-      body: {"sellerID": userId},
-      files: [file],
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      if (withLoading) loading(false);
-      if (jsonDecode(response.body)["status"] == "success") return true;
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
-    }
-    return false;
-  }
-
-  Future<String?> fetchTemplateNonPKPSeller({bool withLoading = true}) async {
-    if (withLoading) loading(true);
-
-    final response = await get(
-      Constant.BASE_API_FULL + '/templatenonpkpseller',
-      body: {
-        'nama': companyNameC.text,
-        'nama_pemilik': ownerNameC.text,
-        'alamat': addressC.text,
-        'jabatan': roleC.text,
-        'kota': selectedCity ?? '',
-      },
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final result = jsonDecode(response.body);
-      notifyListeners();
-      if (withLoading) loading(false);
-      if (result['data'] != null && result['data'] != '') return result['data'];
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
-    }
-    return null;
   }
 
   Future<void> editProfileSeller(BuildContext context,
@@ -363,33 +366,19 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
     }
     if (withLoading) loading(true);
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    var userId = await prefs.getString(Constant.kSetPrefId);
-
+    // Body sesuai UpdateSellerDataRequest Laravel
+    // Fields yang diterima: name, owner_name, phone, cp_name, cp_phone, kbli,
+    //                       category_id, dan file fields: foto, ktp, npwp, nib,
+    //                       buku_rekening, sp_pkp
     Map<String, String> body = {
-      '_method': 'PUT', // For Laravel Multipart Update
-      'nama': companyNameC.text,
-      'nama_pemilik': ownerNameC.text,
-      'email': emailC.text,
-      'telp': phoneC.text,
-      'jabatan': roleC.text,
-      'nama_cp': salesNameC.text,
-      'telp_cp': salesPhoneC.text,
-      'kbli': kbliC.text,
-      'alamat': addressC.text,
-      'prov': selectedProvince ?? '',
-      'prov_id': selectedProvinceId ?? '',
-      'kota': selectedCity ?? '',
-      'kota_id': selectedCityId ?? '',
-      'lokasi': locationName ?? '',
-      'lattitude': '${locationCoordinate?.latitude ?? 0}',
-      'longitude': '${locationCoordinate?.longitude ?? 0}',
-      'kelengkapan_npwp': '${jenisToko ?? 0}',
-      'no_ktp': ktpNumberC.text,
-      'no_nib': nibC.text,
-      'bank': bankTypeC.text,
-      'no_rek': bankNumberC.text,
-      'an_rek': bankNameC.text,
+      '_method': 'PUT', // Laravel Method Spoofing untuk multipart
+      'name': companyNameC.text,         // nama toko/perusahaan
+      'owner_name': ownerNameC.text,     // nama pemilik
+      'phone': phoneC.text,              // nomor telepon
+      'cp_name': salesNameC.text,        // nama contact person
+      'cp_phone': salesPhoneC.text,      // telepon contact person
+      'kbli': kbliC.text,               // kode KBLI
+      'category_id': '1',               // kategori (hardcode sementara)
     };
     List<http.MultipartFile> files = [];
     Future<void> addFile(File file, String fieldName) async {
@@ -419,7 +408,6 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
     }
 
     if (profileFile != null) await addFile(profileFile!, 'foto');
-
     if (ktpFile != null) await addFile(File(ktpFile!.path), 'ktp');
 
     if (npwpFile != null) {
@@ -428,21 +416,25 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
     }
 
     if (nibFile != null) await addFile(File(nibFile!.path), 'nib');
-
     if (bankNumberFile != null)
       await addFile(File(bankNumberFile!.path), 'buku_rekening');
-
     if (spSkpFile != null) await addFile(File(spSkpFile!.path), 'sp_pkp');
 
+    if (sellerDataId == null) {
+      if (withLoading) loading(false);
+      Utils.showFailed(msg: 'ID Profil Seller tidak ditemukan');
+      return;
+    }
+
+    // PUT /api/seller-datas/{id} melalui method spoofing
     final response = await post(
-      Constant.BASE_API_FULL + '/seller-datas/$userId',
+      Constant.BASE_API_FULL + '/seller-datas/$sellerDataId',
       body: body,
       files: files,
     );
 
     if (response.statusCode == 201 || response.statusCode == 200) {
-      // var result = BaseResponse.from(response);
-      Utils.showFailed(msg: 'Sukses Edit Profile Seller');
+      Utils.showSuccess(msg: 'Sukses Edit Profile Seller');
       notifyListeners();
       if (withLoading) loading(false);
 
@@ -450,7 +442,8 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
       await fetchProfile(context, withLoading: true);
       CusNav.nPop(context);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan';
       loading(false);
       if (message.toString().contains("Unauthorized")) {
         Utils.showFailed(msg: "Unauthorized");

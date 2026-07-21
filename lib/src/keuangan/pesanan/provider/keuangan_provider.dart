@@ -120,19 +120,23 @@ class KeuanganProvider extends BaseController with ChangeNotifier {
   Future<void> fetchTransaction({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/getpesanankeuangan');
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      daftarTransaksi =
-          DaftarTransaksiKeuanganModel.fromJson(jsonDecode(response.body));
+    try {
+      final parsed = await getRest(Constant.BASE_API_FULL + '/parent-orders'); // Maybe add role filter if necessary
+      
+      // Jika parsed adalah list (Laravel Resource Controller pattern)
+      List<dynamic> dataList = [];
+      if (parsed is Map<String, dynamic> && parsed.containsKey('data')) {
+        dataList = parsed['data'];
+      } else if (parsed is List) {
+        dataList = parsed;
+      }
+      
+      daftarTransaksi = DaftarTransaksiKeuanganModel.fromJson({'result': 'success', 'data': dataList});
       notifyListeners();
-
+    } catch (e) {
+      throw Exception(e);
+    } finally {
       if (withLoading) loading(false);
-      // return model;
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
@@ -153,22 +157,28 @@ class KeuanganProvider extends BaseController with ChangeNotifier {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String userId = prefs.getString(Constant.kSetPrefId) ?? '1';
 
-    final response = await get(
-        Constant.BASE_API_FULL + '/getdetailpesanankeuangan',
-        body: {"keuangan_id": userId, "parent_order_id": transaction_id});
-    log("ISINYA REKENing : ${detailTransaksi.data?.ParentOrderModel?.Rekening}");
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      detailTransaksi =
-          DetailTransaksiKeuanganModel.fromJson(jsonDecode(response.body));
+    try {
+      final parsed = await getRest(
+        Constant.BASE_API_FULL + '/parent-orders/$transaction_id?keuangan_id=$userId'
+      );
+      
+      Map<String, dynamic>? dataItem = parsed;
+      if (dataItem != null) {
+        var parentOrder = DetailTransaksiKeuanganModelDataParentOrderModel.fromJson(dataItem);
+        var mappedData = DetailTransaksiKeuanganModelData(
+          ParentOrderModel: parentOrder,
+          detail: [],
+          timeline: [],
+        );
+        detailTransaksi = DetailTransaksiKeuanganModel(result: "success", data: mappedData);
+      }
+      
+      log("ISINYA REKENing : ${detailTransaksi.data?.ParentOrderModel?.Rekening}");
       notifyListeners();
-
+    } catch (e) {
+      throw Exception(e);
+    } finally {
       if (withLoading) loading(false);
-      // return model;
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 

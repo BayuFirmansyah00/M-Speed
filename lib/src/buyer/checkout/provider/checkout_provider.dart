@@ -144,7 +144,7 @@ class CheckOutProvider extends BaseController with ChangeNotifier {
           body.addAll({'store_id': id.toString()});
         }
         final response = await get(
-            Constant.BASE_API_FULL + '/option-shipping-v2',
+            Constant.BASE_API_FULL + '/checkout/shipping-options',
             body: body);
         log("RESPONSE COY : ${response}");
         if (response.statusCode == 201 || response.statusCode == 200) {
@@ -193,7 +193,7 @@ class CheckOutProvider extends BaseController with ChangeNotifier {
       };
 
       final response =
-          await get(Constant.BASE_API_FULL + '/getcheckoutbuyer', body: param);
+          await get(Constant.BASE_API_FULL + '/checkout/summary', body: param);
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         checkoutModel = CheckoutModel.fromJson(jsonDecode(response.body));
@@ -233,7 +233,7 @@ class CheckOutProvider extends BaseController with ChangeNotifier {
       // body.addAll({'qty[0]': qty.toString()});
 
       final response =
-          await get(Constant.BASE_API_FULL + '/getcheckoutbuyer', body: body);
+          await get(Constant.BASE_API_FULL + '/checkout/summary', body: body);
       log("RESPONSE COY : ${response}");
       if (response.statusCode == 201 || response.statusCode == 200) {
         setCheckoutOptionShippingModel =
@@ -303,7 +303,7 @@ class CheckOutProvider extends BaseController with ChangeNotifier {
     param.addAll({'keterangan': "a"});
 
     final response =
-        await post(Constant.BASE_API_FULL + '/docheckoutbuyer', body: param);
+        await post(Constant.BASE_API_FULL + '/checkout', body: param);
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       checkoutModel = CheckoutModel.fromJson(jsonDecode(response.body));

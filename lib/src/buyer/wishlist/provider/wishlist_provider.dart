@@ -55,23 +55,18 @@ class WishlistProvider extends BaseController with ChangeNotifier {
 
   Future<void> fetchWishlist({bool withLoading = false}) async {
     if (withLoading) loading(true);
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    String userId = prefs.getString(Constant.kSetPrefId) ?? '';
-    Map<String, String> body = {'user_id': userId};
 
-    // if (wishlistSearchController.text.isNotEmpty)
-    //   body.addAll({'search': wishlistSearchController.text});
-    final response =
-        await get(Constant.BASE_API_FULL + '/wishlists', body: body);
+    // GET /api/wishlists — Auth via Bearer token (tidak perlu kirim user_id)
+    // Response: { data: [{ id, user_data, product: { id, name, price, qty } }] }
+    final response = await get(Constant.BASE_API_FULL + '/wishlists');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
-      // setWishlistModel = WishlistModel.fromJson(jsonDecode(response.body));
       wishlistModel = BuyerWishlistModel.fromJson(jsonDecode(response.body));
       notifyListeners();
-
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -88,25 +83,22 @@ class WishlistProvider extends BaseController with ChangeNotifier {
   Future<void> fetchSellerWishlist({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    final prefs = await SharedPreferences.getInstance();
-    String userId = prefs.getString(Constant.kSetPrefId) ?? '';
+    // GET /api/follows — seller yang diikuti oleh user login
+    // Response: { data: [{ id, user_data, seller_data: { id, name } }] }
+    Map<String, String> body = {};
+    if (sellerFavoritSearchController.text.isNotEmpty) {
+      body['search'] = sellerFavoritSearchController.text;
+    }
 
-    Map<String, String> body = {'user_id': userId};
-    if (sellerFavoritSearchController.text.isNotEmpty)
-      body.addAll({'search': sellerFavoritSearchController.text});
-    final response = await get(
-        Constant.BASE_API_FULL + '/getbuyersellerfavorit',
-        body: body);
+    final response = await get(Constant.BASE_API_FULL + '/follows', body: body);
 
     if (response.statusCode == 201 || response.statusCode == 200) {
-      // setWishlistModel = WishlistModel.fromJson(jsonDecode(response.body));
-      sellerFavorite =
-          BuyerSellerFavoritModel.fromJson(jsonDecode(response.body));
+      sellerFavorite = BuyerSellerFavoritModel.fromJson(jsonDecode(response.body));
       notifyListeners();
-
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -116,21 +108,16 @@ class WishlistProvider extends BaseController with ChangeNotifier {
       {bool withLoading = false, required String sellerId}) async {
     if (withLoading) loading(true);
 
-    final prefs = await SharedPreferences.getInstance();
-    String userId = prefs.getString(Constant.kSetPrefId) ?? '';
-
-    Map<String, String> param = {'seller_id': sellerId, 'buyer_id': userId};
-    final response =
-        await get(Constant.BASE_API_FULL + '/getdetailseller', body: param);
+    // GET /api/seller-datas/{id} — detail seller berdasarkan ID
+    final response = await get(Constant.BASE_API_FULL + '/seller-datas/$sellerId');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
-      // setWishlistModel = WishlistModel.fromJson(jsonDecode(response.body));
       detailSellerBuyer = DetailSellerBuyer.fromJson(jsonDecode(response.body));
       notifyListeners();
-
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -150,21 +137,18 @@ class WishlistProvider extends BaseController with ChangeNotifier {
   }) async {
     if (withLoading) loading(true);
 
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    String userId = prefs.getString(Constant.kSetPrefId) ?? '';
-
+    // POST /api/follows — follow seller (auth via token, tidak perlu buyer_id)
     final response = await post(Constant.BASE_API_FULL + '/follows',
-        body: {'buyer_id': userId, 'seller_id': sellerId});
+        body: {'seller_data_id': sellerId});
 
     if (response.statusCode == 201 || response.statusCode == 200) {
-      // setWishlistModel = WishlistModel.fromJson(jsonDecode(response.body));
       followSellerSuccess = true;
       notifyListeners();
-
       if (withLoading) loading(false);
     } else {
       followSellerSuccess = false;
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -184,49 +168,37 @@ class WishlistProvider extends BaseController with ChangeNotifier {
   }) async {
     if (withLoading) loading(true);
 
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    String userId = prefs.getString(Constant.kSetPrefId) ?? '';
+    // DELETE /api/follows/{id} — unfollow seller (auth via token)
+    final response = await delete(Constant.BASE_API_FULL + '/follows/$sellerId');
 
-    final response = await delete(Constant.BASE_API_FULL + '/follows/$sellerId',
-        body: {'buyer_id': userId});
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      // setWishlistModel = WishlistModel.fromJson(jsonDecode(response.body));
+    if (response.statusCode == 201 || response.statusCode == 200 ||
+        response.statusCode == 204) {
       unfollowSellerSuccess = true;
       notifyListeners();
-
       if (withLoading) loading(false);
     } else {
       unfollowSellerSuccess = false;
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
   }
 
-  // Delete folder wishlist
   Future<void> deleteWishlist({
-    required String idProduk,
+    required String wishlistId,
     bool withLoading = true,
   }) async {
     if (withLoading) loading(true);
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    String userId = prefs.getString(Constant.kSetPrefId) ?? '';
 
-    Map<String, dynamic> param = {
-      "produk_id": idProduk,
-      "user_id": userId,
-    };
+    // DELETE /api/wishlists/{id} — hapus item dari wishlist
+    final response = await delete(Constant.BASE_API_FULL + '/wishlists/$wishlistId');
 
-    final response = await post(
-        Constant.BASE_API_FULL + '/removefromwishlistbuyer',
-        body: param);
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      // if (withLoading) loading(false);
+    if (response.statusCode == 200 || response.statusCode == 204) {
       fetchWishlist();
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -241,49 +213,44 @@ class WishlistProvider extends BaseController with ChangeNotifier {
       bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    Map<String, dynamic> param = {
-      "id": id.toString(),
-      "name": name.toString(),
-    };
-
+    // PUT /api/wishlists/{id} — update nama wishlist
+    // (endpoint lama /product-whishlist-update sudah tidak digunakan)
     final response = await post(
-        Constant.BASE_API_FULL + '/product-whishlist-update',
-        body: param);
+        Constant.BASE_API_FULL + '/wishlists/$id',
+        body: {
+          '_method': 'PUT',
+          'name': name.toString(),
+        });
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       // fetchWishlist();
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
   }
 
-  // add product to one of the wishlist folder
   Future<void> addProductWishlist({
     required String productId,
     bool withLoading = false,
   }) async {
     if (withLoading) loading(true);
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    String userId = prefs.getString(Constant.kSetPrefId) ?? '';
 
-    Map<String, dynamic> param = {
-      "produk_id": productId,
-      "user_id": userId,
-    };
-
+    // POST /api/wishlists — tambah produk ke wishlist (auth via token)
     final response = await post(
-      Constant.BASE_API_FULL + '/addtowishlistbuyer',
-      body: param,
+      Constant.BASE_API_FULL + '/wishlists',
+      body: {'product_id': productId},
     );
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       fetchWishlist();
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -295,18 +262,18 @@ class WishlistProvider extends BaseController with ChangeNotifier {
   }) async {
     if (withLoading) loading(true);
 
-    Map<String, dynamic> param = {
-      "name": namaKoleksiC.text,
-    };
-
-    final response =
-        await post(Constant.BASE_API_FULL + '/product-whishlis', body: param);
+    // POST /api/wishlists — buat koleksi wishlist baru
+    // (endpoint lama /product-whishlis sudah tidak digunakan)
+    final response = await post(
+        Constant.BASE_API_FULL + '/wishlists',
+        body: {'name': namaKoleksiC.text});
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       // fetchWishlist();
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -318,27 +285,24 @@ class WishlistProvider extends BaseController with ChangeNotifier {
   }) async {
     if (withLoading) loading(true);
 
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    String userId = prefs.getString(Constant.kSetPrefId) ?? '';
-
+    // POST /api/carts dengan from_wishlist flag
+    // Semua wishlist item dari seller ini dimasukkan ke cart
     final response = await post(
-      Constant.BASE_API_FULL + '/addalltocartbuyer',
+      Constant.BASE_API_FULL + '/carts',
       body: {
-        'buyer_id': userId,
         'seller_id': sellerId,
-        "qty": "1",
-        "catatan": "",
-        "wishlist": "1",
+        'from_wishlist': '1',
+        'qty': '1',
       },
     );
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       await fetchWishlist(withLoading: true);
       notifyListeners();
-
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["message"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -351,17 +315,14 @@ class WishlistProvider extends BaseController with ChangeNotifier {
   }) async {
     if (withLoading) loading(true);
 
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    String userId = prefs.getString(Constant.kSetPrefId) ?? '';
-
+    // POST /api/carts — tambah dari wishlist ke keranjang
+    // Menggunakan endpoint baru sesuai StoreCartRequest Laravel
+    // (endpoint lama /addtocartbuyer sudah tidak digunakan)
     final response = await post(
-      Constant.BASE_API_FULL + '/addtocartbuyer',
+      Constant.BASE_API_FULL + '/carts',
       body: {
-        'buyer_id': userId,
-        'produk_id': produkId,
-        "qty": "1",
-        "catatan": "",
-        "wishlist": '1',
+        'product_id': produkId,
+        'qty': '1',
       },
     );
 
@@ -371,11 +332,12 @@ class WishlistProvider extends BaseController with ChangeNotifier {
 
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["message"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan';
       loading(false);
       CustomAlert.showSnackBar(
         context,
-        "Terjadi Galat!",
+        message,
         true,
       );
       throw Exception(message);

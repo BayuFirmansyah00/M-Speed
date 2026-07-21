@@ -121,8 +121,9 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
     else if (filterType == 1 && selectedSellerBuyerId != null)
       body.addAll({'buyer': selectedSellerBuyerId ?? ''});
 
+    // GET /api/admin/dashboard
     final response = await get(
-      Constant.BASE_API_FULL + '/dashboardadmin',
+      Constant.BASE_API_FULL + '/admin/dashboard',
       body: body,
     );
 
@@ -130,6 +131,9 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
       homeAdminModel = HomeAdminModel.fromJson(jsonDecode(response.body));
       final chart = homeAdminModel.data?.pembelian;
       final transactionChart = homeAdminModel.data?.transaksi;
+      graphList.clear();
+      biggestGraphVal = 0;
+      biggestTransactionGraphVal = 0;
       for (int i = 0; i < (chart?.length ?? 0); i++) {
         var val = chart?[i] ?? 0;
         if (val >= biggestGraphVal) biggestGraphVal = val;
@@ -140,10 +144,10 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
         if (val >= biggestTransactionGraphVal) biggestTransactionGraphVal = val;
       }
       notifyListeners();
-
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -177,27 +181,26 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
         .where((item) => selectedCategory.contains(item?.nama))
         .map((item2) => item2?.ID ?? '0')
         .toList();
-    Map<String, String> body = {/*'ID': userId*/};
+    // GET /api/products
+    Map<String, String> body = {};
     if (searchController.text.isNotEmpty)
-      body.addAll({'search': searchController.text});
+      body['search'] = searchController.text;
     if (minPrice.text.isNotEmpty && maxPrice.text.isNotEmpty) {
-      body.addAll({'min_price': minPrice.text});
-      body.addAll({'max_price': maxPrice.text});
+      body['min_price'] = minPrice.text;
+      body['max_price'] = maxPrice.text;
     }
-
-    if (sort != 0 && sort > 0) body.addAll({'sort': '$sort'});
+    if (sort != 0 && sort > 0) body['sort'] = '$sort';
     for (int i = 0; i < selectedCategoryID.length; i++)
-      body.addAll({'kategori[$i]': selectedCategoryID[i]});
+      body['category_id[$i]'] = selectedCategoryID[i];
 
-    final response =
-        await get(Constant.BASE_API_FULL + '/getbuyerproduk', body: body);
+    final response = await get(Constant.BASE_API_FULL + '/products', body: body);
     if (response.statusCode == 201 || response.statusCode == 200) {
       buyerProductModel = BuyerProductModel.fromJson(jsonDecode(response.body));
       notifyListeners();
-
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -227,28 +230,26 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
         .where((item) => selectedCategory.contains(item?.nama))
         .map((item2) => item2?.ID ?? '0')
         .toList();
-    Map<String, String> body = {/*'ID': userId*/};
+    // GET /api/products
+    Map<String, String> body = {};
     if (searchController.text.isNotEmpty)
-      body.addAll({'search': searchController.text});
+      body['search'] = searchController.text;
     if (minPrice.text.isNotEmpty && maxPrice.text.isNotEmpty) {
-      body.addAll({'min_price': minPrice.text});
-      body.addAll({'max_price': maxPrice.text});
+      body['min_price'] = minPrice.text;
+      body['max_price'] = maxPrice.text;
     }
-
-    if (sort != 0 && sort > 0) body.addAll({'sort': '$sort'});
+    if (sort != 0 && sort > 0) body['sort'] = '$sort';
     for (int i = 0; i < selectedCategoryID.length; i++)
-      body.addAll({'kategori[$i]': selectedCategoryID[i]});
+      body['category_id[$i]'] = selectedCategoryID[i];
 
-    final response =
-        await get(Constant.BASE_API_FULL + '/getbuyerproduk', body: body);
+    final response = await get(Constant.BASE_API_FULL + '/products', body: body);
     if (response.statusCode == 201 || response.statusCode == 200) {
-      buyerHomeProductModel =
-          BuyerProductModel.fromJson(jsonDecode(response.body));
+      buyerHomeProductModel = BuyerProductModel.fromJson(jsonDecode(response.body));
       notifyListeners();
-
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -266,7 +267,7 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
   Future<void> fetchKategori({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/getallkategori');
+    final response = await get(Constant.BASE_API_FULL + '/categories');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       kategoriModel = KategoriModel.fromJson(jsonDecode(response.body));
@@ -292,8 +293,9 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
       {bool withLoading = false, String search = ''}) async {
     if (withLoading) loading(true);
 
+    // GET /api/users?role=buyer
     final response =
-        await get(Constant.BASE_API_FULL + '/getbuyeradmin', body: {});
+        await get(Constant.BASE_API_FULL + '/users', body: {'role': 'buyer'});
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       userData.clear();
@@ -308,10 +310,10 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
       });
 
       notifyListeners();
-
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -322,13 +324,13 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
       {bool withLoading = false, String search = ''}) async {
     if (withLoading) loading(true);
 
+    // GET /api/users?role=seller
     final response =
-        await get(Constant.BASE_API_FULL + '/getselleradmin', body: {});
+        await get(Constant.BASE_API_FULL + '/users', body: {'role': 'seller'});
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       userData.clear();
       sellerAdminModel = SellerAdminModel.fromJson(jsonDecode(response.body));
-      notifyListeners();
       sellerAdminModel.data?.forEach((v) {
         userData.add(UserData(
             name1: v?.nama,
@@ -340,10 +342,10 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
       });
 
       notifyListeners();
-
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }

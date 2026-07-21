@@ -230,7 +230,7 @@ class _ShoppingCartViewState extends BaseState<ShoppingCartView> {
                       borderRadius: BorderRadius.circular(10), () async {
                     setState(() {
                       cartP.sendCatatan(context,
-                          index: index, indexx: indexx, productId: produkId);
+                          index: index, indexx: indexx, cartId: produkId);
                     });
                     CusNav.nPop(context);
                   }),
@@ -778,10 +778,7 @@ class _ShoppingCartViewState extends BaseState<ShoppingCartView> {
                                                               cartId: int.parse(
                                                                   prodItem?.ID ??
                                                                       "0"),
-                                                              qty: (int.parse(
-                                                                      prodItem?.qty ??
-                                                                          "1") -
-                                                                  1),
+                                                              qty: ((prodItem?.qty ?? 1) - 1),
                                                               note: "",
                                                             )
                                                             .onError((error,
@@ -883,12 +880,7 @@ class _ShoppingCartViewState extends BaseState<ShoppingCartView> {
                                                                         indexx]
                                                                     ?.ID ??
                                                                 ""),
-                                                            qty: (int.parse((item
-                                                                        .detail?[
-                                                                            indexx]
-                                                                        ?.qty ??
-                                                                    "")) +
-                                                                1),
+                                                            qty: ((item.detail?[indexx]?.qty ?? 1) + 1),
                                                             note: "",
                                                           )
                                                           .onError((error,
@@ -1409,9 +1401,7 @@ class _ExpansionTileUpState extends State<ExpansionTileUp> {
                         return Row(
                           children: [
                             Radio(
-                              value: (cartP.getShoppingCartModel.pajak?[index]
-                                      ?.persentase)
-                                  ?.toDouble(),
+                              value: double.tryParse(item?['persentase']?.toString() ?? '0') ?? 0.0,
                               groupValue: cartP.isPajak,
                               visualDensity:
                                   VisualDensity(vertical: -4, horizontal: -4),
@@ -1424,7 +1414,7 @@ class _ExpansionTileUpState extends State<ExpansionTileUp> {
                                 });
                               },
                             ),
-                            Text("Gunakan ${item?.nama} ${item?.persentase}%"),
+                            Text("Gunakan ${item?['nama']} ${item?['persentase']}%"),
                           ],
                         );
                       }),

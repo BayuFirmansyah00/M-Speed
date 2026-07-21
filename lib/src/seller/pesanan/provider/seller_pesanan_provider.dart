@@ -11,31 +11,30 @@ import 'package:mspeed/src/seller/pesanan/view/pesanan_buat_surat_view.dart';
 import 'package:mspeed/src/seller/pesanan/view/upload_lampiran_view.dart';
 import 'package:path/path.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SellerPesananProvider extends BaseController with ChangeNotifier {
   var pesananSellerModel = PesananSellerModel();
   Future<void> fetchListPesanan({
     bool withLoading = false,
-    String sellerId = "196",
   }) async {
     if (withLoading) loading(true);
-    final response = await get(
-      Constant.BASE_API_FULL + '/getpesananseller',
-      body: {"seller_id": sellerId},
-    );
+    
+    try {
+      // Ambil seller_id dari sesi login (bukan hardcode)
+      final prefs = await SharedPreferences.getInstance();
+      final sellerId = prefs.getString(Constant.kSetPrefId) ?? '';
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      pesananSellerModel = PesananSellerModel.fromJson(
-        jsonDecode(response.body),
+      final parsed = await getRest(
+        Constant.BASE_API_FULL + '/parent-orders?seller_id=$sellerId',
       );
+      
+      pesananSellerModel = PesananSellerModel.fromJson(parsed);
       notifyListeners();
-
+    } catch (e) {
+      throw Exception(e);
+    } finally {
       if (withLoading) loading(false);
-      // return model;
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
@@ -50,27 +49,25 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
 
   Future<void> fetchDetailPesanan({
     bool withLoading = false,
-    String seller_id = '196',
     required String parent_id,
   }) async {
     if (withLoading) loading(true);
 
-    final response = await get(
-      Constant.BASE_API_FULL + '/getdetailpesananseller',
-      body: {"seller_id": seller_id, "parent_order_id": parent_id},
-    );
+    try {
+      // Ambil seller_id dari sesi login (bukan hardcode)
+      final prefs = await SharedPreferences.getInstance();
+      final sellerId = prefs.getString(Constant.kSetPrefId) ?? '';
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      detailPesananSellerModel = DetailPesananSellerModel.fromJson(
-        jsonDecode(response.body),
+      final parsed = await getRest(
+        Constant.BASE_API_FULL + '/parent-orders/$parent_id?seller_id=$sellerId',
       );
+      
+      detailPesananSellerModel = DetailPesananSellerModel.fromJson(parsed);
       notifyListeners();
-
+    } catch (e) {
+      throw Exception(e);
+    } finally {
       if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
@@ -83,12 +80,12 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
   }) async {
     if (withLoading) loading(true);
 
-    final path = terima ? 'terimapesananseller' : 'tolakpesananseller';
-
-    var body = {"parent_order_id": parent_id};
+    // PUT /api/parent-orders/{id} — update status pesanan
+    var body = {"status": terima ? "accepted" : "rejected"};
     if (!terima && rejectOrderReason != null && rejectOrderReason?.trim() != '')
-      body.addAll({'alasantolak': rejectOrderReason!});
-    final response = await post(Constant.BASE_API_FULL + '/$path', body: body);
+      body.addAll({'reject_reason': rejectOrderReason!});
+      
+    final response = await put(Constant.BASE_API_FULL + '/parent-orders/$parent_id', body: body);
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       fetchDetailPesanan(parent_id: parent_id, withLoading: true);
@@ -96,10 +93,11 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
       if (withLoading) loading(false);
       return true;
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
       return false;
-      throw Exception(message);
+      // throw Exception(message); // exception dihilangkan karena return false
     }
   }
 
@@ -108,9 +106,11 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
     required String parent_id,
   }) async {
     if (withLoading) loading(true);
-    final response = await post(
-      Constant.BASE_API_FULL + '/kirimbarangseller',
-      body: {"parent_order_id": parent_id},
+    
+    // PUT /api/parent-orders/{id} — update status pengiriman
+    final response = await put(
+      Constant.BASE_API_FULL + '/parent-orders/$parent_id',
+      body: {"status": "shipped"},
     );
 
     if (response.statusCode == 201 || response.statusCode == 200) {
@@ -119,10 +119,10 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
       if (withLoading) loading(false);
       return true;
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
       return false;
-      throw Exception(message);
     }
   }
 
@@ -143,14 +143,19 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
   }) async {
     if (withLoading) loading(true);
     final file = await http.MultipartFile.fromPath(
-      'signature',
+      'file',
       image.path,
-      filename: basename(image.path), // Use the file name of the image
+      filename: basename(image.path), 
     );
 
+    // POST /api/order-documents — upload dokumen pesanan
     final response = await post(
-      Constant.BASE_API_FULL + '/${suratType.path}',
-      body: {"nomor_order": nomor_order, "parent_order_id": transaction_id},
+      Constant.BASE_API_FULL + '/order-documents',
+      body: {
+        "parent_order_id": transaction_id, 
+        "nomor_order": nomor_order,
+        "document_type_id": suratType == SuratType.SURAT_PESANAN ? "2" : "3" // TTD Seller
+      },
       files: [file],
     );
 
@@ -204,9 +209,10 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
       );
     }
 
+    // POST /api/order-documents — upload lampiran seller (faktur, enofa, lainnya)
     final response = await post(
-      Constant.BASE_API_FULL + '/uploadlampiranseller',
-      body: {"parent_order_id": transaction_id},
+      Constant.BASE_API_FULL + '/order-documents',
+      body: {"parent_order_id": transaction_id, "document_type_id": "4"}, // ID untuk lampiran
       files: [mFaktur, mNota, ...mLainnya],
     );
 
@@ -240,8 +246,9 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
       body["keterangan[$i]"] = productCatatan[i].ket ?? '';
     }
 
+    // POST /api/parent-orders/{id}/surat-jalan
     final response = await post(
-      Constant.BASE_API_FULL + '/buatsuratjalanseller',
+      Constant.BASE_API_FULL + '/parent-orders/$transaction_id/surat-jalan',
       body: body,
     );
 

@@ -142,7 +142,7 @@ class _WishlistSayaViewState extends BaseState<WishlistSayaView> {
                   onTap: () {
                     context
                         .read<WishlistProvider>()
-                        .deleteWishlist(idProduk: data.ID.toString());
+                        .deleteWishlist(wishlistId: data.IDWishlist?.toString() ?? data.ID.toString());
                     Navigator.pop(ctx);
                   },
                 ),

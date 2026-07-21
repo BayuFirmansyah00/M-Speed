@@ -31,6 +31,7 @@ class BuyerProductModelData {
   String? foto;
   String? IDKategori;
   String? NamaKategori;
+  String? terjual;
 
   BuyerProductModelData({
     this.ID,
@@ -45,20 +46,38 @@ class BuyerProductModelData {
     this.foto,
     this.IDKategori,
     this.NamaKategori,
+    this.terjual,
   });
   BuyerProductModelData.fromJson(Map<String, dynamic> json) {
-    ID = json['ID']?.toString();
-    nama = json['nama']?.toString();
-    harga = json['harga']?.toString();
-    kodeProduk = json['kode_produk']?.toString();
+    ID = json['id']?.toString() ?? json['ID']?.toString();
+    nama = json['name']?.toString() ?? json['nama']?.toString();
+    harga = json['price']?.toString() ?? json['harga']?.toString();
+    kodeProduk = json['product_code']?.toString() ?? json['kode_produk']?.toString();
     size = json['size']?.toString();
     qty = json['qty']?.toString();
-    deskripsi = json['deskripsi']?.toString();
-    SellerID = json['SellerID']?.toString();
-    SellerNama = json['SellerNama']?.toString();
-    foto = json['foto']?.toString();
-    IDKategori = json['IDKategori']?.toString();
-    NamaKategori = json['NamaKategori']?.toString();
+    deskripsi = json['description']?.toString() ?? json['deskripsi']?.toString();
+
+    // Seller nested atau flat
+    if (json['seller'] != null) {
+      SellerID = json['seller']['id']?.toString();
+      SellerNama = json['seller']['name']?.toString();
+    } else {
+      SellerID = json['SellerID']?.toString();
+      SellerNama = json['SellerNama']?.toString();
+    }
+
+    foto = json['photo']?.toString() ?? json['foto']?.toString();
+    
+    // Category nested atau flat
+    if (json['category'] != null) {
+      IDKategori = json['category']['id']?.toString();
+      NamaKategori = json['category']['name']?.toString();
+    } else {
+      IDKategori = json['IDKategori']?.toString();
+      NamaKategori = json['NamaKategori']?.toString();
+    }
+    
+    terjual = json['terjual']?.toString();
   }
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
@@ -74,6 +93,7 @@ class BuyerProductModelData {
     data['foto'] = foto;
     data['IDKategori'] = IDKategori;
     data['NamaKategori'] = NamaKategori;
+    data['terjual'] = terjual;
     return data;
   }
 }

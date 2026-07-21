@@ -27,23 +27,19 @@ class PenerimaPesananProvider extends BaseController with ChangeNotifier {
     //   param.addAll({'search': searchC.text});
     param.addAll({'penerima_id': userId});
 
-    final response = await get(
-      Constant.BASE_API_FULL + '/getpesananpenerima',
-      body: param,
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      pesananPenerimaModel = PesananPenerimaModel.fromJson(
-        jsonDecode(response.body),
+    try {
+      final parsed = await getRest(
+        Constant.BASE_API_FULL + '/parent-orders?penerima_id=$userId',
       );
+      
+      // Usually Laravel returns a collection inside "data", but the old code expected "result" and "data".
+      // Let's assume the old model handles {"data": [...]} via fromJson if adapted.
+      pesananPenerimaModel = PesananPenerimaModel.fromJson(parsed);
       notifyListeners();
-
+    } catch (e) {
+      throw Exception(e);
+    } finally {
       if (withLoading) loading(false);
-      // return model;
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
@@ -58,24 +54,17 @@ class PenerimaPesananProvider extends BaseController with ChangeNotifier {
     String userId = prefs.getString(Constant.kSetPrefId) ?? '1';
     // userId = "124";
 
-    final response = await get(
-      Constant.BASE_API_FULL + '/getdetailpesananpenerima',
-      body: {"penerima_id": userId, "parent_order_id": transaction_id},
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      detailPesanan = DetailPesananPenerimaModel.fromJson(
-        jsonDecode(response.body),
+    try {
+      final parsed = await getRest(
+        Constant.BASE_API_FULL + '/parent-orders/$transaction_id?penerima_id=$userId',
       );
+      
+      detailPesanan = DetailPesananPenerimaModel.fromJson(parsed);
       notifyListeners();
-
+    } catch (e) {
+      throw Exception(e);
+    } finally {
       if (withLoading) loading(false);
-      // return model;
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 

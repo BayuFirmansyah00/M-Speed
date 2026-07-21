@@ -49,28 +49,37 @@ class ChatSellerProvider extends BaseController with ChangeNotifier {
       {bool withLoading = true, required String idSeller}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/getchatseller',
-        body: {'user_id': idSeller});
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      chatSellerModel = ChatSellerModel.fromJson(jsonDecode(response.body));
+    try {
+      final parsed = await getRest(
+        Constant.BASE_API_FULL + '/chats?user_id=$idSeller'
+      );
+      
+      // Bungkus data menjadi format yang diharapkan (Map { seller: [...] })
+      Map<String, dynamic> dataMap = {};
+      if (parsed is List) {
+        dataMap = {'seller': parsed};
+      } else if (parsed is Map<String, dynamic> && parsed.containsKey('data')) {
+        dataMap = {'seller': parsed['data']};
+      } else {
+        dataMap = {'seller': parsed};
+      }
+      
+      chatSellerModel = ChatSellerModel.fromJson({'result': 'success', 'data': dataMap});
       chatSellerModel.data?.seller?.forEach((element) {
         if (element?.Buat != null)
           element?.Buat = formatDate(element.Buat ?? "");
       });
-
       notifyListeners();
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      if (message.toString().contains("Unauthorized")) {
+    } catch (e) {
+      if (e.toString().contains("Unauthorized")) {
         Utils.showFailed(msg: "Unauthorized");
         Future.delayed(Duration(seconds: 1)).then((value) {
           Navigator.pushReplacementNamed(context, '/login');
         });
       }
-      throw Exception(message);
+      throw Exception(e);
+    } finally {
+      if (withLoading) loading(false);
     }
   }
 
@@ -82,28 +91,34 @@ class ChatSellerProvider extends BaseController with ChangeNotifier {
 
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/getdetailchatseller',
-        body: {'buyer_id': idBuyer, 'seller_id': idSeller});
+    try {
+      final parsed = await getRest(
+        Constant.BASE_API_FULL + '/chats?user_id=$idBuyer&seller_id=$idSeller'
+      );
+      
+      // Jika parsed adalah List, sesuaikan ke format DetailChatSellerModel
+      Map<String, dynamic> dataMap = {};
+      if (parsed is List) {
+        dataMap = {'result': 'success', 'data': parsed};
+      } else if (parsed is Map<String, dynamic> && parsed.containsKey('data')) {
+        dataMap = {'result': 'success', 'data': parsed['data']};
+      } else {
+        dataMap = {'result': 'success', 'data': parsed};
+      }
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      detailChatSellerModel =
-          DetailChatSellerModel.fromJson(jsonDecode(response.body));
-      // detailChatSellerModel.data?.seller?.forEach((element) {
-      //   element?.Buat = formatDate(element.Buat ?? "");
-      // });
+      detailChatSellerModel = DetailChatSellerModel.fromJson(dataMap);
 
       notifyListeners();
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      if (message.toString().contains("Unauthorized")) {
+    } catch (e) {
+      if (e.toString().contains("Unauthorized")) {
         Utils.showFailed(msg: "Unauthorized");
         Future.delayed(Duration(seconds: 1)).then((value) {
           Navigator.pushReplacementNamed(context, '/login');
         });
       }
-      throw Exception(message);
+      throw Exception(e);
+    } finally {
+      if (withLoading) loading(false);
     }
   }
 
@@ -114,28 +129,29 @@ class ChatSellerProvider extends BaseController with ChangeNotifier {
       required String message}) async {
     if (withLoading) loading(true);
 
-    final response = await post(Constant.BASE_API_FULL + '/sendmessageseller',
+    try {
+      final parsed = await postRest(
+        Constant.BASE_API_FULL + '/chats',
         body: {
-          'penerima_id': idPenerima,
-          'pengirim_id': idPengirim,
-          'pesan': message
-        });
+          'user_id': idPenerima, // Asumsi buyer
+          'seller_id': idPengirim,
+          'message': message,
+          'is_seller': '1', // menandakan ini dari seller
+        }
+      );
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      // notifyListeners();
       fetchDetailChat(context,
           withLoading: true, idSeller: idPengirim, idBuyer: idPenerima);
-      // if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      if (message.toString().contains("Unauthorized")) {
+    } catch (e) {
+      if (e.toString().contains("Unauthorized")) {
         Utils.showFailed(msg: "Unauthorized");
         Future.delayed(Duration(seconds: 1)).then((value) {
           Navigator.pushReplacementNamed(context, '/login');
         });
       }
-      throw Exception(message);
+      throw Exception(e);
+    } finally {
+      if (withLoading) loading(false);
     }
   }
 

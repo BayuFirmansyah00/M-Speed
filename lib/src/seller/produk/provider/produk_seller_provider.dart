@@ -93,22 +93,15 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var userId = await prefs.getString(Constant.kSetPrefId);
-    Map<String, String> body = {'seller_id': userId ?? ''};
-    final response = await get(
-      Constant.BASE_API_FULL + '/products',
-      body: body,
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      produkSellerListModel = ProdukListSellerModel.fromJson(
-        jsonDecode(response.body),
+    
+    try {
+      final response = await getRest(
+        Constant.BASE_API_FULL + '/products?seller_id=${userId ?? ''}',
       );
+      produkSellerListModel = ProdukListSellerModel.fromJson(response);
       notifyListeners();
+    } finally {
       if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
@@ -128,21 +121,14 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
     required String productId,
   }) async {
     if (withLoading) loading(true);
-    Map<String, String> body = {'produk_id': productId};
-    final response = await get(
-      Constant.BASE_API_FULL + '/products/$productId',
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      productDetailSellerModel = ProdukDetailSellerModel.fromJson(
-        jsonDecode(response.body),
+    try {
+      final response = await getRest(
+        Constant.BASE_API_FULL + '/products/$productId',
       );
+      productDetailSellerModel = ProdukDetailSellerModel.fromJson(response);
       notifyListeners();
+    } finally {
       if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
@@ -275,51 +261,24 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
       }
 
       // Perform API request
-      final response = await post(
+      final parsed = await postRest(
         '${Constant.BASE_API_FULL}/products${isEdit ? '/${data?.produk?.ID ?? 0}' : ''}',
         body: body,
         files: files,
       );
 
+      print("========== PARSED SUCCESS JSON ==========");
+      print(parsed);
+
+      fetchProductListSeller();
+      productDetailSellerModel = ProdukDetailSellerModel.fromJson(parsed);
+      deletedImageId.clear();
+      notifyListeners();
+    } catch (e) {
+      print("🔥 API ERROR MESSAGE: $e");
+      throw Exception(e.toString());
+    } finally {
       if (withLoading) loading(false);
-
-      print("========== RAW RESPONSE ==========");
-      print("STATUS: ${response.statusCode}");
-      print("BODY: ${response.body}");
-
-      // SUCCESS
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final parsed = jsonDecode(response.body);
-        print("========== PARSED SUCCESS JSON ==========");
-        print(parsed);
-
-        fetchProductListSeller();
-        productDetailSellerModel = ProdukDetailSellerModel.fromJson(parsed);
-        deletedImageId.clear();
-        notifyListeners();
-        return;
-      }
-
-      // ERROR CASE (JSON)
-      final errJson = jsonDecode(response.body);
-      print("========== ERROR RESPONSE JSON ==========");
-      print(errJson);
-
-      final message = errJson["message"] ??
-          errJson["messages"]?["error"] ??
-          "Unknown Error";
-
-      print("🔥 API ERROR MESSAGE: $message");
-      throw Exception(message);
-
-    } catch (e, stack) {
-      print("🔥🔥🔥 EXCEPTION IN sendProduct()");
-      print("ERROR: $e");
-      print("STACKTRACE:");
-      print(stack);
-
-      if (withLoading) loading(false);
-      rethrow;
     }
   }
 
@@ -415,26 +374,22 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
   //   }
   // }
 
-  Future<void> deleteProduct({
+  Future<void> hapusProduk({
     bool withLoading = false,
     required String productId,
   }) async {
     if (withLoading) loading(true);
 
-    final response = await delete(
-      Constant.BASE_API_FULL + '/products/$productId',
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final result = BaseResponse.from(response);
-      await Utils.showSuccess(msg: result.message);
+    try {
+      final parsed = await deleteRest(
+        Constant.BASE_API_FULL + '/products/$productId',
+      );
+      // final result = BaseResponse.from(parsed); // Usually Laravel just returns a message or success 204
+      await Utils.showSuccess(msg: "Produk berhasil dihapus");
       await Future.delayed(Duration(seconds: 2));
       notifyListeners();
+    } finally {
       if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
@@ -446,10 +401,9 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
   Future<void> fetchKategori({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/categories');
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      kategoriModel = KategoriModel.fromJson(jsonDecode(response.body));
+    try {
+      final parsed = await getRest(Constant.BASE_API_FULL + '/categories');
+      kategoriModel = KategoriModel.fromJson(parsed);
       kategori =
           kategoriModel?.data
               ?.map(
@@ -461,11 +415,8 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
               .toList() ??
           [];
       notifyListeners();
+    } finally {
       if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 }

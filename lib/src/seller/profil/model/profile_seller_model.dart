@@ -160,35 +160,35 @@ class ProfileSellerModelDataGetSeller {
     this.nib,
   });
   ProfileSellerModelDataGetSeller.fromJson(Map<String, dynamic> json) {
-    ID = json['ID']?.toString();
-    nama = json['nama']?.toString();
-    alamat = json['alamat']?.toString();
+    ID = json['ID']?.toString() ?? json['id']?.toString();
+    nama = json['nama']?.toString() ?? json['name']?.toString() ?? json['company_name']?.toString();
+    alamat = json['alamat']?.toString() ?? json['address']?.toString();
     lokasi = json['lokasi']?.toString();
-    lattitude = json['lattitude']?.toString();
+    lattitude = json['lattitude']?.toString() ?? json['latitude']?.toString();
     longitude = json['longitude']?.toString();
     email = json['email']?.toString();
-    telp = json['telp']?.toString();
+    telp = json['telp']?.toString() ?? json['phone']?.toString();
     kbli = json['kbli']?.toString();
-    namaPemilik = json['nama_pemilik']?.toString();
-    namaCp = json['nama_cp']?.toString();
-    telpCp = json['telp_cp']?.toString();
-    foto = json['foto']?.toString();
-    noNpwp = json['no_npwp']?.toString();
+    namaPemilik = json['nama_pemilik']?.toString() ?? json['owner_name']?.toString();
+    namaCp = json['nama_cp']?.toString() ?? json['cp_name']?.toString();
+    telpCp = json['telp_cp']?.toString() ?? json['cp_phone']?.toString();
+    foto = json['foto']?.toString() ?? json['photo']?.toString();
+    noNpwp = json['no_npwp']?.toString() ?? json['npwp_number']?.toString();
     npwp = json['npwp']?.toString();
-    noKtp = json['no_ktp']?.toString();
+    noKtp = json['no_ktp']?.toString() ?? json['ktp_number']?.toString();
     ktp = json['ktp']?.toString();
-    spPkp = json['sp_pkp']?.toString();
-    prov = json['prov']?.toString();
-    kota = json['kota']?.toString();
-    noRek = json['no_rek']?.toString();
-    anRek = json['an_rek']?.toString();
-    bank = json['bank']?.toString();
-    bukuRekening = json['buku_rekening']?.toString();
-    jabatan = json['jabatan']?.toString();
+    spPkp = json['sp_pkp']?.toString() ?? json['sp_pkp_file']?.toString();
+    prov = json['prov']?.toString() ?? json['province']?.toString();
+    kota = json['kota']?.toString() ?? json['city']?.toString();
+    noRek = json['no_rek']?.toString() ?? json['bank_account_number']?.toString();
+    anRek = json['an_rek']?.toString() ?? json['bank_account_name']?.toString();
+    bank = json['bank']?.toString() ?? json['bank_name']?.toString();
+    bukuRekening = json['buku_rekening']?.toString() ?? json['bank_book_file']?.toString();
+    jabatan = json['jabatan']?.toString() ?? json['role_position']?.toString();
     kelengkapanNpwp = json['kelengkapan_npwp']?.toString();
     tglTtdNonpkp = json['tgl_ttd_nonpkp']?.toString();
     fileTtdNonpkp = json['file_ttd_nonpkp']?.toString();
-    noNib = json['no_nib']?.toString();
+    noNib = json['no_nib']?.toString() ?? json['nib_number']?.toString();
     nib = json['nib']?.toString();
   }
   Map<String, dynamic> toJson() {

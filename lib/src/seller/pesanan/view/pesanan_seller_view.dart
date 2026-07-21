@@ -33,7 +33,7 @@ class _PesananSellerViewState extends BaseState<PesananSellerView> {
     userId = await prefs.getString(Constant.kSetPrefId) ?? "";
     userName = await prefs.getString(Constant.kSetPrefFirstName) ?? "";
     final p = context.read<SellerPesananProvider>();
-    await p.fetchListPesanan(withLoading: false, sellerId: userId);
+    await p.fetchListPesanan(withLoading: false);
     listPesanan = p.pesananSellerModel.data ?? [];
     setState(() {});
   }
@@ -43,7 +43,7 @@ class _PesananSellerViewState extends BaseState<PesananSellerView> {
 
   refresh() async {
     final p = context.read<SellerPesananProvider>();
-    await p.fetchListPesanan(withLoading: true, sellerId: userId);
+    await p.fetchListPesanan(withLoading: true);
     listPesanan = p.pesananSellerModel.data ?? [];
     setState(() {});
   }

@@ -48,20 +48,27 @@ class DetailChatSellerModelData {
     this.jenis,
     this.attachment,
   });
+
   DetailChatSellerModelData.fromJson(Map<String, dynamic> json) {
-    ID = json['ID']?.toString();
-    Created = json['Created']?.toString();
-    Edited = json['Edited']?.toString();
-    PengirimID = json['PengirimID']?.toString();
-    PenerimaID = json['PenerimaID']?.toString();
-    BuyerID = json['BuyerID']?.toString();
-    SellerID = json['SellerID']?.toString();
-    pesan = json['pesan']?.toString();
-    dibaca = json['dibaca']?.toString();
+    ID = json['ID']?.toString() ?? json['id']?.toString();
+    Created = json['Created']?.toString() ?? json['created_at']?.toString();
+    Edited = json['Edited']?.toString() ?? json['updated_at']?.toString();
+    var sellerId = json['seller'] == null ? null : json['seller']['id']?.toString();
+    var userId = json['user'] == null ? null : json['user']['id']?.toString();
+    
+    PengirimID = json['PengirimID']?.toString() ?? 
+        (json['is_seller'] == true || json['is_seller'] == 1 ? sellerId : userId);
+    PenerimaID = json['PenerimaID']?.toString() ?? 
+        (json['is_seller'] == true || json['is_seller'] == 1 ? userId : sellerId);
+    BuyerID = json['BuyerID']?.toString() ?? userId;
+    SellerID = json['SellerID']?.toString() ?? sellerId;
+    pesan = json['pesan']?.toString() ?? json['message']?.toString();
+    dibaca = json['dibaca']?.toString() ?? (json['is_read'] == true || json['is_read'] == 1 ? "1" : "0");
     hapus = json['hapus']?.toString();
     jenis = json['jenis']?.toString();
     attachment = json['attachment']?.toString();
   }
+  
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
     data['ID'] = ID;

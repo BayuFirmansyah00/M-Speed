@@ -18,12 +18,8 @@ class NotifikasiBuyerProvider extends BaseController with ChangeNotifier {
   Future<void> fetchNotification({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    String buyerId = prefs.getString(Constant.kSetPrefId) ?? '';
-
-    Map<String, String> body = {'buyer_id': buyerId};
-    final response =
-        await get(Constant.BASE_API_FULL + '/getnotifbuyer', body: body);
+    // GET /api/log-activities
+    final response = await get(Constant.BASE_API_FULL + '/log-activities');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       notifikasiModel = NotifikasiModel.fromJson(jsonDecode(response.body));
@@ -36,7 +32,8 @@ class NotifikasiBuyerProvider extends BaseController with ChangeNotifier {
       notifyListeners();
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -47,12 +44,11 @@ class NotifikasiBuyerProvider extends BaseController with ChangeNotifier {
       {bool withLoading = false, required parentOrderId}) async {
     if (withLoading) loading(true);
 
-    Map<String, String> param = {};
+    Map<String, String> param = {'parent_order_id': parentOrderId.toString()};
 
-    param.addAll({'parent_order_id': parentOrderId});
-
+    // POST /api/log-activities/mark-read
     final response = await post(
-      Constant.BASE_API_FULL + '/markreadnotifbuyer',
+      Constant.BASE_API_FULL + '/log-activities/mark-read',
       body: param,
     );
 
@@ -60,7 +56,8 @@ class NotifikasiBuyerProvider extends BaseController with ChangeNotifier {
       notifyListeners();
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -71,23 +68,18 @@ class NotifikasiBuyerProvider extends BaseController with ChangeNotifier {
       {bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    String buyerId = prefs.getString(Constant.kSetPrefId) ?? '';
-
-    Map<String, String> param = {};
-
-    param.addAll({'buyer_id': buyerId});
-
+    // POST /api/log-activities/mark-all-read
     final response = await post(
-      Constant.BASE_API_FULL + '/markallreadnotifbuyer',
-      body: param,
+      Constant.BASE_API_FULL + '/log-activities/mark-all-read',
+      body: {},
     );
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       notifyListeners();
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }

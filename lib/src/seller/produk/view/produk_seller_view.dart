@@ -257,7 +257,7 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
                             CusNav.nPop(context);
                             await context
                                 .read<ProdukSellerProvider>()
-                                .deleteProduct(
+                                .hapusProduk(
                                   productId: data?.ID ?? '0',
                                   withLoading: true,
                                 );

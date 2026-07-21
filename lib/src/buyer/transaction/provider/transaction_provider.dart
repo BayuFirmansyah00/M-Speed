@@ -59,50 +59,32 @@ class TransactionProvider extends BaseController with ChangeNotifier {
   Future<void> fetchTransaction(
       {bool withLoading = false, required int status}) async {
     if (withLoading) loading(true);
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setIsSubAgent = prefs.getString(Constant.kSetPrefId) ?? "1";
-    String userId = prefs.getString(Constant.kSetPrefId) ?? '1';
 
-    final response = await get(
-        Constant.BASE_API_FULL + '/parent-orders',
-        // Note: New API currently doesn't filter by status/buyer_id yet, but we send it as query params via BaseController just in case.
-        body: {"buyer_id": userId, "status": status.toString()});
+    try {
+      // GET /api/parent-orders?status={status} — auth via token (tanpa buyer_id)
+      // ParentOrderResource: { id, order_number, payment_status, seller_snapshot, shipping, actors_snapshot }
+      final parsed = await getRest(
+          Constant.BASE_API_FULL + '/parent-orders?status=$status');
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      // SharedPreferences prefs = await SharedPreferences.getInstance();
-      
-      // Karena format JSON dari Laravel 11 Resource berbeda (tidak ada result: "success"), kita tangani manual
-      var jsonResponse = jsonDecode(response.body);
-      
-      // Jika struktur adalah PaginatedResource (ada data, links, meta)
-      List<dynamic> dataList = [];
-      if (jsonResponse is Map<String, dynamic> && jsonResponse.containsKey('data')) {
-        dataList = jsonResponse['data'];
-      } else if (jsonResponse is List) {
-        dataList = jsonResponse;
-      }
-      
-      // Mapping manual dari format ParentOrderResource ke DaftarTransaksiBuyerModelData
-      List<DaftarTransaksiBuyerModelData> mappedData = dataList.map((item) {
+      List<DaftarTransaksiBuyerModelData> mappedData = (parsed as List).map((item) {
         return DaftarTransaksiBuyerModelData(
           ID: item['id']?.toString(),
           nomorOrder: item['order_number']?.toString(),
           status: item['payment_status']?.toString(),
-          SellerNama: item['seller_snapshot'] != null ? item['seller_snapshot']['name']?.toString() : null,
-          total: item['shipping'] != null ? item['shipping']['cost']?.toString() : "0", // Fallback krn total tidak ada
+          SellerNama: item['seller_snapshot']?['name']?.toString(),
+          total: item['shipping']?['cost']?.toString() ?? '0',
           Created: item['created_at']?.toString(),
-          detail: [] // Kosongkan detail untuk saat ini (API baru pisah detail)
+          detail: [],
         );
       }).toList();
 
-      final model = DaftarTransaksiBuyerModel(result: "success", data: mappedData);
-
-      daftarTransaksi[status - 1] = model;
+      daftarTransaksi[status - 1] = DaftarTransaksiBuyerModel(
+          result: 'success', data: mappedData);
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Gagal memuat transaksi: $e');
+    } finally {
       if (withLoading) loading(false);
-      notifyListeners(); // return model;
-    } else {
-      loading(false);
-      throw Exception("Gagal memuat transaksi (Kode: ${response.statusCode})");
     }
   }
 
@@ -112,32 +94,20 @@ class TransactionProvider extends BaseController with ChangeNotifier {
       required String productId}) async {
     if (withLoading) loading(true);
 
-    // final prefs = await SharedPreferences.getInstance();
-    // String? userId = await prefs.getString(Constant.kSetPrefId) ?? "";
-
+    // GET /api/negos?product_id={productId} — riwayat nego produk di transaksi
     final response = await get(
-        Constant.BASE_API_FULL + '/getriwayatnegotransaksibuyer',
-        body: {'TempOrderID': tempOrderId, 'produk_id': productId});
+        Constant.BASE_API_FULL + '/negos',
+        body: {'product_id': productId});
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       riwayatNegoTransaksiModel =
           RiwayatNegoTransaksiModel.fromJson(jsonDecode(response.body));
-
-      // chatBuyerModel.data?.seller?.forEach((element) {
-      //   element?.Buat = formatDate(element.Buat ?? "");
-      // });
-
       notifyListeners();
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
-      // if (message.toString().contains("Unauthorized")) {
-      //   Utils.showFailed(msg: "Unauthorized");
-      //   Future.delayed(Duration(seconds: 1)).then((value) {
-      //     Navigator.pushReplacementNamed(context, '/login');
-      //   });
-      // }
       throw Exception(message);
     }
   }
@@ -145,52 +115,39 @@ class TransactionProvider extends BaseController with ChangeNotifier {
   Future<void> fetchDetailTransaction(
       {bool withLoading = false, required String transaction_id}) async {
     if (withLoading) loading(true);
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setIsSubAgent = prefs.getString(Constant.kSetPrefId) ?? "1";
-    String userId = prefs.getString(Constant.kSetPrefId) ?? '1';
-    // userId = "148";
 
-    final response = await get(
-        Constant.BASE_API_FULL + '/parent-orders/$transaction_id',
-        body: {"user_id": userId});
+    try {
+      // GET /api/parent-orders/{id} — auth via token (tanpa user_id di query)
+      final parsed = await getRest(
+          Constant.BASE_API_FULL + '/parent-orders/$transaction_id');
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      // Mapping manual response dari Laravel 11 (ParentOrderResource) ke DetailTransaksiBuyerModel
-      var jsonResponse = jsonDecode(response.body);
-      Map<String, dynamic>? dataItem;
-      if (jsonResponse is Map<String, dynamic> && jsonResponse.containsKey('data')) {
-        dataItem = jsonResponse['data'];
-      } else {
-        dataItem = jsonResponse;
-      }
-      
+      Map<String, dynamic>? dataItem = parsed;
+
       if (dataItem != null) {
         var parentOrder = DetailTransaksiBuyerModelDataParentOrderModel(
           ID: dataItem['id']?.toString(),
           nomorOrder: dataItem['order_number']?.toString(),
           status: dataItem['payment_status']?.toString(),
-          SellerNama: dataItem['seller_snapshot'] != null ? dataItem['seller_snapshot']['name']?.toString() : null,
-          total: dataItem['shipping'] != null ? dataItem['shipping']['cost']?.toString() : "0",
+          SellerNama: dataItem['seller_snapshot']?['name']?.toString(),
+          total: dataItem['shipping']?['cost']?.toString() ?? '0',
           Created: dataItem['created_at']?.toString(),
         );
-        
-        var mappedData = DetailTransaksiBuyerModelData(
-          ParentOrderModel: parentOrder,
-          detail: [], // Kosongkan karena API belum support orderItems
-          timeline: [],
-          title: "Detail Order"
-        );
-        
-        setDetailTransaksi = DetailTransaksiBuyerModel(result: "success", data: mappedData);
-      }
-      
-      notifyListeners();
 
+        setDetailTransaksi = DetailTransaksiBuyerModel(
+          result: 'success',
+          data: DetailTransaksiBuyerModelData(
+            ParentOrderModel: parentOrder,
+            detail: [],
+            timeline: [],
+            title: 'Detail Order',
+          ),
+        );
+      }
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Gagal memuat detail transaksi: $e');
+    } finally {
       if (withLoading) loading(false);
-      // return model;
-    } else {
-      loading(false);
-      throw Exception("Gagal memuat detail transaksi (Kode: ${response.statusCode})");
     }
   }
 
@@ -232,43 +189,29 @@ class TransactionProvider extends BaseController with ChangeNotifier {
       required String nomor_order,
       required File image}) async {
     if (withLoading) loading(true);
-    // SharedPreferences prefs = await SharedPreferences.getInstance();
-    // setIsSubAgent = prefs.getString(Constant.kSetPrefId) ?? "1";
-    // String userId = prefs.getString(Constant.kSetPrefId) ?? '1';
-    // userId = "148";
 
     final file = await http.MultipartFile.fromPath(
-      'signature',
+      'file',
       image.path,
-      filename: basename(image.path), // Use the file name of the image
+      filename: basename(image.path),
     );
 
+    // POST /api/order-documents — upload dokumen/TTD pesanan
     final response = await post(
-        Constant.BASE_API_FULL + '/addsuratpesananbuyer',
-        body: {"nomor_order": nomor_order, "parent_order_id": transaction_id},
+        Constant.BASE_API_FULL + '/order-documents',
+        body: {
+          'parent_order_id': transaction_id,
+          'document_type_id': '1', // TTD buyer
+        },
         files: [file]);
 
     if (response.statusCode == 201 || response.statusCode == 200) {
-      // SharedPreferences prefs = await SharedPreferences.getInstance();
-      // detailTransaksi =
-      //     DetailTransaksiBuyerModel.fromJson(jsonDecode(response.body));
       if (withLoading) loading(false);
-      if (jsonDecode(response.body)["status"] == "success") {
-        isTtdSuccess = true;
-        return true;
-      } else {
-        isTtdSuccess = false;
-        return false;
-      }
-      // notifyListeners();
-
-      // return model;
+      isTtdSuccess = true;
+      return true;
     } else {
       isTtdSuccess = false;
       return false;
-      // final message = jsonDecode(response.body)["messages"]["error"];
-      // loading(false);
-      // throw Exception(message);
     }
   }
 
@@ -280,35 +223,18 @@ class TransactionProvider extends BaseController with ChangeNotifier {
     required String parentOrderId,
   }) async {
     if (withLoading) loading(true);
-    final prefs = await SharedPreferences.getInstance();
-    String? buyerId = await prefs.getString(Constant.kSetPrefId) ?? "";
 
+    // POST /api/parent-orders/{id}/dispute — kembalikan/dispute tagihan
     final response = await post(
-      Constant.BASE_API_FULL + '/kembalikantagihan',
+      Constant.BASE_API_FULL + '/parent-orders/$parentOrderId/dispute',
       body: {
-        "buyer_id": buyerId,
-        "parent_order_id": parentOrderId,
-        "reset": '$resetDate',
-        "desc": reason,
+        'reset': '$resetDate',
+        'desc': reason ?? '',
       },
     );
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      if (withLoading) loading(false);
-      if (jsonDecode(response.body)["status"] == "success") {
-        return true;
-      } else {
-        return false;
-      }
-      // notifyListeners();
-
-      // return model;
-    } else {
-      return false;
-      // final message = jsonDecode(response.body)["messages"]["error"];
-      // loading(false);
-      // throw Exception(message);
-    }
+    if (withLoading) loading(false);
+    return response.statusCode == 200 || response.statusCode == 201;
   }
 
   XFile? ematerai;
@@ -318,34 +244,17 @@ class TransactionProvider extends BaseController with ChangeNotifier {
     required String parentOrderId,
   }) async {
     if (withLoading) loading(true);
-    final prefs = await SharedPreferences.getInstance();
-    String? buyerId = await prefs.getString(Constant.kSetPrefId) ?? "";
 
-    var file = await getMultipart('ematerai', File(ematerai!.path));
+    var file = await getMultipart('file', File(ematerai!.path));
+
+    // POST /api/materais — upload e-meterai untuk pesanan
     final response = await post(
-      Constant.BASE_API_FULL + '/uploademateraibuyer',
-      body: {
-        "buyer_id": buyerId,
-        "parent_order_id": parentOrderId,
-      },
+      Constant.BASE_API_FULL + '/materais',
+      body: {'parent_order_id': parentOrderId},
       files: [file],
     );
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      if (withLoading) loading(false);
-      if (jsonDecode(response.body)["status"] == "success") {
-        return true;
-      } else {
-        return false;
-      }
-      // notifyListeners();
-
-      // return model;
-    } else {
-      return false;
-      // final message = jsonDecode(response.body)["messages"]["error"];
-      // loading(false);
-      // throw Exception(message);
-    }
+    if (withLoading) loading(false);
+    return response.statusCode == 200 || response.statusCode == 201;
   }
 }

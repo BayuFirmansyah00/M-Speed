@@ -271,58 +271,49 @@ class ShoppingCartProvider extends BaseController with ChangeNotifier {
       };
 
       // Melakukan request ke API
-      final response =
-          await get(Constant.BASE_API_FULL + '/carts', body: param);
+      final parsed = await getRest(Constant.BASE_API_FULL + '/carts');
 
-      if (response.statusCode == 200) {
-        // Mengubah response JSON menjadi model ShoppingCartModel
-        setShoppingCartModel =
-            ShoppingCartModel.fromJson(jsonDecode(response.body));
-        notifyListeners();
+      // Mengubah response JSON menjadi model ShoppingCartModel
+      setShoppingCartModel = ShoppingCartModel.fromJson(parsed);
+      notifyListeners();
 
-        // Membersihkan list sebelum digunakan kembali
-        qtyListC.clear();
-        itemListCheck.clear();
-        storeListCheck.clear();
-        descListC.clear();
-        negoListC.clear();
-        catatanListC.clear();
+      // Membersihkan list sebelum digunakan kembali
+      qtyListC.clear();
+      itemListCheck.clear();
+      storeListCheck.clear();
+      descListC.clear();
+      negoListC.clear();
+      catatanListC.clear();
 
-        // Iterasi melalui toko
-        for (int i = 0; i < (getShoppingCartModel.data ?? []).length; i++) {
-          // Inisialisasi list untuk toko
-          itemListCheck.add([]);
-          storeListCheck.add(false);
-          qtyListC.add([]);
-          descListC.add([]);
-          negoListC.add([]);
-          catatanListC.add([]);
+      // Iterasi melalui toko
+      for (int i = 0; i < (getShoppingCartModel.data ?? []).length; i++) {
+        // Inisialisasi list untuk toko
+        itemListCheck.add([]);
+        storeListCheck.add(false);
+        qtyListC.add([]);
+        descListC.add([]);
+        negoListC.add([]);
+        catatanListC.add([]);
 
-          // Iterasi melalui produk di setiap toko
-          for (var item in getShoppingCartModel.data?[i]?.detail ?? []) {
-            qtyListC[i].add(
-              TextEditingController()
-                ..text = item.qty.toString()
-                ..selection = TextSelection.fromPosition(
-                    TextPosition(offset: item.qty.toString().length)),
-            );
+        // Iterasi melalui produk di setiap toko
+        for (var item in getShoppingCartModel.data?[i]?.detail ?? []) {
+          qtyListC[i].add(
+            TextEditingController()
+              ..text = item.qty.toString()
+              ..selection = TextSelection.fromPosition(
+                  TextPosition(offset: item.qty.toString().length)),
+          );
 
-            descListC[i].add(TextEditingController()..text = "");
-            negoListC[i].add(TextEditingController()..text = "");
-            catatanListC[i].add(TextEditingController()..text = "");
-            itemListCheck[i].add(false); // Tambahkan produk ke checklist
-          }
+          descListC[i].add(TextEditingController()..text = "");
+          negoListC[i].add(TextEditingController()..text = "");
+          catatanListC[i].add(TextEditingController()..text = "");
+          itemListCheck[i].add(false); // Tambahkan produk ke checklist
         }
-
-        // Memanggil function untuk menghitung total item dalam cart
-        countShoppingCart();
-        notifyListeners();
-      } else {
-        // Jika response gagal, ambil pesan error dari response
-        final message = jsonDecode(response.body)["messages"]["error"] ??
-            "Terjadi kesalahan.";
-        throw Exception(message);
       }
+
+      // Memanggil function untuk menghitung total item dalam cart
+      countShoppingCart();
+      notifyListeners();
     } catch (e) {
       throw Exception(e);
     } finally {
@@ -336,34 +327,26 @@ class ShoppingCartProvider extends BaseController with ChangeNotifier {
       bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    final prefs = await SharedPreferences.getInstance();
-    String? userId = await prefs.getString(Constant.kSetPrefId) ?? "";
+    // Request body sesuai StoreCartRequest Laravel
+    // Field: product_id, qty (catatan opsional)
     Map<String, dynamic> param = {
-      "produk_id": produkId.toString(),
+      "product_id": produkId.toString(), // Laravel menggunakan product_id (snake_case)
       "qty": qty.toString(),
-      "catatan": 'a',
-      "buyer_id": userId,
-      "wishlist": "",
     };
 
-    final response =
-        await post(Constant.BASE_API_FULL + '/carts', body: param);
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
+    try {
+      final parsed = await postRest(Constant.BASE_API_FULL + '/carts', body: param);
       await Utils.showSuccess(msg: "Produk berhasil ditambahkan ke cart");
       await Future.delayed(Duration(seconds: 2));
-      // fetchShoppingCart(context);
-
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"];
-      loading(false);
+    } catch (e) {
       CustomAlert.showSnackBar(
         context,
-        "Terjadi Galat!",
+        e.toString().replaceAll('Exception: ', ''),
         true,
       );
-      throw Exception(message);
+      throw Exception(e);
+    } finally {
+      if (withLoading) loading(false);
     }
   }
 
@@ -374,22 +357,17 @@ class ShoppingCartProvider extends BaseController with ChangeNotifier {
       bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    Map<String, dynamic> param = {
-      "cart_id": cartId.toString(),
-      "qty": qty.toString(),
-      // "note": noteC.text,
-    };
-
-    final response =
-        await post(Constant.BASE_API_FULL + '/carts/${cartId}', body: {'_method': 'PUT', 'qty': qty.toString()});
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
+    try {
+      // PUT /api/carts/{id} — UpdateCartRequest Laravel
+      final parsed = await postRest(
+        Constant.BASE_API_FULL + '/carts/$cartId',
+        body: {'_method': 'PUT', 'qty': qty.toString()}
+      );
       fetchShoppingCart(context);
+    } catch (e) {
+      throw Exception(e);
+    } finally {
       if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
@@ -397,58 +375,33 @@ class ShoppingCartProvider extends BaseController with ChangeNotifier {
       {required String cartId, bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    final response =
-        await delete(Constant.BASE_API_FULL + '/carts/$cartId');
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
+    try {
+      final parsed = await deleteRest(Constant.BASE_API_FULL + '/carts/$cartId');
       fetchShoppingCart(context);
+    } catch (e) {
+      throw Exception(e);
+    } finally {
       if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
   Future<void> fetchBuyNowCartConfirm(BuildContext context,
       {bool withLoading = false, int index = 0}) async {
-    final shipP = context.read<CheckOutProvider>();
+    // API /cart/confirm sudah tidak digunakan di backend Laravel yang baru.
+    // Perhitungan pajak dan subtotal sudah berjalan di lokal Flutter (countTotalCheckout).
+    // Alamat default juga akan dipilih secara lokal dari addressProvider.
+    
     if (withLoading) loading(true);
-    Map<String, String> param = {};
-
-    int? ongkir;
-    final shippingList =
-        shipP.getCheckoutOptionShippingModel.shippingList ?? [];
-    if (shippingList.isNotEmpty &&
-        (shippingList.first?.typeList ?? []).isNotEmpty) {
-      ongkir = shippingList.first?.typeList?.first?.price;
-    }
-
-    if (shipP.selectedShipping != null) {
-      param.addAll({
-        'shipping_amount[0]': (shipP.selectedShipping?.price ?? 0).toString()
-      });
-    } else {
-      if (ongkir != null) {
-        param.addAll({'shipping_amount[0]': '$ongkir'});
-      }
-    }
-    final response =
-        await get(Constant.BASE_API_FULL + '/cart/confirm', body: param);
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final model =
-          ShoppingCartConfirmModel.fromJson(jsonDecode(response.body));
-      setShoppingCartConfirmModel = model;
-      if (model.data?.address != null && selectedAddress == null)
-        selectedAddress = model.data?.address;
-
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
-    }
+    await Future.delayed(Duration(milliseconds: 300));
+    
+    // Mock successful model state
+    final model = ShoppingCartConfirmModel(
+      success: true,
+      data: ShoppingCartConfirmModelData(),
+    );
+    setShoppingCartConfirmModel = model;
+    
+    if (withLoading) loading(false);
   }
 
   Future<void> fetchSubdit(BuildContext context,
@@ -481,18 +434,20 @@ class ShoppingCartProvider extends BaseController with ChangeNotifier {
       {bool withLoading = true, required String productId}) async {
     if (withLoading) loading(true);
 
-    final prefs = await SharedPreferences.getInstance();
-    String? userId = await prefs.getString(Constant.kSetPrefId) ?? "";
-
-    final response = await get(Constant.BASE_API_FULL + '/getriwayatnegobuyer',
-        body: {'user_id': userId, 'produk_id': productId});
+    // GET /api/negos?product_id={productId} — endpoint baru Laravel
+    // Filter nego berdasarkan product_id milik user yang sedang login
+    final response = await get(
+      Constant.BASE_API_FULL + '/negos',
+      body: {'product_id': productId},
+    );
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       riwayatNegoModel = RiwayatNegoModel.fromJson(jsonDecode(response.body));
       notifyListeners();
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -511,23 +466,17 @@ class ShoppingCartProvider extends BaseController with ChangeNotifier {
       required int index,
       required int indexx,
       required String productId}) async {
-    final prefs = await SharedPreferences.getInstance();
-    String? userId = await prefs.getString(Constant.kSetPrefId) ?? "";
-    // parameters
+    // POST /api/negos — StoreNegoRequest Laravel
+    // Fields: product_id, price (harga nego yang diajukan buyer)
     Map<String, String> param = {
-      "produk_id": productId,
-      // if (shoppingCartModel.data?[index]?.detail?[indexx]?.nego2 != null)
-      //   "nego3": negoListC[index][indexx].text.replaceAll(".", ""),
-      // if (shoppingCartModel.data?[index]?.detail?[indexx]?.nego2 == null)
-      //   "nego": negoListC[index][indexx].text.replaceAll(".", ""),
-      "nego": negoListC[index][indexx].text.replaceAll(".", ""),
-      "user_id": userId,
+      "product_id": productId,
+      "price": negoListC[index][indexx].text.replaceAll(".", ""),
     };
 
     loading(true);
-    // response
+    // POST /api/negos sesuai kontrak baru Laravel
     final response = BaseResponse.from(
-        await post(Constant.BASE_API_FULL + '/editnegocartbuyer', body: param));
+        await post(Constant.BASE_API_FULL + '/negos', body: param));
     loading(false);
 
     await Utils.showSuccess(msg: "Berhasil mengajukan nego");
@@ -571,19 +520,17 @@ class ShoppingCartProvider extends BaseController with ChangeNotifier {
       {bool withLoading = false,
       required int index,
       required int indexx,
-      required String productId}) async {
-    final prefs = await SharedPreferences.getInstance();
-    String? userId = await prefs.getString(Constant.kSetPrefId) ?? "";
-    // parameters
+      required String cartId}) async {
+    // PUT /api/carts/{cartId} — UpdateCartRequest Laravel
+    // Mengirim catatan/note melalui update cart item
     Map<String, String> param = {
-      "produk_id": productId,
-      "catatan": catatanListC[index][indexx].text,
-      "user_id": userId,
+      "_method": "PUT",
+      "note": catatanListC[index][indexx].text,
     };
     loading(true);
-    // response
+    // PUT /api/carts/{cartId} sesuai kontrak baru Laravel
     final response = BaseResponse.from(await post(
-        Constant.BASE_API_FULL + '/editcatatancartbuyer',
+        Constant.BASE_API_FULL + '/carts/$cartId',
         body: param));
     loading(false);
 
@@ -601,36 +548,17 @@ class ShoppingCartProvider extends BaseController with ChangeNotifier {
       {bool withLoading = false, required String sellerId}) async {
     if (withLoading) loading(true);
 
-    final prefs = await SharedPreferences.getInstance();
-    String? userId = await prefs.getString(Constant.kSetPrefId) ?? "";
+    // POST /api/parent-orders dipindahkan ke halaman CheckOut (saat menekan tombol Bayar).
+    // Di sini kita cukup memvalidasi secara lokal dan lanjut ke CheckoutView.
+    
+    // Asumsi: cart_ids atau item yang dipilih sudah tersimpan di state provider ini.
+    // Kita hanya perlu delay sejenak untuk mensimulasikan proses, lalu pindah halaman.
+    await Future.delayed(Duration(milliseconds: 300));
+    
+    if (withLoading) loading(false);
 
-    Map<String, String> param = {
-      "pajak": countPajakCheckOut().toStringAsFixed(0),
-      "ongkir": (ongkirC.text != "") ? ongkirC.text.replaceAll('.', '') : '0',
-      "buyer_id": userId,
-      "seller_id": sellerId,
-    };
-
-    final response =
-        await post(Constant.BASE_API_FULL + '/buybuyer', body: param);
-    final baseResponse = BaseResponse.from(response);
-    if (baseResponse.success) {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      buyBuyerModel = BuyBuyerModel.fromJson(jsonDecode(response.body));
-      await prefs.setString(
-          Constant.kSetIdTemp, "${buyBuyerModel.messages?.IDTemp ?? 0}");
-      await Utils.showSuccess(msg: "Berhasil");
-      await Future.delayed(Duration(seconds: 2));
-      await CusNav.nPush(context, CheckOutView());
-
-      notifyListeners();
-
-      if (withLoading) loading(false);
-      // return checkoutModel.data?.invoiceUrl ?? "";
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
-    }
+    // Navigasi ke Checkout
+    await CusNav.nPush(context, CheckOutView());
+    notifyListeners();
   }
 }

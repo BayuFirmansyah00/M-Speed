@@ -18,17 +18,17 @@ class TransactionAdminProvider extends BaseController with ChangeNotifier {
       String search = ''}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/getdppadmin',
+    // GET /api/admin/dpp
+    final response = await get(Constant.BASE_API_FULL + '/admin/dpp',
         body: search.isNotEmpty ? {"search": search} : {});
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       dpp = DppAdminModel.fromJson(jsonDecode(response.body));
-
       notifyListeners();
-
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -42,17 +42,17 @@ class TransactionAdminProvider extends BaseController with ChangeNotifier {
       String search = ''}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/getorderadmin',
+    // GET /api/admin/orders
+    final response = await get(Constant.BASE_API_FULL + '/admin/orders',
         body: search.isNotEmpty ? {"search": search} : {});
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       order = OrderAdminModel.fromJson(jsonDecode(response.body));
-
       notifyListeners();
-
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final decoded = jsonDecode(response.body);
+      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }

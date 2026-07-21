@@ -59,7 +59,6 @@ class _DetailTransactionViewState extends BaseState<DetailTransactionView> {
     );
 
     await context.read<SellerPesananProvider>().fetchDetailPesanan(
-      seller_id: widget.seller_id,
       withLoading: true,
       parent_id: widget.transaction_id,
     );
@@ -646,7 +645,10 @@ class _DetailTransactionViewState extends BaseState<DetailTransactionView> {
                         SizedBox(width: 20),
                         Expanded(
                           child: Text(
-                            '${data?.ParentOrderModel?.estPengiriman != "0000-00-00" ? DateFormat('d MMMM yyyy').format(DateTime.parse(data?.ParentOrderModel?.estPengiriman ?? "0000-00-00")) : ''} - ${data?.ParentOrderModel?.estPengiriman2 != "0000-00-00" ? DateFormat('d MMMM yyyy').format(DateTime.parse(data?.ParentOrderModel?.estPengiriman2 ?? "0000-00-00")) : ''}',
+                            _formatEstimasiPengiriman(
+                              data?.ParentOrderModel?.estPengiriman,
+                              data?.ParentOrderModel?.estPengiriman2,
+                            ),
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w400,
@@ -928,7 +930,6 @@ class _DetailTransactionViewState extends BaseState<DetailTransactionView> {
                 await Utils.showSuccess(msg: "Berhasil Tanda Tangan!");
                 await sellerP.fetchDetailPesanan(
                   parent_id: widget.transaction_id,
-                  seller_id: widget.seller_id,
                   withLoading: false,
                 );
                 provider.isTtdSuccess = null;
@@ -968,7 +969,6 @@ class _DetailTransactionViewState extends BaseState<DetailTransactionView> {
                 );
                 await sellerP.fetchDetailPesanan(
                   parent_id: widget.transaction_id,
-                  seller_id: widget.seller_id,
                   withLoading: false,
                 );
               } else {
@@ -1007,7 +1007,6 @@ class _DetailTransactionViewState extends BaseState<DetailTransactionView> {
                 );
                 await sellerP.fetchDetailPesanan(
                   parent_id: widget.transaction_id,
-                  seller_id: widget.seller_id,
                   withLoading: false,
                 );
               } else {
@@ -1152,5 +1151,28 @@ class _DetailTransactionViewState extends BaseState<DetailTransactionView> {
       decimalDigits: 0,
     );
     return formatCurrency.format(value);
+  }
+
+  /// Format estimasi tanggal pengiriman dengan aman.
+  /// Menangani nilai null, string "null", "0000-00-00", dan format tidak valid.
+  String _formatEstimasiPengiriman(String? start, String? end) {
+    String formatSingle(String? raw) {
+      if (raw == null || raw.isEmpty || raw == 'null' || raw == '0000-00-00') {
+        return '';
+      }
+      try {
+        final date = DateTime.parse(raw);
+        return DateFormat('d MMMM yyyy').format(date);
+      } catch (_) {
+        return '';
+      }
+    }
+
+    final s = formatSingle(start);
+    final e = formatSingle(end);
+    if (s.isEmpty && e.isEmpty) return '-';
+    if (s.isEmpty) return e;
+    if (e.isEmpty) return s;
+    return '$s - $e';
   }
 }
