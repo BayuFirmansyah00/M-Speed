@@ -17,7 +17,8 @@ class _HomeAdminGraphViewState extends State<HomeAdminGraphView> {
   @override
   Widget build(BuildContext context) {
     final p = context.watch<AdminHomeProvider>();
-    final graph = p.homeAdminModel.data?.pembelian ?? [];
+    // Gunakan graphList dari provider yang sudah diisi dari purchaseStatistics
+    final graph = p.graphList;
 
     Widget bottomTitleWidgets(double value, TitleMeta meta) {
       const style = TextStyle(
@@ -89,10 +90,7 @@ class _HomeAdminGraphViewState extends State<HomeAdminGraphView> {
         ),
         lineBarsData: [
           LineChartBarData(
-            spots: List.generate(
-              graph.length,
-              (i) => FlSpot(i.toDouble(), (graph[i] ?? 0).toDouble()),
-            ),
+            spots: graph.isEmpty ? [const FlSpot(0, 0)] : graph,
             isCurved: true,
             curveSmoothness: 0.35,
             color: const Color(0xffF58B2B),
@@ -114,8 +112,8 @@ class _HomeAdminGraphViewState extends State<HomeAdminGraphView> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  const Color(0xffFF9900).withOpacity(0.18),
-                  const Color(0xffFF7A00).withOpacity(0.0),
+                  const Color(0xffFF9900).withValues(alpha: 0.18),
+                  const Color(0xffFF7A00).withValues(alpha: 0.0),
                 ],
               ),
             ),
@@ -145,12 +143,12 @@ class _HomeAdminGraphViewState extends State<HomeAdminGraphView> {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: showAvg
-                      ? Constant.primaryColor.withOpacity(0.12)
+                      ? Constant.primaryColor.withValues(alpha: 0.12)
                       : const Color(0xffF5F6FA),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: showAvg
-                        ? Constant.primaryColor.withOpacity(0.35)
+                        ? Constant.primaryColor.withValues(alpha: 0.35)
                         : const Color(0xffE4E6EF),
                     width: 1,
                   ),

@@ -20,15 +20,15 @@ class KotaAdminModelData {
     this.nama,
   });
   KotaAdminModelData.fromJson(Map<String, dynamic> json) {
-    ID = json['ID']?.toString();
-    provId = json['prov_id']?.toString();
-    nama = json['nama']?.toString();
+    ID = json['id']?.toString();
+    provId = json['province'] != null ? json['province']['id']?.toString() : null;
+    nama = json['name']?.toString();
   }
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
-    data['ID'] = ID;
-    data['prov_id'] = provId;
-    data['nama'] = nama;
+    data['id'] = ID;
+    data['province'] = {'id': provId};
+    data['name'] = nama;
     return data;
   }
 }
@@ -55,7 +55,7 @@ class KotaAdminModel {
     this.data,
   });
   KotaAdminModel.fromJson(Map<String, dynamic> json) {
-    result = json['result']?.toString();
+    result = "success";
     if (json['data'] != null) {
       final v = json['data'];
       final arr0 = <KotaAdminModelData>[];
@@ -67,7 +67,6 @@ class KotaAdminModel {
   }
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
-    data['result'] = result;
     if (this.data != null) {
       final v = this.data;
       final arr0 = [];

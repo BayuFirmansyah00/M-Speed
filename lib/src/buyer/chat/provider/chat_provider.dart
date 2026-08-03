@@ -50,7 +50,7 @@ class ChatProvider extends BaseController with ChangeNotifier {
     if (response.statusCode == 201 || response.statusCode == 200) {
       chatBuyerModel = ChatBuyerModel.fromJson(jsonDecode(response.body));
       chatBuyerModel.data?.seller?.forEach((element) {
-        element?.Buat = formatDate(element.Buat ?? "");
+        element?.createdAt = formatDate(element.createdAt ?? "");
       });
 
       notifyListeners();

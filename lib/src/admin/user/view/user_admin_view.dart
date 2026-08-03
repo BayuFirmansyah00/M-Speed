@@ -5,7 +5,7 @@ import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/common/helper/constant.dart';
 import 'package:mspeed/generated/assets.dart';
 import 'package:mspeed/src/admin/user/view/user_data_admin_view.dart';
-
+import 'package:mspeed/utils/utils.dart';
 class UserAdminView extends StatefulWidget {
   const UserAdminView({super.key});
 
@@ -30,35 +30,35 @@ class _UserAdminViewState extends BaseState<UserAdminView> {
         subtitle: 'Kelola data vendor / seller',
         icon: Icons.storefront_rounded,
         gradient: [const Color(0xff10B981), const Color(0xff059669)],
-        onTap: () => CusNav.nPush(context, UserDataAdminView(userType: UserDataType.SELLER)),
+        onTap: () => CusNav.nPush(context, const UserDataAdminView(userType: UserDataType.SELLER)),
       ),
       _UserMenu(
         title: 'Data Finance',
         subtitle: 'Kelola data keuangan',
         icon: Icons.account_balance_rounded,
         gradient: [const Color(0xffF59E0B), const Color(0xffD97706)],
-        onTap: () => CusNav.nPush(context, UserDataAdminView(userType: UserDataType.FINANCE)),
+        onTap: () => CusNav.nPush(context, const UserDataAdminView(userType: UserDataType.FINANCE)),
       ),
       _UserMenu(
         title: 'Data Penerima',
         subtitle: 'Kelola data penerima barang',
         icon: Icons.person_pin_rounded,
         gradient: [const Color(0xff8B5CF6), const Color(0xff7C3AED)],
-        onTap: () => CusNav.nPush(context, UserDataAdminView(userType: UserDataType.PENERIMA)),
+        onTap: () => CusNav.nPush(context, const UserDataAdminView(userType: UserDataType.PENERIMA)),
       ),
       _UserMenu(
         title: 'Data Manager',
         subtitle: 'Kelola data manager platform',
         icon: Icons.manage_accounts_rounded,
         gradient: [const Color(0xffEC4899), const Color(0xffBE185D)],
-        onTap: () => CusNav.nPush(context, UserDataAdminView(userType: UserDataType.MANAGER)),
+        onTap: () => CusNav.nPush(context, const UserDataAdminView(userType: UserDataType.MANAGER)),
       ),
       _UserMenu(
         title: 'Data Audit',
         subtitle: 'Kelola data auditor / pengawas',
         icon: Icons.fact_check_rounded,
         gradient: [const Color(0xff14B8A6), const Color(0xff0F766E)],
-        onTap: () => CusNav.nPush(context, UserDataAdminView(userType: UserDataType.AUDIT)),
+        onTap: () => CusNav.nPush(context, const UserDataAdminView(userType: UserDataType.AUDIT)),
       ),
     ];
 
@@ -82,7 +82,7 @@ class _UserAdminViewState extends BaseState<UserAdminView> {
                     end: Alignment.bottomRight,
                     colors: [
                       Constant.primaryColor,
-                      Constant.primaryColor.withOpacity(0.75),
+                      Constant.primaryColor.withValues(alpha: 0.75),
                     ],
                   ),
                 ),
@@ -93,7 +93,7 @@ class _UserAdminViewState extends BaseState<UserAdminView> {
                       child: Container(
                         width: 150, height: 150,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.07),
+                          color: Colors.white.withValues(alpha: 0.07),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -103,7 +103,7 @@ class _UserAdminViewState extends BaseState<UserAdminView> {
                       child: Container(
                         width: 100, height: 100,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -119,13 +119,13 @@ class _UserAdminViewState extends BaseState<UserAdminView> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.15),
+                                  color: Colors.white.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: SvgPicture.asset(
                                   Assets.svgsIsAdminUsers,
                                   width: 20, height: 20,
-                                  color: Colors.white,
+                                  colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -170,7 +170,7 @@ class _UserAdminViewState extends BaseState<UserAdminView> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Constant.primaryColor.withOpacity(0.1),
+                      color: Constant.primaryColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text('${menus.length} kategori',
@@ -206,8 +206,9 @@ class _UserMenu {
   final String subtitle;
   final IconData icon;
   final List<Color> gradient;
+  final bool isComingSoon;
   final VoidCallback onTap;
-  const _UserMenu({required this.title, required this.subtitle, required this.icon, required this.gradient, required this.onTap});
+  const _UserMenu({required this.title, required this.subtitle, required this.icon, required this.gradient, this.isComingSoon = false, required this.onTap});
 }
 
 // ─── Card Widget (matching Transaksi style) ──────────────────────────────────
@@ -248,7 +249,7 @@ class _UserMenuCardState extends State<_UserMenuCard> with SingleTickerProviderS
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 16, offset: const Offset(0, 4)),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 16, offset: const Offset(0, 4)),
             ],
           ),
           child: Row(
@@ -283,17 +284,30 @@ class _UserMenuCardState extends State<_UserMenuCard> with SingleTickerProviderS
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: m.gradient[0].withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
+              if (m.isComingSoon)
+                Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xffF1F5F9),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text('Segera Hadir', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xff94A3B8))),
                   ),
-                  child: Icon(Icons.arrow_forward_rounded, color: m.gradient[0], size: 16),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: m.gradient[0].withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.arrow_forward_rounded, color: m.gradient[0], size: 16),
+                  ),
                 ),
-              ),
             ],
           ),
         ),

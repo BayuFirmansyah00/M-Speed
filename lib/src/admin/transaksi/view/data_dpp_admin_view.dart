@@ -298,7 +298,7 @@ class _DataDppAdminViewState extends BaseState<DataDppAdminView> {
                           width: 120,
                           height: 120,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.08),
+                            color: Colors.white.withValues(alpha: 0.08),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -310,7 +310,7 @@ class _DataDppAdminViewState extends BaseState<DataDppAdminView> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.18),
+                                color: Colors.white.withValues(alpha: 0.18),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(Icons.receipt_long_rounded,

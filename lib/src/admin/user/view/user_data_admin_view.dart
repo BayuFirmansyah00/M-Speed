@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:excel/excel.dart' hide Border;
-import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
@@ -18,6 +17,9 @@ import 'package:mspeed/src/admin/user/view/create_data_penerima_admin_view.dart'
 import 'package:mspeed/src/admin/user/view/create_data_seller_admin_view.dart';
 import 'package:mspeed/src/admin/user/view/create_data_manager_admin_view.dart';
 import 'package:mspeed/src/admin/user/view/create_data_audit_admin_view.dart';
+import 'package:mspeed/src/admin/user/model/keuangan_admin_model.dart';
+import 'package:mspeed/src/admin/user/model/penerima_admin_model.dart';
+import 'package:mspeed/src/admin/home/model/buyer_admin_model.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
 
@@ -30,7 +32,8 @@ enum UserDataType {
   FINANCE('Data Finance'),
   PENERIMA('Data Penerima'),
   MANAGER('Data Manager'),
-  AUDIT('Data Audit');
+  AUDIT('Data Audit'),
+  DIREKSI('Data Direksi');
 
   final String title;
   const UserDataType(this.title);
@@ -65,6 +68,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       case UserDataType.PENERIMA: return [const Color(0xff8B5CF6), const Color(0xff7C3AED)];
       case UserDataType.MANAGER:  return [const Color(0xffEC4899), const Color(0xffBE185D)];
       case UserDataType.AUDIT:    return [const Color(0xff14B8A6), const Color(0xff0F766E)];
+      case UserDataType.DIREKSI:  return [const Color(0xff6366F1), const Color(0xff4338CA)];
     }
   }
 
@@ -78,6 +82,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       case UserDataType.PENERIMA: return Icons.person_pin_rounded;
       case UserDataType.MANAGER:  return Icons.manage_accounts_rounded;
       case UserDataType.AUDIT:    return Icons.fact_check_rounded;
+      case UserDataType.DIREKSI:  return Icons.supervisor_account_rounded;
     }
   }
 
@@ -119,6 +124,8 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       await p.fetchManager(withLoading: false, search: q);
     } else if (widget.userType == UserDataType.AUDIT) {
       await p.fetchAudit(withLoading: false, search: q);
+    } else if (widget.userType == UserDataType.DIREKSI) {
+      await p.fetchDireksi(withLoading: false, search: q);
     }
     Utils.dismissLoading();
   }
@@ -126,29 +133,76 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
   // ── Navigate to edit form ──
   void _onEdit(int i) {
     final p = context.read<AdminUserProvider>();
+    final user = p.userData[i];
+
     if (widget.userType == UserDataType.BUYER) {
-      CusNav.nPush(context, CreateDataBuyerAdminView(buyer: p.buyerAdminModel.data![i]));
+      final buyer = BuyerAdminModelData(
+        ID: user.id,
+        email: user.email,
+        fullAddress: user.alamat,
+        userData: UserDataModel(
+          firstName: user.name1,
+          lastName: user.name2,
+        ),
+      );
+      CusNav.nPush(context, CreateDataBuyerAdminView(buyer: buyer));
     } else if (widget.userType == UserDataType.SELLER) {
-      CusNav.nPush(context, CreateDataSellerAdminView(seller: p.sellerAdminModel.data![i]));
+      // Backend seller belum tersedia, tampilkan pesan
+      Utils.showFailed(msg: 'Fitur edit seller belum tersedia dari backend');
     } else if (widget.userType == UserDataType.FINANCE) {
-      CusNav.nPush(context, CreateDataFinanceAdminView(keuangan: p.keuanganAdminModel.data![i]));
+      final keuangan = KeuanganAdminModelData(
+        ID: user.id,
+        firstname: user.name1,
+        lastname: user.name2,
+        email: user.email,
+        alamat: user.alamat,
+      );
+      CusNav.nPush(context, CreateDataFinanceAdminView(keuangan: keuangan));
     } else if (widget.userType == UserDataType.PENERIMA) {
-      CusNav.nPush(context, CreateDataPenerimaAdminView(penerima: p.penerimaAdminModel.data![i]));
+      final penerima = PenerimaAdminModelData(
+        ID: user.id,
+        firstname: user.name1,
+        lastname: user.name2,
+        email: user.email,
+        alamat: user.alamat,
+      );
+      CusNav.nPush(context, CreateDataPenerimaAdminView(penerima: penerima));
     } else if (widget.userType == UserDataType.MANAGER) {
-      CusNav.nPush(context, CreateDataManagerAdminView(manager: p.managerAdminModel.data![i]));
+      final manager = KeuanganAdminModelData(
+        ID: user.id,
+        firstname: user.name1,
+        lastname: user.name2,
+        email: user.email,
+        alamat: user.alamat,
+      );
+      CusNav.nPush(context, CreateDataManagerAdminView(manager: manager));
     } else if (widget.userType == UserDataType.AUDIT) {
-      CusNav.nPush(context, CreateDataAuditAdminView(audit: p.auditAdminModel.data![i]));
+      final audit = KeuanganAdminModelData(
+        ID: user.id,
+        firstname: user.name1,
+        lastname: user.name2,
+        email: user.email,
+        alamat: user.alamat,
+      );
+      CusNav.nPush(context, CreateDataAuditAdminView(audit: audit));
+    } else if (widget.userType == UserDataType.DIREKSI) {
+      // Direksi uses same model pattern as Audit
+      final direksi = KeuanganAdminModelData(
+        ID: user.id,
+        firstname: user.name1,
+        lastname: user.name2,
+        email: user.email,
+        alamat: user.alamat,
+      );
+      // TODO: Buat CreateDataDireksiAdminView jika diperlukan form terpisah
+      Utils.showFailed(msg: 'Form edit Direksi belum tersedia');
     }
   }
 
   // ── Change session ──
   Future<void> _onChangeSession(int i) async {
     final p = context.read<AdminUserProvider>();
-    String id = '';
-    if (widget.userType == UserDataType.BUYER) id = p.buyerAdminModel.data?[i]?.ID ?? '';
-    else if (widget.userType == UserDataType.SELLER) id = p.sellerAdminModel.data?[i]?.ID ?? '';
-    else if (widget.userType == UserDataType.FINANCE) id = p.keuanganAdminModel.data?[i]?.ID ?? '';
-    else id = p.penerimaAdminModel.data?[i]?.ID ?? '';
+    String id = p.userData[i].id ?? '';
     await p.changeSession(context, id);
   }
 
@@ -162,7 +216,23 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       desc: 'Yakin ingin menghapus data "${model[i].name1 ?? ''}"?',
       yesCallback: () async {
         CusNav.nPop(context);
-        p.deleteSeller(id: model[i].id ?? '');
+        if (widget.userType == UserDataType.BUYER) {
+          p.deleteBuyer(buyerId: model[i].id ?? '');
+        } else if (widget.userType == UserDataType.SELLER) {
+          p.deleteSeller(id: model[i].id ?? '');
+        } else if (widget.userType == UserDataType.FINANCE) {
+          p.deleteKeuangan(keuanganId: model[i].id ?? '');
+        } else if (widget.userType == UserDataType.PENERIMA) {
+          p.deletePenerima(penerimaId: model[i].id ?? '');
+        } else if (widget.userType == UserDataType.MANAGER) {
+          p.deleteManager(managerId: model[i].id ?? '');
+        } else if (widget.userType == UserDataType.AUDIT) {
+          p.deleteAudit(auditId: model[i].id ?? '');
+        } else if (widget.userType == UserDataType.DIREKSI) {
+          p.deleteDireksi(direksiId: model[i].id ?? '');
+        } else {
+          Utils.showFailed(msg: 'Hapus data untuk role ini belum didukung');
+        }
       },
       noCallback: () => CusNav.nPop(context),
     );
@@ -182,6 +252,9 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       CusNav.nPush(context, CreateDataManagerAdminView());
     } else if (widget.userType == UserDataType.AUDIT) {
       CusNav.nPush(context, CreateDataAuditAdminView());
+    } else if (widget.userType == UserDataType.DIREKSI) {
+      // TODO: Buat CreateDataDireksiAdminView jika diperlukan form terpisah
+      Utils.showFailed(msg: 'Form tambah Direksi belum tersedia');
     }
   }
 
@@ -295,9 +368,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       final p = context.read<AdminUserProvider>();
       final isFinance = widget.userType == UserDataType.FINANCE;
       final String title = isFinance ? 'Data Finance' : 'Data Penerima';
-      final List<dynamic> dataList = isFinance
-          ? (p.keuanganAdminModel.data ?? [])
-          : (p.penerimaAdminModel.data ?? []);
+      final List<UserData> dataList = p.userData;
 
       final pdfDoc = pw.Document();
 
@@ -314,11 +385,11 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                 ['No', 'Nama', 'Email', 'No HP', 'Alamat', 'Kab/Kota'],
                 ...dataList.asMap().entries.map((e) => [
                       '${e.key + 1}',
-                      '${e.value?.firstname ?? ''} ${e.value?.lastname ?? ''}',
-                      e.value?.email ?? '',
-                      e.value?.telp ?? '',
-                      e.value?.alamat ?? '',
-                      e.value?.kabkota ?? '',
+                      '${e.value.name1 ?? ''} ${e.value.name2 ?? ''}'.trim(),
+                      e.value.email ?? '',
+                      '-',
+                      e.value.alamat ?? '',
+                      '-',
                     ])
               ],
             ),
@@ -346,9 +417,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       final p = context.read<AdminUserProvider>();
       final isFinance = widget.userType == UserDataType.FINANCE;
       final String title = isFinance ? 'Data Finance' : 'Data Penerima';
-      final List<dynamic> dataList = isFinance
-          ? (p.keuanganAdminModel.data ?? [])
-          : (p.penerimaAdminModel.data ?? []);
+      final List<UserData> dataList = p.userData;
       
       var excel = Excel.createExcel();
       Sheet sheetObject = excel[title];
@@ -369,11 +438,11 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
         final item = dataList[i];
         sheetObject.appendRow([
           IntCellValue(i + 1),
-          TextCellValue('${item?.firstname ?? ''} ${item?.lastname ?? ''}'),
-          TextCellValue(item?.email ?? ''),
-          TextCellValue(item?.telp ?? ''),
-          TextCellValue(item?.alamat ?? ''),
-          TextCellValue(item?.kabkota ?? ''),
+          TextCellValue('${item.name1 ?? ''} ${item.name2 ?? ''}'.trim()),
+          TextCellValue(item.email ?? ''),
+          TextCellValue('-'),
+          TextCellValue(item.alamat ?? ''),
+          TextCellValue('-'),
         ]);
       }
 
@@ -422,7 +491,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Row(
@@ -443,7 +512,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Row(
@@ -474,7 +543,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                       child: Container(
                         width: 140, height: 140,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.07),
+                          color: Colors.white.withValues(alpha: 0.07),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -486,7 +555,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(_headerIcon, color: Colors.white, size: 22),
@@ -576,7 +645,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _accentColor.withOpacity(0.1),
+                      color: _accentColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text('${model.length} data',
@@ -679,7 +748,7 @@ class _UserCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 14, offset: const Offset(0, 3))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 14, offset: const Offset(0, 3))],
       ),
       child: Column(
         children: [
@@ -687,7 +756,7 @@ class _UserCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.fromLTRB(14, 14, 8, 12),
             decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.04),
+              color: accentColor.withValues(alpha: 0.04),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
               border: const Border(bottom: BorderSide(color: Color(0xffF0F0F0), width: 1)),
             ),
@@ -730,8 +799,8 @@ class _UserCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: item.status == 'Aktif'
-                          ? const Color(0xff28C76F).withOpacity(0.12)
-                          : const Color(0xffED1C24).withOpacity(0.12),
+                          ? const Color(0xff28C76F).withValues(alpha: 0.12)
+                          : const Color(0xffED1C24).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(item.status!,
@@ -813,9 +882,13 @@ class _UserCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 // Alamat full width
                 _InfoChip(
-                  label: 'Alamat',
+                  label: userType == UserDataType.FINANCE || userType == UserDataType.MANAGER || userType == UserDataType.AUDIT 
+                      ? 'Departemen' 
+                      : 'Alamat',
                   value: item.alamat ?? '-',
-                  icon: Icons.location_on_outlined,
+                  icon: userType == UserDataType.FINANCE || userType == UserDataType.MANAGER || userType == UserDataType.AUDIT 
+                      ? Icons.business_rounded 
+                      : Icons.location_on_outlined,
                   fullWidth: true,
                 ),
               ],
@@ -841,7 +914,7 @@ class _UserCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: iconColor, size: 16),

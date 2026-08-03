@@ -5,6 +5,7 @@ import 'package:mspeed/common/page/image_preview.dart';
 import 'package:mspeed/src/admin/home/provider/admin_home_provider.dart';
 import 'package:mspeed/src/admin/home/view/admin_main_home.dart';
 import 'package:mspeed/src/admin/master/provider/master_provider.dart';
+import 'package:mspeed/src/admin/master/provider/admin_banner_provider.dart';
 import 'package:mspeed/src/admin/transaksi/provider/transaction_admin_provider.dart';
 import 'package:mspeed/src/admin/user/provider/admin_form_buyer_provider.dart';
 import 'package:mspeed/src/admin/user/provider/admin_form_keuangan_provider.dart';
@@ -408,6 +409,7 @@ class MyApp extends StatelessWidget {
               ChangeNotifierProvider(create: (_) => AdminFormSellerProvider()),
               ChangeNotifierProvider(create: (_) => AdminFormManagerProvider()),
               ChangeNotifierProvider(create: (_) => AdminFormAuditProvider()),
+              ChangeNotifierProvider(create: (_) => AdminBannerProvider()),
             ],
             child: MaterialApp(
               title: 'M-Speed',

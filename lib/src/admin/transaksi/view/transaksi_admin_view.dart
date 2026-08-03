@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
-import 'package:mspeed/common/helper/constant.dart';
 import 'package:mspeed/generated/assets.dart';
 import 'package:mspeed/src/admin/transaksi/view/data_dpp_admin_view.dart';
 import 'package:mspeed/src/admin/transaksi/view/data_order_admin_view.dart';
@@ -60,14 +59,14 @@ class _TransaksiAdminViewState extends State<TransaksiAdminView> {
                       right: -30, top: -30,
                       child: Container(
                         width: 150, height: 150,
-                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.07), shape: BoxShape.circle),
+                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.07), shape: BoxShape.circle),
                       ),
                     ),
                     Positioned(
                       left: -20, bottom: -20,
                       child: Container(
                         width: 100, height: 100,
-                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), shape: BoxShape.circle),
+                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), shape: BoxShape.circle),
                       ),
                     ),
                     Padding(
@@ -81,7 +80,7 @@ class _TransaksiAdminViewState extends State<TransaksiAdminView> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.15),
+                                  color: Colors.white.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: SvgPicture.asset(
@@ -129,7 +128,7 @@ class _TransaksiAdminViewState extends State<TransaksiAdminView> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xff0284C7).withOpacity(0.1),
+                      color: const Color(0xff0284C7).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Text('2 kategori',
@@ -206,7 +205,7 @@ class _TxMenuCardState extends State<_TxMenuCard> with SingleTickerProviderState
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 16, offset: const Offset(0, 4))],
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 16, offset: const Offset(0, 4))],
           ),
           child: Row(
             children: [
@@ -245,7 +244,7 @@ class _TxMenuCardState extends State<_TxMenuCard> with SingleTickerProviderState
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: m.gradient[0].withOpacity(0.1),
+                    color: m.gradient[0].withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(Icons.arrow_forward_rounded, color: m.gradient[0], size: 16),

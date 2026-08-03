@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
-import 'package:mspeed/common/helper/Constant.dart';
 import 'package:mspeed/src/admin/transaksi/model/order_admin_model.dart';
 import 'package:mspeed/src/admin/transaksi/provider/transaction_admin_provider.dart';
 import 'package:mspeed/src/admin/transaksi/view/detail_pesanan_admin_view.dart';
@@ -74,7 +73,7 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
                           width: 120,
                           height: 120,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.08),
+                            color: Colors.white.withValues(alpha: 0.08),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -86,7 +85,7 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.18),
+                                color: Colors.white.withValues(alpha: 0.18),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(Icons.assignment_rounded,
@@ -131,7 +130,7 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 10,
                         offset: const Offset(0, 3),
                       ),
@@ -227,7 +226,7 @@ class _OrderCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -247,7 +246,7 @@ class _OrderCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: const Color(0xffF97316).withOpacity(0.1),
+                          color: const Color(0xffF97316).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(Icons.assignment_rounded,
@@ -353,7 +352,7 @@ class _OrderCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.08),
+              color: iconColor.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: iconColor, size: 14),

@@ -14,6 +14,8 @@ import 'package:mspeed/src/buyer/home/model/buyer_product_model.dart';
 import 'package:mspeed/src/buyer/home/model/home_model.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
+import 'package:mspeed/core/network/api_client.dart';
 
 import '../model/kategori_model.dart';
 
@@ -94,62 +96,50 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    var userId = await prefs.getString(Constant.kSetPrefId);
     var firstName = await prefs.getString(Constant.kSetPrefFirstName);
     var lastName = await prefs.getString(Constant.kSetPrefLastName);
     name = ((firstName ?? '') + ' ' + (lastName ?? '')).trim();
     email = await prefs.getString(Constant.kSetPrefEmail);
-    Map<String, String> body = {'status': selectedPeriodeData ?? '0'};
+
+    // Filter parameter sesuai AdminDashboardFilterRequest Laravel
+    Map<String, String> body = {};
     if (selectedPeriodeData == '1' && selectedDate != null)
-      body.addAll({
-        'date': DateFormat('yyyy-MM-dd').format(selectedDate!),
-      });
+      body['period'] = 'daily';
+    else if (selectedPeriodeData == '2' && selectedMonth != null)
+      body['period'] = 'monthly';
+    else if (selectedPeriodeData == '3' && selectedYear != null)
+      body['period'] = 'yearly';
 
-    if (selectedPeriodeData == '2' &&
-        selectedMonth != null &&
-        selectedYear != null)
-      body.addAll({
-        'month': selectedMonth!,
-        'year': selectedYear!,
-      });
+    if (selectedDate != null)
+      body['start_date'] = DateFormat('yyyy-MM-dd').format(selectedDate!);
 
-    if (selectedPeriodeData == '3' && selectedYear != null)
-      body.addAll({'year': selectedYear!});
+    // GET /api/v1/admin/dashboard
+    try {
+      final response = await ApiClient().dio.get(
+        '/v1/admin/dashboard',
+        queryParameters: body,
+      );
 
-    if (filterType == 0 && selectedSellerBuyerId != null)
-      body.addAll({'seller': selectedSellerBuyerId ?? ''});
-    else if (filterType == 1 && selectedSellerBuyerId != null)
-      body.addAll({'buyer': selectedSellerBuyerId ?? ''});
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        homeAdminModel = HomeAdminModel.fromJson(response.data);
 
-    // GET /api/admin/dashboard
-    final response = await get(
-      Constant.BASE_API_FULL + '/admin/dashboard',
-      body: body,
-    );
+        // Rebuild graph dari purchase_statistics
+        graphList.clear();
+        biggestGraphVal = 0;
+        final totalOrders = homeAdminModel.purchaseStatistics.totalOrders;
+        graphList.add(FlSpot(0, totalOrders.toDouble()));
+        biggestGraphVal = totalOrders;
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      homeAdminModel = HomeAdminModel.fromJson(jsonDecode(response.body));
-      final chart = homeAdminModel.data?.pembelian;
-      final transactionChart = homeAdminModel.data?.transaksi;
-      graphList.clear();
-      biggestGraphVal = 0;
-      biggestTransactionGraphVal = 0;
-      for (int i = 0; i < (chart?.length ?? 0); i++) {
-        var val = chart?[i] ?? 0;
-        if (val >= biggestGraphVal) biggestGraphVal = val;
-        graphList.add(FlSpot(i.toDouble(), val.toDouble()));
+        notifyListeners();
+        if (withLoading) loading(false);
       }
-      for (int i = 0; i < (transactionChart?.length ?? 0); i++) {
-        var val = transactionChart?[i] ?? 0;
-        if (val >= biggestTransactionGraphVal) biggestTransactionGraphVal = val;
-      }
-      notifyListeners();
-      if (withLoading) loading(false);
-    } else {
-      final decoded = jsonDecode(response.body);
-      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
+    } on DioException catch (e) {
+      final message = e.response?.data['message'] ?? 'Terjadi kesalahan pada dashboard';
       loading(false);
       throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
     }
   }
 
@@ -169,7 +159,6 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
     buyerProductModel = BuyerProductModel();
 
     final prefs = await SharedPreferences.getInstance();
-    String? userId = await prefs.getString(Constant.kSetPrefId) ?? "";
 
     final categoryData = kategoriModel?.data ?? [];
     // selectedCategoryID = [];
@@ -193,16 +182,20 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
     for (int i = 0; i < selectedCategoryID.length; i++)
       body['category_id[$i]'] = selectedCategoryID[i];
 
-    final response = await get(Constant.BASE_API_FULL + '/products', body: body);
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      buyerProductModel = BuyerProductModel.fromJson(jsonDecode(response.body));
-      notifyListeners();
-      if (withLoading) loading(false);
-    } else {
-      final decoded = jsonDecode(response.body);
-      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
+    try {
+      final response = await ApiClient().dio.get('/products', queryParameters: body);
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        buyerProductModel = BuyerProductModel.fromJson(response.data);
+        notifyListeners();
+        if (withLoading) loading(false);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data['message'] ?? e.response?.data['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
     }
   }
 
@@ -242,16 +235,20 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
     for (int i = 0; i < selectedCategoryID.length; i++)
       body['category_id[$i]'] = selectedCategoryID[i];
 
-    final response = await get(Constant.BASE_API_FULL + '/products', body: body);
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      buyerHomeProductModel = BuyerProductModel.fromJson(jsonDecode(response.body));
-      notifyListeners();
-      if (withLoading) loading(false);
-    } else {
-      final decoded = jsonDecode(response.body);
-      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
+    try {
+      final response = await ApiClient().dio.get('/products', queryParameters: body);
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        buyerHomeProductModel = BuyerProductModel.fromJson(response.data);
+        notifyListeners();
+        if (withLoading) loading(false);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data['message'] ?? e.response?.data['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
     }
   }
 
@@ -267,21 +264,26 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
   Future<void> fetchKategori({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/categories');
+    try {
+      final response = await ApiClient().dio.get('/categories');
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      kategoriModel = KategoriModel.fromJson(jsonDecode(response.body));
-      kategoriMap = Map.fromIterable(
-        kategoriModel?.data ?? [],
-        key: (k) => k.nama,
-        value: (v) => false,
-      );
-      notifyListeners();
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        kategoriModel = KategoriModel.fromJson(response.data);
+        kategoriMap = Map.fromIterable(
+          kategoriModel?.data ?? [],
+          key: (k) => k.nama,
+          value: (v) => false,
+        );
+        notifyListeners();
+        if (withLoading) loading(false);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data["message"] ?? e.message;
       loading(false);
       throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
     }
   }
 
@@ -293,29 +295,35 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
       {bool withLoading = false, String search = ''}) async {
     if (withLoading) loading(true);
 
-    // GET /api/users?role=buyer
-    final response =
-        await get(Constant.BASE_API_FULL + '/users', body: {'role': 'buyer'});
+    Map<String, String> body = {};
+    if (search.isNotEmpty) body['search'] = search;
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      userData.clear();
-      buyerAdminModel = BuyerAdminModel.fromJson(jsonDecode(response.body));
-      buyerAdminModel.data?.forEach((v) {
-        userData.add(UserData(
-            name1: v?.firstname,
-            name2: v?.lastname,
-            email: v?.email,
-            id: v?.ID,
-            alamat: v?.alamat));
-      });
+    try {
+      // GET /api/v1/admin/buyers
+      final response = await ApiClient().dio.get('/v1/admin/buyers', queryParameters: body);
 
-      notifyListeners();
-      if (withLoading) loading(false);
-    } else {
-      final decoded = jsonDecode(response.body);
-      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        userData.clear();
+        buyerAdminModel = BuyerAdminModel.fromJson(response.data);
+        buyerAdminModel.data?.forEach((v) {
+          userData.add(UserData(
+              name1: v?.firstname,
+              name2: v?.lastname,
+              email: v?.email,
+              id: v?.ID,
+              alamat: v?.alamat));
+        });
+
+        notifyListeners();
+        if (withLoading) loading(false);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data['message'] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
     }
   }
 
@@ -324,30 +332,33 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
       {bool withLoading = false, String search = ''}) async {
     if (withLoading) loading(true);
 
-    // GET /api/users?role=seller
-    final response =
-        await get(Constant.BASE_API_FULL + '/users', body: {'role': 'seller'});
+    try {
+      // GET /api/users?role=seller
+      final response = await ApiClient().dio.get('/users', queryParameters: {'role': 'seller'});
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      userData.clear();
-      sellerAdminModel = SellerAdminModel.fromJson(jsonDecode(response.body));
-      sellerAdminModel.data?.forEach((v) {
-        userData.add(UserData(
-            name1: v?.nama,
-            name2: v?.namaPemilik,
-            email: v?.email,
-            id: v?.ID,
-            alamat: v?.alamat,
-            status: v?.status));
-      });
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        userData.clear();
+        sellerAdminModel = SellerAdminModel.fromJson(response.data);
+        sellerAdminModel.data?.forEach((v) {
+          userData.add(UserData(
+              name1: v?.nama,
+              name2: v?.namaPemilik,
+              email: v?.email,
+              id: v?.ID,
+              alamat: v?.alamat,
+              status: v?.status));
+        });
 
-      notifyListeners();
-      if (withLoading) loading(false);
-    } else {
-      final decoded = jsonDecode(response.body);
-      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
+        notifyListeners();
+        if (withLoading) loading(false);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data['message'] ?? 'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
     }
   }
 }

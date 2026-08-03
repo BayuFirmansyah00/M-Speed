@@ -11,6 +11,8 @@ import 'package:mspeed/src/admin/master/model/subdit_admin_model.dart';
 import 'package:mspeed/common/base/base_controller.dart';
 import 'package:mspeed/common/helper/constant.dart';
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import 'package:mspeed/core/network/api_client.dart';
 import 'package:mspeed/src/admin/master/view/data_alamat_admin.dart';
 import 'package:mspeed/src/admin/master/view/data_kategori_admin.dart';
 import 'package:mspeed/utils/utils.dart';
@@ -173,20 +175,22 @@ class MasterProvider extends BaseController with ChangeNotifier {
       {bool withLoading = false, String search = ''}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/categories',
-        body: search.isNotEmpty ? {"search": search} : {});
+    try {
+      final response = await ApiClient().dio.get('/categories',
+          queryParameters: search.isNotEmpty ? {"search": search} : {});
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      kategoriAdminModel =
-          KategoriAdminModel.fromJson(jsonDecode(response.body));
-
-      notifyListeners();
-
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        kategoriAdminModel = KategoriAdminModel.fromJson(response.data);
+        notifyListeners();
+        if (withLoading) loading(false);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data["message"] ?? e.message;
       loading(false);
       throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
     }
   }
 
@@ -220,22 +224,25 @@ class MasterProvider extends BaseController with ChangeNotifier {
 
   Future<void> fetchProvinsiAdmin({bool withLoading = false}) async {
     if (withLoading) loading(true);
-    Map<String, String> param = {};
+    Map<String, dynamic> param = {};
     if (provinsiSearchC.text.isNotEmpty)
       param.addAll({'search': provinsiSearchC.text});
-    final response =
-        await get(Constant.BASE_API_FULL + '/getprovinsi', body: param);
+    
+    try {
+      final response = await ApiClient().dio.get('/provinces', queryParameters: param);
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      provinsiAdminModel =
-          ProvinsiAdminModel.fromJson(jsonDecode(response.body));
-      notifyListeners();
-
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        provinsiAdminModel = ProvinsiAdminModel.fromJson(response.data);
+        notifyListeners();
+        if (withLoading) loading(false);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data["message"] ?? e.message;
       loading(false);
       throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
     }
   }
 
@@ -243,21 +250,25 @@ class MasterProvider extends BaseController with ChangeNotifier {
 
   Future<void> fetchKotaAdmin({bool withLoading = false}) async {
     if (withLoading) loading(true);
-    Map<String, String> param = {};
+    Map<String, dynamic> param = {};
     if (kotaSearchC.text.isNotEmpty) param.addAll({'search': kotaSearchC.text});
     param.addAll({'prov_id': "${selectedProvince ?? 0}"});
-    final response =
-        await get(Constant.BASE_API_FULL + '/getkota', body: param);
+    
+    try {
+      final response = await ApiClient().dio.get('/cities', queryParameters: param);
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      kotaAdminModel = KotaAdminModel.fromJson(jsonDecode(response.body));
-      notifyListeners();
-
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        kotaAdminModel = KotaAdminModel.fromJson(response.data);
+        notifyListeners();
+        if (withLoading) loading(false);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data["message"] ?? e.message;
       loading(false);
       throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
     }
   }
 

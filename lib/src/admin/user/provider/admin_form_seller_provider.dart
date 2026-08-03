@@ -5,6 +5,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:mspeed/common/base/base_controller.dart';
 import 'package:mspeed/common/base/base_response.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
+import 'package:mspeed/core/network/api_client.dart';
+import 'package:dio/dio.dart';
 import 'package:mspeed/common/helper/constant.dart';
 import 'package:mspeed/src/admin/home/model/seller_admin_model.dart';
 import 'package:mspeed/src/admin/master/model/subdit_admin_model.dart';
@@ -39,7 +41,8 @@ class AdminFormSellerProvider extends BaseController with ChangeNotifier {
   final TextEditingController ktpFileC = TextEditingController();
   final TextEditingController bankBookC = TextEditingController();
   final TextEditingController spSkpC = TextEditingController();
-  
+  final TextEditingController passwordC = TextEditingController();
+
   File? npwpFile;
   File? ktpFile;
   File? bankBookFile;
@@ -51,13 +54,16 @@ class AdminFormSellerProvider extends BaseController with ChangeNotifier {
   // Update the method signature to remove GoogleMapController
   void updateLocation(LatLng newLocation) {
     locationCoordinate = newLocation;
-    locationName = "";  // Use reverse geocoding if necessary
+    locationName = ""; // Use reverse geocoding if necessary
     notifyListeners();
   }
 
   Future<void> setMapLocation(PickedData pickedData) async {
     locationName = pickedData.address;
-    locationCoordinate = LatLng(pickedData.latLong.latitude, pickedData.latLong.longitude);
+    locationCoordinate = LatLng(
+      pickedData.latLong.latitude,
+      pickedData.latLong.longitude,
+    );
 
     // Notify listeners to update UI
     notifyListeners();
@@ -98,58 +104,88 @@ class AdminFormSellerProvider extends BaseController with ChangeNotifier {
     phoneNumberC.clear();
     alamatC.clear();
     cityC.clear();
+    passwordC.clear();
   }
 
-  Future<void> sendSeller(BuildContext context, {bool withLoading = false, String? sellerId}) async {
+  Future<void> sendSeller(
+    BuildContext context, {
+    bool withLoading = false,
+    String? sellerId,
+  }) async {
     if (withLoading) loading(true);
     var param = {
-      'nama': companyNameC.text,
       'email': emailC.text,
-      'nama_pemilik': ownerNameC.text,
-      'telp_cp': cpPhoneNumberC.text,
-      'telp': phoneNumberC.text,
-      'kbli': kbliC.text,
-      'alamat': alamatC.text,
-      'kota': cityC.text,
-      'lokasi': locationC.text,
+      'first_name': ownerNameC.text.isNotEmpty
+          ? ownerNameC.text
+          : companyNameC.text,
+      'last_name': cpNameC.text,
+      'phone': phoneNumberC.text.isNotEmpty
+          ? phoneNumberC.text
+          : cpPhoneNumberC.text,
     };
-    if (sellerId != null) param.addAll({'seller_id': sellerId});
+    if (passwordC.text.isNotEmpty) {
+      param['password'] = passwordC.text;
+    }
 
-    final response = await post(
-        Constant.BASE_API_FULL + '/${sellerId != null ? 'edit' : 'create'}selleradmin',
-        body: param);
+    try {
+      final isEdit = sellerId != null;
+      final url = isEdit
+          ? '/audit/v1/admin/direksi/$sellerId'
+          : '/audit/v1/admin/direksi';
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final model = BaseResponse.from(response);
-      notifyListeners();
-      await Utils.showSuccess(msg: model.message);
-      await Future.delayed(Duration(seconds: 2), () {});
-      CusNav.nPushReplace(context, UserDataAdminView(userType: UserDataType.BUYER));
+      final response = isEdit
+          ? await ApiClient().dio.put(url, data: param)
+          : await ApiClient().dio.post(url, data: param);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        notifyListeners();
+        await Utils.showSuccess(msg: 'Data direksi berhasil disimpan!');
+        await Future.delayed(Duration(seconds: 2), () {});
+        CusNav.nPushReplace(
+          context,
+          UserDataAdminView(userType: UserDataType.SELLER),
+        );
+      }
+    } on DioException catch (e) {
+      var decoded = e.response?.data;
+      String errorMessage = 'Terjadi kesalahan saat menyimpan data.';
+      if (decoded != null && decoded['message'] != null) {
+        errorMessage = decoded['message'];
+      }
+      Utils.showFailed(msg: errorMessage);
+    } catch (e) {
+      Utils.showFailed(msg: e.toString());
+    } finally {
       if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
-  Future<void> deleteSeller(BuildContext context, {bool withLoading = false, String? sellerId}) async {
+  Future<void> deleteSeller(
+    BuildContext context, {
+    bool withLoading = false,
+    String? sellerId,
+  }) async {
+    if (sellerId == null) return;
     if (withLoading) loading(true);
-    var param = {'seller_id': sellerId};
 
-    final response = await post(Constant.BASE_API_FULL + '/hapusselleradmin', body: param);
+    try {
+      final response = await ApiClient().dio.delete(
+        '/audit/v1/admin/direksi/$sellerId',
+      );
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final model = BaseResponse.from(response);
-      notifyListeners();
-      await Utils.showSuccess(msg: model.message);
-      await Future.delayed(Duration(seconds: 2), () {});
-      CusNav.nPushReplace(context, UserDataAdminView(userType: UserDataType.SELLER));
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        notifyListeners();
+        await Utils.showSuccess(msg: 'Data direksi berhasil dihapus!');
+        await Future.delayed(Duration(seconds: 2), () {});
+        CusNav.nPushReplace(
+          context,
+          UserDataAdminView(userType: UserDataType.SELLER),
+        );
+      }
+    } catch (e) {
+      Utils.showFailed(msg: e.toString());
+    } finally {
       if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
@@ -159,8 +195,12 @@ class AdminFormSellerProvider extends BaseController with ChangeNotifier {
   Future<void> fetchSubditAdmin({bool withLoading = false}) async {
     if (withLoading) loading(true);
     Map<String, String> param = {};
-    if (subditSearchC.text.isNotEmpty) param.addAll({'search': subditSearchC.text});
-    final response = await get(Constant.BASE_API_FULL + '/getsubditadmin', body: param);
+    if (subditSearchC.text.isNotEmpty)
+      param.addAll({'search': subditSearchC.text});
+    final response = await get(
+      Constant.BASE_API_FULL + '/getsubditadmin',
+      body: param,
+    );
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       subditAdminModel = SubditAdminModel.fromJson(jsonDecode(response.body));

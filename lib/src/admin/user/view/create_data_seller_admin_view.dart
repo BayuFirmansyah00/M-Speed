@@ -238,10 +238,10 @@ class _FileButtonState extends State<_FileButton> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: _fileName != null ? widget.accent.withOpacity(0.06) : const Color(0xffF8F9FC),
+          color: _fileName != null ? widget.accent.withValues(alpha: 0.06) : const Color(0xffF8F9FC),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: _fileName != null ? widget.accent.withOpacity(0.3) : const Color(0xffE2E4E9),
+            color: _fileName != null ? widget.accent.withValues(alpha: 0.3) : const Color(0xffE2E4E9),
           ),
         ),
         child: Row(
@@ -249,7 +249,7 @@ class _FileButtonState extends State<_FileButton> {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: widget.accent.withOpacity(0.12),
+                color: widget.accent.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(

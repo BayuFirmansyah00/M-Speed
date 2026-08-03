@@ -7,6 +7,8 @@ import 'package:mspeed/src/admin/user/provider/admin_form_buyer_provider.dart';
 import 'package:mspeed/src/admin/user/view/admin_form_widgets.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
+import 'package:mspeed/src/seller/profil/model/provinsi_model.dart';
+import 'package:mspeed/src/seller/profil/model/kota_model.dart';
 
 class CreateDataBuyerAdminView extends StatefulWidget {
   const CreateDataBuyerAdminView({super.key, this.buyer});
@@ -44,9 +46,10 @@ class _CreateDataBuyerAdminViewState
         yesCallback: () async {
           handleTap(() async {
             CusNav.nPop(context);
-            await context
-                .read<AdminFormBuyerProvider>()
-                .sendBuyer(context, buyerId: widget.buyer?.ID);
+            await context.read<AdminFormBuyerProvider>().sendBuyer(
+              context,
+              buyerId: widget.buyer?.ID,
+            );
           });
         },
         noCallback: () => Navigator.pop(context),
@@ -70,8 +73,7 @@ class _CreateDataBuyerAdminViewState
             surfaceTintColor: Colors.transparent,
             leading: IconButton(
               onPressed: () => Navigator.pop(context),
-              icon:
-                  const Icon(Icons.arrow_back_rounded, color: Colors.white),
+              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: AdminFormHeader(
@@ -97,27 +99,31 @@ class _CreateDataBuyerAdminViewState
                     accentColor: _accent,
                     children: [
                       AdminFormField(
-                          controller: p.firstNameC,
-                          label: 'First Name',
-                          hint: 'Masukkan nama depan',
-                          icon: Icons.badge_outlined),
+                        controller: p.firstNameC,
+                        label: 'First Name',
+                        hint: 'Masukkan nama depan',
+                        icon: Icons.badge_outlined,
+                      ),
                       AdminFormField(
-                          controller: p.lastNameC,
-                          label: 'Last Name',
-                          hint: 'Masukkan nama belakang',
-                          icon: Icons.badge_outlined),
+                        controller: p.lastNameC,
+                        label: 'Last Name',
+                        hint: 'Masukkan nama belakang',
+                        icon: Icons.badge_outlined,
+                      ),
                       AdminFormField(
-                          controller: p.emailC,
-                          label: 'Email',
-                          hint: 'Masukkan alamat email',
-                          icon: Icons.email_outlined,
-                          inputType: TextInputType.emailAddress),
+                        controller: p.emailC,
+                        label: 'Email',
+                        hint: 'Masukkan alamat email',
+                        icon: Icons.email_outlined,
+                        inputType: TextInputType.emailAddress,
+                      ),
                       AdminFormField(
-                          controller: p.phoneNumberC,
-                          label: 'No. Telepon',
-                          hint: 'Masukkan no. HP',
-                          icon: Icons.phone_outlined,
-                          inputType: TextInputType.phone),
+                        controller: p.phoneNumberC,
+                        label: 'No. Telepon',
+                        hint: 'Masukkan no. HP',
+                        icon: Icons.phone_outlined,
+                        inputType: TextInputType.phone,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 14),
@@ -131,24 +137,61 @@ class _CreateDataBuyerAdminViewState
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Subdit',
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xff4A5568))),
+                          const Text(
+                            'Subdit',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xff4A5568),
+                            ),
+                          ),
                           const SizedBox(height: 6),
                           CustomDropdown.normalDropdown(
                             controller: p.subditC,
                             hintText: 'Pilih Subdit',
                             list: (p.subditAdminModel.data ?? [])
-                                .map((e) => DropdownMenuItem(
-                                      value: e?.id ?? '0',
-                                      child: Text(e?.subditName ?? ''),
-                                    ))
+                                .map(
+                                  (e) => DropdownMenuItem(
+                                    value: e?.id ?? '0',
+                                    child: Text(e?.subditName ?? ''),
+                                  ),
+                                )
                                 .toList(),
                             selectedItem: p.selectedSubdit,
                             onChanged: (value) {
                               p.selectedSubdit = value;
+                              setState(() {});
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Departemen',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xff4A5568),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          CustomDropdown.normalDropdown(
+                            controller: p.departmentC,
+                            hintText: 'Pilih Departemen',
+                            list: p.filteredDepartments
+                                .map(
+                                  (e) => DropdownMenuItem(
+                                    value: e['id']?.toString() ?? '0',
+                                    child: Text(e['name'] ?? ''),
+                                  ),
+                                )
+                                .toList(),
+                            selectedItem: p.selectedDepartment,
+                            onChanged: (value) {
+                              p.selectedDepartment = value;
                               setState(() {});
                             },
                           ),
@@ -164,17 +207,89 @@ class _CreateDataBuyerAdminViewState
                     icon: Icons.location_on_outlined,
                     accentColor: _accent,
                     children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Provinsi',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xff4A5568),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          CustomDropdown.searchDropdown(
+                            hintText: 'Pilih Provinsi',
+                            list: (p.provinsiModel?.data ?? [])
+                                .map((e) => e?.nama ?? '')
+                                .toList(),
+                            selectedItem: p.selectedProvince,
+                            onChanged: (value) async {
+                              var matchedProvince;
+                              for (var e in p.provinsiModel?.data ?? []) {
+                                if (e?.nama == value) {
+                                  matchedProvince = e;
+                                  break;
+                                }
+                              }
+                              p.selectedProvinceId = matchedProvince?.ID;
+                              p.selectedProvince = matchedProvince?.nama;
+                              p.selectedCityId = null;
+                              p.selectedCity = null;
+                              setState(() {});
+                              
+                              // Failsafe: if kota is null, try to fetch it again!
+                              if (p.kotaModel?.data == null || p.kotaModel!.data!.isEmpty) {
+                                await p.fetchKota(withLoading: true);
+                                setState(() {});
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Kota',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xff4A5568),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          CustomDropdown.searchDropdown(
+                            hintText: 'Pilih Kota',
+                            list: p.filteredKotaList
+                                .map((e) => e?.kota ?? '')
+                                .toList(),
+                            selectedItem: p.selectedCity,
+                            onChanged: (value) {
+                              var matchedCity;
+                              for (var e in p.kotaModel?.data ?? []) {
+                                if (e?.kota == value) {
+                                  matchedCity = e;
+                                  break;
+                                }
+                              }
+                              p.selectedCityId = matchedCity?.ID;
+                              p.selectedCity = matchedCity?.kota;
+                              setState(() {});
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
                       AdminFormField(
-                          controller: p.cityC,
-                          label: 'Kota',
-                          hint: 'Masukkan kota',
-                          icon: Icons.location_city_outlined),
-                      AdminFormField(
-                          controller: p.alamatC,
-                          label: 'Alamat Lengkap',
-                          hint: 'Masukkan alamat lengkap',
-                          icon: Icons.map_outlined,
-                          maxLines: 3),
+                        controller: p.alamatC,
+                        label: 'Alamat Lengkap',
+                        hint: 'Masukkan alamat lengkap',
+                        icon: Icons.map_outlined,
+                        maxLines: 3,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 14),
@@ -186,12 +301,13 @@ class _CreateDataBuyerAdminViewState
                     accentColor: _accent,
                     children: [
                       AdminFormField(
-                          controller: p.passwordC,
-                          label: 'Password',
-                          hint: 'Masukkan password',
-                          icon: Icons.lock_outline_rounded,
-                          obscure: true,
-                          inputType: TextInputType.visiblePassword),
+                        controller: p.passwordC,
+                        label: 'Password',
+                        hint: 'Masukkan password',
+                        icon: Icons.lock_outline_rounded,
+                        obscure: true,
+                        inputType: TextInputType.visiblePassword,
+                      ),
                     ],
                   ),
                 ],
@@ -200,8 +316,11 @@ class _CreateDataBuyerAdminViewState
           ),
         ],
       ),
-      bottomNavigationBar:
-          AdminSaveBar(accentColor: _accent, gradient: _gradient, onSave: _save),
+      bottomNavigationBar: AdminSaveBar(
+        accentColor: _accent,
+        gradient: _gradient,
+        onSave: _save,
+      ),
     );
   }
 }

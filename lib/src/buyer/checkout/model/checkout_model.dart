@@ -302,12 +302,12 @@ class CheckoutModelDataTemporder {
     this.produk,
   });
   CheckoutModelDataTemporder.fromJson(Map<String, dynamic> json) {
-    ID = json['ID']?.toString();
+    ID = json['ID']?.toString() ?? json['id']?.toString();
     status = json['status']?.toString();
-    BuyerID = json['BuyerID']?.toString();
-    pajak = json['pajak']?.toString();
-    ongkir = json['ongkir']?.toString();
-    title = json['title']?.toString();
+    BuyerID = json['BuyerID']?.toString() ?? json['buyer']?['id']?.toString();
+    pajak = json['pajak']?.toString() ?? json['tax']?['percentage']?.toString();
+    ongkir = json['ongkir']?.toString() ?? json['shipping_cost']?.toString();
+    title = json['title']?.toString() ?? json['prk_submission']?['title']?.toString();
     if (json['produk'] != null) {
       final v = json['produk'];
       final arr0 = <CheckoutModelDataTemporderProduk>[];

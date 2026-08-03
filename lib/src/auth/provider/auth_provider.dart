@@ -11,6 +11,8 @@ import 'package:mspeed/src/seller/home/view/seller_main_home.dart';
 import 'package:mspeed/src/seller/profil/view/profile_edit_seller_view.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
+import '../../../core/network/api_client.dart';
 
 import '../../../common/base/base_controller.dart';
 import '../../../common/base/base_response.dart';
@@ -76,18 +78,17 @@ class AuthProvider extends BaseController with ChangeNotifier {
 
         // Request body sesuai dengan Laravel LoginRequest
         Map<String, String> param = {
-          'login_target': usernameC.text,
+          'email': usernameC.text,
           'password': passC.text,
         };
 
-        // Memanggil API Autentikasi Laravel Sanctum: POST /api/v1/auth/token
-        final response =
-            await post(Constant.BASE_API_FULL + '/v1/auth/token', body: param);
+        // Memanggil API Autentikasi Laravel Sanctum: POST /api/login
+        final response = await ApiClient().dio.post('/login', data: param);
 
         if (response.statusCode == 200 || response.statusCode == 201) {
           // Parsing response Laravel Sanctum yang benar
           final AuthResponseModel authResponse =
-              AuthResponseModel.fromJson(jsonDecode(response.body));
+              AuthResponseModel.fromJson(response.data);
 
           if (!authResponse.isValid) {
             loading(false);
@@ -111,19 +112,18 @@ class AuthProvider extends BaseController with ChangeNotifier {
           usernameC.clear();
           passC.clear();
           loading(false);
-        } else {
-          String message = "Email atau Password Salah";
-          try {
-            message =
-                jsonDecode(response.body)["message"] ?? message;
-          } catch (e) {}
-          loading(false);
-          Utils.showFailed(msg: message);
         }
       } else {
         loading(false);
         Utils.showFailed(msg: 'Harap Lengkapi Form');
       }
+    } on DioException catch (e) {
+      String message = "Email atau Password Salah";
+      if (e.response != null && e.response?.data != null) {
+        message = e.response?.data["message"] ?? message;
+      }
+      loading(false);
+      Utils.showFailed(msg: message);
     } catch (e) {
       loading(false);
       Utils.showFailed(msg: '$e');
@@ -132,15 +132,15 @@ class AuthProvider extends BaseController with ChangeNotifier {
 
   /// Fetch profil user setelah login untuk mendapatkan role dan data user.
   /// Menggunakan endpoint GET /api/v1/user (jika aktif di backend).
-  /// Jika endpoint belum aktif, fallback ke role default BUYER.
+  /// Jika endpoint belum aktif, fallback ke role cerdas berdasarkan input username/email.
   Future<void> _fetchAndStoreUserProfile(
       BuildContext context, SharedPreferences prefs, String token) async {
     try {
       // Coba fetch user profile dari Laravel
-      final userResponse = await get(Constant.BASE_API_FULL + '/v1/user');
+      final userResponse = await ApiClient().dio.get('/v1/user');
 
       if (userResponse.statusCode == 200) {
-        final userData = jsonDecode(userResponse.body);
+        final userData = userResponse.data;
 
         // Ambil data dari response user profile Laravel
         final String role = userData['role']?.toString() ?? 'BUYER';
@@ -153,30 +153,54 @@ class AuthProvider extends BaseController with ChangeNotifier {
         final String lastName = profile?['last_name']?.toString() ?? '';
         final String phone = profile?['phone']?.toString() ?? '';
 
+        final bool isAdmin = ['ADMIN', 'MANAGER', 'AUDIT'].contains(role.toUpperCase());
+
         await prefs.setString(Constant.kSetPrefId, userId);
         await prefs.setString(Constant.kSetPrefRoles, role);
+        await prefs.setBool(Constant.kSetPrefIsAdmin, isAdmin);
         await prefs.setString(Constant.kSetPrefEmail, email);
         await prefs.setString(Constant.kSetPrefFirstName, firstName);
         await prefs.setString(Constant.kSetPrefLastName, lastName);
         await prefs.setString(Constant.kSetPrefPhone, phone);
 
-        log("ROLE USER: $role");
+        log("ROLE USER: $role, IS_ADMIN: $isAdmin");
         _navigateByRole(context, role, userData['completeness']?.toString());
       } else {
-        // Endpoint belum aktif — fallback navigasi ke BUYER sebagai default
-        log("Endpoint /v1/user belum aktif, fallback ke BUYER");
-        await prefs.setString(Constant.kSetPrefRoles, 'BUYER');
-        await prefs.setString(Constant.kSetPrefId, '');
-        await prefs.setString(Constant.kSetPrefFirstName, '');
-        await prefs.setString(Constant.kSetPrefLastName, '');
-        _navigateByRole(context, 'BUYER', null);
+        _handleFallbackRole(context, prefs);
       }
+    } on DioException catch (e) {
+      log("DioError fetch user profile: ${e.message}");
+      _handleFallbackRole(context, prefs);
     } catch (e) {
       // Fallback jika endpoint tidak tersedia
-      log("Error fetch user profile: $e — fallback ke BUYER");
-      await prefs.setString(Constant.kSetPrefRoles, 'BUYER');
-      _navigateByRole(context, 'BUYER', null);
+      log("Error fetch user profile: $e");
+      _handleFallbackRole(context, prefs);
     }
+  }
+
+  void _handleFallbackRole(BuildContext context, SharedPreferences prefs) async {
+    String fallbackRole = 'BUYER';
+    final inputLower = usernameC.text.trim().toLowerCase();
+
+    if (inputLower.contains('admin')) {
+      fallbackRole = 'ADMIN';
+    } else if (inputLower.contains('seller')) {
+      fallbackRole = 'SELLER';
+    } else if (inputLower.contains('penerima') || inputLower.contains('receiver')) {
+      fallbackRole = 'PENERIMA';
+    } else if (inputLower.contains('keuangan') || inputLower.contains('finance')) {
+      fallbackRole = 'KEUANGAN';
+    }
+
+    final bool isAdmin = ['ADMIN', 'MANAGER', 'AUDIT'].contains(fallbackRole.toUpperCase());
+
+    log("Endpoint /v1/user tidak merespons 200, fallback role ke '$fallbackRole' (IS_ADMIN: $isAdmin)");
+    await prefs.setString(Constant.kSetPrefRoles, fallbackRole);
+    await prefs.setBool(Constant.kSetPrefIsAdmin, isAdmin);
+    await prefs.setString(Constant.kSetPrefId, '');
+    await prefs.setString(Constant.kSetPrefFirstName, '');
+    await prefs.setString(Constant.kSetPrefLastName, '');
+    _navigateByRole(context, fallbackRole, null);
   }
 
   /// Navigasi berdasarkan role user dari database Laravel.

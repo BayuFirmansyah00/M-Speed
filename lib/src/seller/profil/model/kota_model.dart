@@ -32,7 +32,7 @@ class KotaModelData {
     // dan format lama: { ID, kota }
     ID = json['id']?.toString() ?? json['ID']?.toString();
     kota = json['name']?.toString() ?? json['kota']?.toString();
-    provinceId = json['province_id']?.toString();
+    provinceId = json['province_id']?.toString() ?? json['province']?['id']?.toString();
   }
 
   Map<String, dynamic> toJson() {

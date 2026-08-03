@@ -17,13 +17,13 @@ class KategoriAdminModelData {
     this.nama,
   });
   KategoriAdminModelData.fromJson(Map<String, dynamic> json) {
-    ID = json['ID']?.toString();
-    nama = json['nama']?.toString();
+    ID = json['id']?.toString();
+    nama = json['name']?.toString();
   }
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
-    data['ID'] = ID;
-    data['nama'] = nama;
+    data['id'] = ID;
+    data['name'] = nama;
     return data;
   }
 }
@@ -49,7 +49,7 @@ class KategoriAdminModel {
     this.data,
   });
   KategoriAdminModel.fromJson(Map<String, dynamic> json) {
-    result = json['result']?.toString();
+    result = "success";
     if (json['data'] != null && (json['data'] is List)) {
       final v = json['data'];
       final arr0 = <KategoriAdminModelData>[];
@@ -61,7 +61,6 @@ class KategoriAdminModel {
   }
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
-    data['result'] = result;
     if (this.data != null) {
       final v = this.data;
       final arr0 = [];

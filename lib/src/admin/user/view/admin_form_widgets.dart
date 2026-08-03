@@ -40,7 +40,7 @@ class AdminFormHeader extends StatelessWidget {
               width: 140,
               height: 140,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.07),
+                color: Colors.white.withValues(alpha: 0.07),
                 shape: BoxShape.circle,
               ),
             ),
@@ -52,7 +52,7 @@ class AdminFormHeader extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.18),
+                    color: Colors.white.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, color: Colors.white, size: 22),
@@ -108,7 +108,7 @@ class AdminFormSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 12,
             offset: const Offset(0, 3),
           ),
@@ -125,7 +125,7 @@ class AdminFormSection extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.1),
+                    color: accentColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(icon, color: accentColor, size: 16),
@@ -277,7 +277,7 @@ class AdminSaveBar extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.07),
+            color: Colors.black.withValues(alpha: 0.07),
             blurRadius: 16,
             offset: const Offset(0, -4),
           ),
@@ -296,7 +296,7 @@ class AdminSaveBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             boxShadow: [
               BoxShadow(
-                color: accentColor.withOpacity(0.35),
+                color: accentColor.withValues(alpha: 0.35),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),

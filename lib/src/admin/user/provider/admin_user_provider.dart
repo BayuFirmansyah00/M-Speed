@@ -1,18 +1,14 @@
 import 'dart:async';
-import 'dart:convert';
+import 'dart:developer';
 
 import 'package:mspeed/common/base/base_controller.dart';
-import 'package:mspeed/common/base/base_response.dart';
 import 'package:mspeed/common/helper/constant.dart';
-import 'package:mspeed/src/admin/home/model/buyer_admin_model.dart';
-import 'package:mspeed/src/admin/home/model/seller_admin_model.dart';
-import 'package:mspeed/src/admin/user/model/keuangan_admin_model.dart';
-import 'package:mspeed/src/admin/user/model/penerima_admin_model.dart';
 import 'package:mspeed/src/admin/user/view/user_data_admin_view.dart';
-import 'package:mspeed/src/auth/model/login_model.dart';
 import 'package:flutter/material.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
+import 'package:mspeed/core/network/api_client.dart';
 
 class AdminUserProvider extends BaseController with ChangeNotifier {
   List<UserData> userData = [];
@@ -24,74 +20,51 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       loading(true);
       FocusManager.instance.primaryFocus?.unfocus();
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      Map<String, String> param = {'id': id};
-      final response = await post(
-        Constant.BASE_API_FULL + '/changesession',
-        body: param,
-      );
 
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        final model = LoginModel.fromJson(jsonDecode(response.body));
+      // Simpan token admin asli sebelum impersonate
+      final currentToken = prefs.getString(Constant.kSetPrefToken) ?? '';
+      await prefs.setString('admin_original_token', currentToken);
 
-        // set to shared preferences
-        await prefs.setString(Constant.kSetPrefId, "${model.jenis?.ID ?? 0}");
-        await prefs.setString(
-          Constant.kSetPrefToken,
-          model.jenis?.password ?? '',
-        );
-        await prefs.setString(
-          Constant.kSetPrefFirstName,
-          model.jenis?.firstname ?? '',
-        );
-        await prefs.setString(
-          Constant.kSetPrefLastName,
-          model.jenis?.lastname ?? '',
-        );
-        await prefs.setString(Constant.kSetPrefRoles, model.jenis?.jenis ?? '');
-        await prefs.setBool(
-          Constant.kSetPrefIsAdmin,
-          model.jenis?.isAdmin ?? false,
-        );
-        await prefs.setString(
-          Constant.kSetPrefSubditId,
-          model.jenis?.subditId ?? '',
-        );
+      // POST /api/aimpersonate/{id} — Laravel Sanctum Impersonate
+      final response = await ApiClient().dio.post('/aimpersonate/$id');
 
-        if (model.jenis?.jenis == 'SELLER')
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/sellerHome',
-            (route) => false,
-          );
-        else if (model.jenis?.jenis == 'PENERIMA')
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/penerimaHome',
-            (route) => false,
-          );
-        else if (model.jenis?.jenis == 'KEUANGAN')
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/keuanganHome',
-            (route) => false,
-          );
-        else if (model.jenis?.jenis == 'ADMIN')
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/adminHome',
-            (route) => false,
-          );
-        else
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data['data'] ?? {};
+        final impersonatedUser = data['impersonated_user'] ?? {};
+        final accessToken = data['access_token']?.toString() ?? '';
+        final role = impersonatedUser['role']?.toString().toUpperCase() ?? '';
+
+        // Simpan token impersonate baru
+        await prefs.setString(Constant.kSetPrefToken, accessToken);
+        await prefs.setString(Constant.kSetPrefId, impersonatedUser['id']?.toString() ?? '');
+        await prefs.setString(Constant.kSetPrefEmail, impersonatedUser['email']?.toString() ?? '');
+        await prefs.setString(Constant.kSetPrefRoles, role);
+        await prefs.setBool(Constant.kSetPrefIsAdmin, false);
+
+        log('IMPERSONATE SUCCESS: role=$role, token=$accessToken');
+
+        // Navigasi berdasarkan role target
+        if (role == 'SELLER') {
+          Navigator.pushNamedAndRemoveUntil(context, '/sellerHome', (route) => false);
+        } else if (role == 'PENERIMA' || role == 'RECEIVER') {
+          Navigator.pushNamedAndRemoveUntil(context, '/penerimaHome', (route) => false);
+        } else if (role == 'KEUANGAN' || role == 'FINANCE') {
+          Navigator.pushNamedAndRemoveUntil(context, '/keuanganHome', (route) => false);
+        } else if (role == 'BUYER') {
           Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        } else {
+          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        }
 
         loading(false);
       } else {
-        final message = jsonDecode(response.body)["messages"]["error"];
         loading(false);
-        Utils.showFailed(msg: message);
-        // return LoginModel();
-        throw Exception(message);
+        Utils.showFailed(msg: 'Gagal melakukan impersonate');
       }
+    } on DioException catch (e) {
+      loading(false);
+      final msg = e.response?.data?['message'] ?? 'Gagal melakukan impersonate';
+      Utils.showFailed(msg: msg);
     } catch (e) {
       loading(false);
       Utils.showFailed(msg: '$e');
@@ -103,57 +76,40 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       loading(true);
       FocusManager.instance.primaryFocus?.unfocus();
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      final response = await post(Constant.BASE_API_FULL + '/backtoadmin');
 
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        final model = LoginModel.fromJson(jsonDecode(response.body));
-
-        // set to shared preferences
-        await prefs.setString(Constant.kSetPrefId, "${model.jenis?.ID ?? 0}");
-        await prefs.setString(
-          Constant.kSetPrefToken,
-          model.jenis?.password ?? '',
-        );
-        await prefs.setString(
-          Constant.kSetPrefFirstName,
-          model.jenis?.firstname ?? '',
-        );
-        await prefs.setString(
-          Constant.kSetPrefLastName,
-          model.jenis?.lastname ?? '',
-        );
-        await prefs.setString(Constant.kSetPrefRoles, model.jenis?.jenis ?? '');
-        await prefs.setBool(
-          Constant.kSetPrefIsAdmin,
-          model.jenis?.isAdmin ?? false,
-        );
-        await prefs.setString(
-          Constant.kSetPrefSubditId,
-          model.jenis?.subditId ?? '',
-        );
-
-        // log("JENIS : ${model.jenis?.jenis}");
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/adminHome',
-          (route) => false,
-        );
-
-        loading(false);
-      } else {
-        final message = jsonDecode(response.body)["messages"]["error"];
-        loading(false);
-        Utils.showFailed(msg: message);
-        // return LoginModel();
-        throw Exception(message);
+      // POST /api/impersonate/stop — revoke token impersonate
+      try {
+        await ApiClient().dio.post('/impersonate/stop');
+      } catch (_) {
+        // Token impersonate mungkin sudah expired, lanjutkan saja
       }
+
+      // Restore token admin asli
+      final adminToken = prefs.getString('admin_original_token') ?? '';
+      if (adminToken.isNotEmpty) {
+        await prefs.setString(Constant.kSetPrefToken, adminToken);
+        await prefs.remove('admin_original_token');
+      }
+
+      // Set kembali ke role admin
+      await prefs.setString(Constant.kSetPrefRoles, 'ADMIN');
+      await prefs.setBool(Constant.kSetPrefIsAdmin, true);
+
+      log('BACK TO ADMIN: token restored');
+
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/adminHome',
+        (route) => false,
+      );
+
+      loading(false);
     } catch (e) {
       loading(false);
       Utils.showFailed(msg: '$e');
     }
   }
 
-  BuyerAdminModel buyerAdminModel = BuyerAdminModel();
   Future<void> fetchBuyers({
     bool withLoading = false,
     String search = '',
@@ -161,127 +117,90 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
     Map<String, String> param = {};
     if (search.isNotEmpty) param.addAll({'search': search});
-    if (id != null) param.addAll({'buyer_id': id ?? '0'});
 
-    final response = await get(
-      Constant.BASE_API_FULL + '/getbuyeradmin',
-      body: param,
-    );
+    try {
+      final response = await ApiClient().dio.get(
+        '/audit/v1/admin/buyers',
+        queryParameters: param,
+      );
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      userData.clear();
-      buyerAdminModel = BuyerAdminModel.fromJson(jsonDecode(response.body));
-      buyerAdminModel.data?.forEach((v) {
-        userData.add(
-          UserData(
-            name1: v?.firstname,
-            name2: v?.lastname,
-            email: v?.email,
-            id: v?.ID,
-            alamat: v?.alamat,
-          ),
-        );
-      });
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        userData.clear();
+        final dataList = response.data['data'] as List<dynamic>? ?? [];
+        
+        for (var item in dataList) {
+          final uData = item['user_data'] ?? {};
+          userData.add(
+            UserData(
+              name1: uData['first_name']?.toString() ?? '',
+              name2: uData['last_name']?.toString() ?? '',
+              email: item['email']?.toString() ?? '',
+              id: item['id']?.toString() ?? '',
+              alamat: item['full_address']?.toString() ?? '',
+              status: item['status']?.toString() == 'active' ? '1' : '0',
+            ),
+          );
+        }
 
-      notifyListeners();
-
+        notifyListeners();
+      } else {
+        throw Exception("Gagal memuat data buyer");
+      }
+    } catch (e) {
+      debugPrint("fetchBuyers Error: $e");
+    } finally {
       if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
   Future<void> deleteBuyer({bool withLoading = false, String? buyerId}) async {
     if (withLoading) loading(true);
 
-    final response = await post(
-      Constant.BASE_API_FULL + '/hapusbuyeradmin',
-      body: {'buyer_id': buyerId},
-    );
+    try {
+      final response = await ApiClient().dio.delete(
+        '/audit/v1/admin/buyers/$buyerId',
+      );
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final model = BaseResponse.from(response);
-      notifyListeners();
-      await Utils.showSuccess(msg: model.message);
-      await Future.delayed(Duration(seconds: 2), () {});
-      if (withLoading) loading(false);
-      fetchSellers(withLoading: true);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final message = response.data['message'] ?? 'Berhasil menghapus pembeli';
+        notifyListeners();
+        await Utils.showSuccess(msg: message);
+        await Future.delayed(Duration(seconds: 2), () {});
+        if (withLoading) loading(false);
+        fetchBuyers(withLoading: true);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data["message"] ?? e.message;
       loading(false);
       throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
     }
   }
 
-  var sellerAdminModel = SellerAdminModel();
+  // NOTE: AdminSellerApiController belum tersedia dari tim backend.
+  // Fungsi ini adalah placeholder sementara.
   Future<void> fetchSellers({
     bool withLoading = false,
     String search = '',
   }) async {
     if (withLoading) loading(true);
-    Map<String, String> param = {};
-    if (search.isNotEmpty) param.addAll({'search': search});
-    if (id != null) param.addAll({'seller_id': id ?? '0'});
-
-    final response = await get(
-      Constant.BASE_API_FULL + '/getselleradmin',
-      body: param,
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      userData.clear();
-      sellerAdminModel = SellerAdminModel.fromJson(jsonDecode(response.body));
-      sellerAdminModel.data?.forEach((v) {
-        userData.add(
-          UserData(
-            name1: v?.nama,
-            name2: v?.namaPemilik,
-            email: v?.email,
-            id: v?.ID,
-            alamat: v?.alamat,
-            status: v?.status,
-          ),
-        );
-      });
-
-      notifyListeners();
-
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
-    }
+    userData.clear();
+    notifyListeners();
+    if (withLoading) loading(false);
+    // TODO: Ganti dengan endpoint v1/admin/sellers setelah backend ready
+    debugPrint('fetchSellers: AdminSellerApiController belum tersedia dari tim backend');
   }
 
   Future<void> deleteSeller({
     bool withLoading = false,
-    String id = "148",
+    String id = '0',
   }) async {
-    if (withLoading) loading(true);
-
-    final response = await post(
-      Constant.BASE_API_FULL + '/hapusselleradmin',
-      body: {'seller_id': id},
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final model = BaseResponse.from(response);
-      notifyListeners();
-      await Utils.showSuccess(msg: model.message);
-      await Future.delayed(Duration(seconds: 2), () {});
-      if (withLoading) loading(false);
-      fetchSellers(withLoading: true);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
-    }
+    Utils.showFailed(msg: 'Fitur hapus seller belum tersedia dari backend');
+    // TODO: Ganti dengan endpoint DELETE v1/admin/sellers/{id} setelah backend ready
   }
 
-  var keuanganAdminModel = KeuanganAdminModel();
   Future<void> fetchKeuangan({
     bool withLoading = false,
     String search = '',
@@ -289,37 +208,45 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
     Map<String, String> param = {};
     if (search.isNotEmpty) param.addAll({'search': search});
-    if (id != null) param.addAll({'keuangan_id': id ?? '0'});
 
-    final response = await get(
-      Constant.BASE_API_FULL + '/getkeuanganadmin',
-      body: param,
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      userData.clear();
-      keuanganAdminModel = KeuanganAdminModel.fromJson(
-        jsonDecode(response.body),
+    try {
+      final response = await ApiClient().dio.get(
+        '/audit/v1/admin/finances',
+        queryParameters: param,
       );
-      keuanganAdminModel.data?.forEach((v) {
-        userData.add(
-          UserData(
-            name1: v?.firstname,
-            name2: v?.lastname,
-            email: v?.email,
-            id: v?.ID,
-            alamat: v?.alamat,
-          ),
-        );
-      });
 
-      notifyListeners();
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        userData.clear();
+        final dataList = response.data['data'] as List<dynamic>? ?? [];
+        
+        for (var item in dataList) {
+          final uData = item['user_data'] ?? {};
+          final dept = uData['department'];
+          String alamatDept = '';
+          if (dept != null && dept is Map) {
+            alamatDept = dept['name']?.toString() ?? '';
+          }
 
+          userData.add(
+            UserData(
+              name1: uData['first_name']?.toString() ?? '',
+              name2: uData['last_name']?.toString() ?? '',
+              email: item['email']?.toString() ?? '',
+              id: item['id']?.toString() ?? '',
+              alamat: alamatDept,
+              status: item['status']?.toString() == 'active' ? '1' : '0',
+            ),
+          );
+        }
+
+        notifyListeners();
+      } else {
+        throw Exception("Gagal memuat data finance");
+      }
+    } catch (e) {
+      debugPrint("fetchKeuangan Error: $e");
+    } finally {
       if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
@@ -329,26 +256,26 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
   }) async {
     if (withLoading) loading(true);
 
-    final response = await post(
-      Constant.BASE_API_FULL + '/hapuskeuanganadmin',
-      body: {'keuangan_id': keuanganId},
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final model = BaseResponse.from(response);
-      notifyListeners();
-      await Utils.showSuccess(msg: model.message);
-      await Future.delayed(Duration(seconds: 2), () {});
+    try {
+      final response = await ApiClient().dio.delete('/audit/v1/admin/finances/$keuanganId');
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        notifyListeners();
+        await Utils.showSuccess(msg: "Data finance berhasil dihapus");
+        await Future.delayed(Duration(seconds: 2), () {});
+        if (withLoading) loading(false);
+        fetchKeuangan(withLoading: true);
+      } else {
+        throw Exception("Gagal menghapus data");
+      }
+    } catch (e) {
+      debugPrint("deleteKeuangan Error: $e");
+      Utils.showFailed(msg: e.toString());
+    } finally {
       if (withLoading) loading(false);
-      fetchKeuangan(withLoading: true);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
-  var penerimaAdminModel = PenerimaAdminModel();
   Future<void> fetchPenerima({
     bool withLoading = false,
     String search = '',
@@ -356,37 +283,38 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
     Map<String, String> param = {};
     if (search.isNotEmpty) param.addAll({'search': search});
-    if (id != null) param.addAll({'penerima_id': id ?? '0'});
 
-    final response = await get(
-      Constant.BASE_API_FULL + '/getpenerimaadmin',
-      body: param,
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      userData.clear();
-      penerimaAdminModel = PenerimaAdminModel.fromJson(
-        jsonDecode(response.body),
+    try {
+      final response = await ApiClient().dio.get(
+        '/audit/v1/admin/receivers',
+        queryParameters: param,
       );
-      penerimaAdminModel.data?.forEach((v) {
-        userData.add(
-          UserData(
-            name1: v?.firstname,
-            name2: v?.lastname,
-            email: v?.email,
-            id: v?.ID,
-            alamat: v?.alamat,
-          ),
-        );
-      });
 
-      notifyListeners();
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        userData.clear();
+        final dataList = response.data['data'] as List<dynamic>;
+        
+        for (var item in dataList) {
+          final uData = item['user_data'] ?? {};
+          userData.add(
+            UserData(
+              name1: uData['first_name']?.toString() ?? '',
+              name2: uData['last_name']?.toString() ?? '',
+              email: item['email']?.toString() ?? '',
+              id: item['id']?.toString() ?? '',
+              alamat: item['full_address']?.toString() ?? '',
+            ),
+          );
+        }
 
+        notifyListeners();
+      } else {
+        throw Exception("Gagal memuat data penerima");
+      }
+    } catch (e) {
+      debugPrint("fetchPenerima Error: $e");
+    } finally {
       if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
@@ -396,26 +324,26 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
   }) async {
     if (withLoading) loading(true);
 
-    final response = await post(
-      Constant.BASE_API_FULL + '/hapuspenerimaadmin',
-      body: {'penerima_id': penerimaId},
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final model = BaseResponse.from(response);
-      notifyListeners();
-      await Utils.showSuccess(msg: model.message);
-      await Future.delayed(Duration(seconds: 2), () {});
+    try {
+      final response = await ApiClient().dio.delete('/audit/v1/admin/receivers/$penerimaId');
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        notifyListeners();
+        await Utils.showSuccess(msg: "Data penerima berhasil dihapus");
+        await Future.delayed(Duration(seconds: 2), () {});
+        if (withLoading) loading(false);
+        fetchPenerima(withLoading: true);
+      } else {
+        throw Exception("Gagal menghapus data penerima");
+      }
+    } catch (e) {
+      debugPrint("deletePenerima Error: $e");
+      Utils.showFailed(msg: e.toString());
+    } finally {
       if (withLoading) loading(false);
-      fetchPenerima(withLoading: true);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
-  var managerAdminModel = KeuanganAdminModel();
   Future<void> fetchManager({
     bool withLoading = false,
     String search = '',
@@ -423,39 +351,69 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
     Map<String, String> param = {};
     if (search.isNotEmpty) param.addAll({'search': search});
-    if (id != null) param.addAll({'manager_id': id ?? '0'});
 
-    final response = await get(
-      Constant.BASE_API_FULL + '/getmanageradmin',
-      body: param,
-    );
+    try {
+      final response = await ApiClient().dio.get(
+        '/audit/v1/admin/managers',
+        queryParameters: param,
+      );
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      userData.clear();
-      managerAdminModel = KeuanganAdminModel.fromJson(jsonDecode(response.body));
-      managerAdminModel.data?.forEach((v) {
-        userData.add(
-          UserData(
-            name1: v?.firstname,
-            name2: v?.lastname,
-            email: v?.email,
-            id: v?.ID,
-            alamat: v?.alamat,
-          ),
-        );
-      });
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        userData.clear();
+        final dataList = response.data['data'] as List<dynamic>? ?? [];
+        
+        for (var item in dataList) {
+          // Manager menggunakan key 'profile' bukan 'user_data'
+          final profile = item['profile'] ?? {};
+          userData.add(
+            UserData(
+              name1: profile['first_name']?.toString() ?? '',
+              name2: profile['last_name']?.toString() ?? '',
+              email: item['email']?.toString() ?? '',
+              id: item['id']?.toString() ?? '',
+              alamat: profile['phone']?.toString() ?? '',
+              status: item['status']?.toString() == 'active' ? '1' : '0',
+            ),
+          );
+        }
 
-      notifyListeners();
-
+        notifyListeners();
+      } else {
+        throw Exception("Gagal memuat data manager");
+      }
+    } catch (e) {
+      debugPrint("fetchManager Error: $e");
+    } finally {
       if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
-  var auditAdminModel = KeuanganAdminModel();
+  Future<void> deleteManager({
+    bool withLoading = false,
+    String managerId = "0",
+  }) async {
+    if (withLoading) loading(true);
+
+    try {
+      final response = await ApiClient().dio.delete('/audit/v1/admin/managers/$managerId');
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        notifyListeners();
+        await Utils.showSuccess(msg: "Data manager berhasil dihapus");
+        await Future.delayed(Duration(seconds: 2), () {});
+        if (withLoading) loading(false);
+        fetchManager(withLoading: true);
+      } else {
+        throw Exception("Gagal menghapus data manager");
+      }
+    } catch (e) {
+      debugPrint("deleteManager Error: $e");
+      Utils.showFailed(msg: e.toString());
+    } finally {
+      if (withLoading) loading(false);
+    }
+  }
+
   Future<void> fetchAudit({
     bool withLoading = false,
     String search = '',
@@ -463,35 +421,132 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
     Map<String, String> param = {};
     if (search.isNotEmpty) param.addAll({'search': search});
-    if (id != null) param.addAll({'audit_id': id ?? '0'});
 
-    final response = await get(
-      Constant.BASE_API_FULL + '/getauditadmin',
-      body: param,
-    );
+    try {
+      final response = await ApiClient().dio.get(
+        '/audit/v1/admin/audits',
+        queryParameters: param,
+      );
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      userData.clear();
-      auditAdminModel = KeuanganAdminModel.fromJson(jsonDecode(response.body));
-      auditAdminModel.data?.forEach((v) {
-        userData.add(
-          UserData(
-            name1: v?.firstname,
-            name2: v?.lastname,
-            email: v?.email,
-            id: v?.ID,
-            alamat: v?.alamat,
-          ),
-        );
-      });
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        userData.clear();
+        final dataList = response.data['data'] as List<dynamic>;
+        
+        for (var item in dataList) {
+          final uData = item['user_data'] ?? {};
+          userData.add(
+            UserData(
+              name1: uData['first_name']?.toString() ?? '',
+              name2: uData['last_name']?.toString() ?? '',
+              email: item['email']?.toString() ?? '',
+              id: item['id']?.toString() ?? '',
+              alamat: uData['address']?.toString() ?? '',
+            ),
+          );
+        }
 
-      notifyListeners();
-
+        notifyListeners();
+      } else {
+        throw Exception("Gagal memuat data audit");
+      }
+    } catch (e) {
+      debugPrint("fetchAudit Error: $e");
+    } finally {
       if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
+    }
+  }
+
+  Future<void> deleteAudit({
+    bool withLoading = false,
+    String auditId = "0",
+  }) async {
+    if (withLoading) loading(true);
+
+    try {
+      final response = await ApiClient().dio.delete('/audit/v1/admin/audits/$auditId');
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        notifyListeners();
+        await Utils.showSuccess(msg: "Data audit berhasil dihapus");
+        await Future.delayed(Duration(seconds: 2), () {});
+        if (withLoading) loading(false);
+        fetchAudit(withLoading: true);
+      } else {
+        throw Exception("Gagal menghapus data audit");
+      }
+    } catch (e) {
+      debugPrint("deleteAudit Error: $e");
+      Utils.showFailed(msg: e.toString());
+    } finally {
+      if (withLoading) loading(false);
+    }
+  }
+
+  Future<void> fetchDireksi({
+    bool withLoading = false,
+    String search = '',
+  }) async {
+    if (withLoading) loading(true);
+    Map<String, String> param = {};
+    if (search.isNotEmpty) param.addAll({'search': search});
+
+    try {
+      final response = await ApiClient().dio.get(
+        '/audit/v1/admin/direksi',
+        queryParameters: param,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        userData.clear();
+        final dataList = response.data['data'] as List<dynamic>;
+        
+        for (var item in dataList) {
+          final uData = item['user_data'] ?? {};
+          userData.add(
+            UserData(
+              name1: uData['first_name']?.toString() ?? '',
+              name2: uData['last_name']?.toString() ?? '',
+              email: item['email']?.toString() ?? '',
+              id: item['id']?.toString() ?? '',
+              alamat: uData['address']?.toString() ?? '',
+            ),
+          );
+        }
+
+        notifyListeners();
+      } else {
+        throw Exception("Gagal memuat data direksi");
+      }
+    } catch (e) {
+      debugPrint("fetchDireksi Error: $e");
+    } finally {
+      if (withLoading) loading(false);
+    }
+  }
+
+  Future<void> deleteDireksi({
+    bool withLoading = false,
+    String direksiId = "0",
+  }) async {
+    if (withLoading) loading(true);
+
+    try {
+      final response = await ApiClient().dio.delete('/audit/v1/admin/direksi/$direksiId');
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        notifyListeners();
+        await Utils.showSuccess(msg: "Data direksi berhasil dihapus");
+        await Future.delayed(Duration(seconds: 2), () {});
+        if (withLoading) loading(false);
+        fetchDireksi(withLoading: true);
+      } else {
+        throw Exception("Gagal menghapus data direksi");
+      }
+    } catch (e) {
+      debugPrint("deleteDireksi Error: $e");
+      Utils.showFailed(msg: e.toString());
+    } finally {
+      if (withLoading) loading(false);
     }
   }
 }

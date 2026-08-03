@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:mspeed/common/base/base_controller.dart';
 import 'package:mspeed/common/base/base_response.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
+import 'package:mspeed/core/network/api_client.dart';
+import 'package:dio/dio.dart';
 import 'package:mspeed/common/helper/constant.dart';
 import 'package:mspeed/src/admin/user/model/keuangan_admin_model.dart';
 import 'package:mspeed/src/admin/user/view/user_data_admin_view.dart';
@@ -49,33 +51,40 @@ class AdminFormManagerProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
     var param = {
       'email': emailC.text,
-      'password': passwordC.text,
-      'firstname': firstNameC.text,
-      'lastname': lastNameC.text,
-      'telp': phoneNumberC.text,
-      'alamat': alamatC.text,
-      'kabkota': cityC.text,
+      'first_name': firstNameC.text,
+      'last_name': lastNameC.text,
+      'phone': phoneNumberC.text,
     };
-    if (managerId != null) param.addAll({'manager_id': managerId});
+    if (passwordC.text.isNotEmpty) {
+      param['password'] = passwordC.text;
+    }
 
-    final response = await post(
-        Constant.BASE_API_FULL +
-            '/${managerId != null ? 'edit' : 'create'}manageradmin',
-        body: param);
+    try {
+      final isEdit = managerId != null;
+      final url = isEdit ? '/audit/v1/admin/managers/$managerId' : '/audit/v1/admin/managers';
+      
+      final response = isEdit 
+        ? await ApiClient().dio.put(url, data: param)
+        : await ApiClient().dio.post(url, data: param);
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final model = BaseResponse.from(response);
-      notifyListeners();
-      await Utils.showSuccess(msg: model.message);
-      await Future.delayed(const Duration(seconds: 2), () {});
-      CusNav.nPushReplace(
-          context, const UserDataAdminView(userType: UserDataType.MANAGER));
-
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        notifyListeners();
+        await Utils.showSuccess(msg: 'Data manager berhasil disimpan!');
+        await Future.delayed(const Duration(seconds: 2), () {});
+        CusNav.nPushReplace(
+            context, const UserDataAdminView(userType: UserDataType.MANAGER));
+      }
+    } on DioException catch (e) {
+      var decoded = e.response?.data;
+      String errorMessage = 'Terjadi kesalahan saat menyimpan data.';
+      if (decoded != null && decoded['message'] != null) {
+        errorMessage = decoded['message'];
+      }
+      Utils.showFailed(msg: errorMessage);
+    } catch (e) {
+      Utils.showFailed(msg: e.toString());
+    } finally {
       if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 }

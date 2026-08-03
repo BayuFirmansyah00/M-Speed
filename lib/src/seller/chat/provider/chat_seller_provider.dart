@@ -66,8 +66,8 @@ class ChatSellerProvider extends BaseController with ChangeNotifier {
       
       chatSellerModel = ChatSellerModel.fromJson({'result': 'success', 'data': dataMap});
       chatSellerModel.data?.seller?.forEach((element) {
-        if (element?.Buat != null)
-          element?.Buat = formatDate(element.Buat ?? "");
+        if (element?.createdAt != null)
+          element?.createdAt = formatDate(element.createdAt ?? "");
       });
       notifyListeners();
     } catch (e) {

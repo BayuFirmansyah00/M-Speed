@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
-import 'package:mspeed/common/helper/Constant.dart';
 import 'package:mspeed/generated/assets.dart';
 import 'package:mspeed/src/admin/master/model/alamat_admin_model.dart';
 import 'package:mspeed/src/admin/master/provider/master_provider.dart';
@@ -63,7 +62,7 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xff059669).withOpacity(0.1),
+                    color: const Color(0xff059669).withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: SvgPicture.asset(Assets.svgsIcAdminEdit, color: const Color(0xff059669), width: 18, height: 18),
@@ -82,7 +81,7 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xffEF4444).withOpacity(0.1),
+                    color: const Color(0xffEF4444).withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: SvgPicture.asset(Assets.svgsIcAdminDelete, color: const Color(0xffEF4444), width: 18, height: 18),
@@ -133,7 +132,7 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
                   icon: Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
@@ -159,7 +158,7 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
                           width: 120,
                           height: 120,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.08),
+                            color: Colors.white.withValues(alpha: 0.08),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -171,7 +170,7 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.18),
+                                color: Colors.white.withValues(alpha: 0.18),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(Icons.location_on_rounded,
@@ -216,7 +215,7 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 10,
                         offset: const Offset(0, 3),
                       ),
@@ -278,7 +277,7 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.04),
+                                  color: Colors.black.withValues(alpha: 0.04),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -294,7 +293,7 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
                                       Container(
                                         padding: const EdgeInsets.all(6),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xff059669).withOpacity(0.1),
+                                          color: const Color(0xff059669).withValues(alpha: 0.1),
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: const Icon(Icons.map_rounded,

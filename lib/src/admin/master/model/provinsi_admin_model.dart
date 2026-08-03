@@ -17,13 +17,13 @@ class ProvinsiAdminModelData {
     this.nama,
   });
   ProvinsiAdminModelData.fromJson(Map<String, dynamic> json) {
-    ID = json['ID']?.toString();
-    nama = json['nama']?.toString();
+    ID = json['id']?.toString();
+    nama = json['name']?.toString();
   }
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
-    data['ID'] = ID;
-    data['nama'] = nama;
+    data['id'] = ID;
+    data['name'] = nama;
     return data;
   }
 }
@@ -49,7 +49,7 @@ class ProvinsiAdminModel {
     this.data,
   });
   ProvinsiAdminModel.fromJson(Map<String, dynamic> json) {
-    result = json['result']?.toString();
+    result = "success"; // Hardcoded for backward compatibility in Flutter side
     if (json['data'] != null) {
       final v = json['data'];
       final arr0 = <ProvinsiAdminModelData>[];
@@ -61,7 +61,6 @@ class ProvinsiAdminModel {
   }
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
-    data['result'] = result;
     if (this.data != null) {
       final v = this.data;
       final arr0 = [];

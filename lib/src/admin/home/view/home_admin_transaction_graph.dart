@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:mspeed/common/helper/constant.dart';
 import 'package:mspeed/src/admin/home/provider/admin_home_provider.dart';
-import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
 
 class HomeAdminTransactionGraph extends StatefulWidget {
@@ -17,9 +15,17 @@ class _HomeAdminTransactionGraphState extends State<HomeAdminTransactionGraph> {
   @override
   Widget build(BuildContext context) {
     final p = context.watch<AdminHomeProvider>();
-    final graph = p.homeAdminModel.data?.transaksi ?? [];
-    final label = p.homeAdminModel.data?.transaksiLabel ?? [];
-    final nominal = p.homeAdminModel.data?.transaksiNominal ?? [];
+    final statusData = p.homeAdminModel.orderStatusMonitoring;
+    // Konversi status ke list untuk bar chart
+    final graph = [
+      statusData.pesananBaru,
+      statusData.approveManager,
+      statusData.pesananDikirim,
+      statusData.pesananDiterima,
+      statusData.tagihan,
+      statusData.pesananDibayar,
+    ];
+    final label = ['Baru', 'Approved', 'Kirim', 'Terima', 'Tagihan', 'Dibayar'];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,8 +78,7 @@ class _HomeAdminTransactionGraphState extends State<HomeAdminTransactionGraph> {
                       ),
                       children: [
                         TextSpan(
-                          text: Utils.thousandSeparator(
-                              nominal[groupIndex] ?? 0),
+                          text: '${rod.toY.round()} order',
                           style: const TextStyle(
                             color: Color(0xff4ADE80),
                             fontSize: 10,
@@ -94,7 +99,7 @@ class _HomeAdminTransactionGraphState extends State<HomeAdminTransactionGraph> {
                     showingTooltipIndicators: isTouched ? [0] : [],
                     barRods: [
                       BarChartRodData(
-                        toY: (graph[i] ?? 0).toDouble(),
+                        toY: graph[i].toDouble(),
                         fromY: 0,
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(6),
@@ -167,7 +172,7 @@ class _HomeAdminTransactionGraphState extends State<HomeAdminTransactionGraph> {
                 ),
               ),
               minY: 0,
-              maxY: p.biggestTransactionGraphVal.toDouble() + 30,
+              maxY: (graph.isNotEmpty ? graph.reduce((a, b) => a > b ? a : b) : 10).toDouble() + 5,
               gridData: FlGridData(
                 show: true,
                 drawVerticalLine: false,

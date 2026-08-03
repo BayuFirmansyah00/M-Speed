@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
+import 'package:mspeed/common/component/custom_dropdown.dart';
 import 'package:mspeed/src/admin/user/model/penerima_admin_model.dart';
 import 'package:mspeed/src/admin/user/provider/admin_form_penerima_provider.dart';
 import 'package:mspeed/src/admin/user/view/admin_form_widgets.dart';
@@ -115,6 +116,38 @@ class _CreateDataPenerimaAdminViewState
                           hint: 'Masukkan no. HP',
                           icon: Icons.phone_outlined,
                           inputType: TextInputType.phone),
+                      const SizedBox(height: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Departemen',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xff4A5568),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          CustomDropdown.normalDropdown(
+                            controller: p.departmentC,
+                            hintText: 'Pilih Departemen',
+                            list: p.allDepartments
+                                .map(
+                                  (e) => DropdownMenuItem(
+                                    value: e['id']?.toString() ?? '0',
+                                    child: Text(e['name'] ?? ''),
+                                  ),
+                                )
+                                .toList(),
+                            selectedItem: p.selectedDepartmentId,
+                            onChanged: (value) {
+                              p.selectedDepartmentId = value;
+                              setState(() {});
+                            },
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                   const SizedBox(height: 14),
@@ -123,11 +156,79 @@ class _CreateDataPenerimaAdminViewState
                     icon: Icons.location_on_outlined,
                     accentColor: _accent,
                     children: [
-                      AdminFormField(
-                          controller: p.cityC,
-                          label: 'Kota',
-                          hint: 'Masukkan kota',
-                          icon: Icons.location_city_outlined),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Provinsi',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xff4A5568),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          CustomDropdown.searchDropdown(
+                            hintText: 'Pilih Provinsi',
+                            list: (p.provinsiModel?.data ?? [])
+                                .map((e) => e?.nama ?? '')
+                                .toList(),
+                            selectedItem: p.selectedProvince,
+                            onChanged: (value) async {
+                              var matchedProvince;
+                              for (var e in p.provinsiModel?.data ?? []) {
+                                if (e?.nama == value) {
+                                  matchedProvince = e;
+                                  break;
+                                }
+                              }
+                              p.selectedProvinceId = matchedProvince?.ID;
+                              p.selectedProvince = matchedProvince?.nama;
+                              p.selectedCityId = null;
+                              p.selectedCity = null;
+                              setState(() {});
+                              
+                              if (p.kotaModel?.data == null || p.kotaModel!.data!.isEmpty) {
+                                await p.fetchKota(withLoading: true);
+                                setState(() {});
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Kota',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xff4A5568),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          CustomDropdown.searchDropdown(
+                            hintText: 'Pilih Kota',
+                            list: p.filteredKotaList.map((e) => e?.kota ?? '').toList(),
+                            selectedItem: p.selectedCity,
+                            onChanged: (value) {
+                              var matchedCity;
+                              for (var e in p.filteredKotaList) {
+                                if (e?.kota == value) {
+                                  matchedCity = e;
+                                  break;
+                                }
+                              }
+                              p.selectedCityId = matchedCity?.ID;
+                              p.selectedCity = matchedCity?.kota;
+                              setState(() {});
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
                       AdminFormField(
                           controller: p.alamatC,
                           label: 'Alamat Lengkap',

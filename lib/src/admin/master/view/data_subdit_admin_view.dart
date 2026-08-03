@@ -64,7 +64,7 @@ class _DataSubditAdminViewState extends BaseState<DataSubditAdminView> {
                           width: 120,
                           height: 120,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.08),
+                            color: Colors.white.withValues(alpha: 0.08),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -76,7 +76,7 @@ class _DataSubditAdminViewState extends BaseState<DataSubditAdminView> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.18),
+                                color: Colors.white.withValues(alpha: 0.18),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(Icons.lan_rounded,
@@ -121,7 +121,7 @@ class _DataSubditAdminViewState extends BaseState<DataSubditAdminView> {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 10,
                         offset: const Offset(0, 3),
                       ),
@@ -183,7 +183,7 @@ class _DataSubditAdminViewState extends BaseState<DataSubditAdminView> {
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.04),
+                                  color: Colors.black.withValues(alpha: 0.04),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -199,7 +199,7 @@ class _DataSubditAdminViewState extends BaseState<DataSubditAdminView> {
                                       Container(
                                         padding: const EdgeInsets.all(6),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xff7C3AED).withOpacity(0.1),
+                                          color: const Color(0xff7C3AED).withValues(alpha: 0.1),
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: const Icon(Icons.lan_rounded,

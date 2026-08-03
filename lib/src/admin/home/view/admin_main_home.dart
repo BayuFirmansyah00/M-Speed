@@ -1,14 +1,11 @@
 import 'dart:io';
 
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:mspeed/generated/assets.dart';
 import 'package:mspeed/src/admin/home/view/home_admin_view.dart';
 import 'package:mspeed/src/admin/master/view/master_admin_view.dart';
 import 'package:mspeed/src/admin/transaksi/view/transaksi_admin_view.dart';
 import 'package:mspeed/src/admin/user/view/user_admin_view.dart';
 import 'package:mspeed/src/buyer/home/model/home_model.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../common/helper/constant.dart';
 
 class _AdminNavItem {
@@ -109,8 +106,8 @@ class _SellerMainHomeState extends State<AdminMainHome> with SingleTickerProvide
             color: Colors.white,
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
-              BoxShadow(color: primary.withOpacity(0.15), blurRadius: 30, offset: const Offset(0, 10)),
-              BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 16, offset: const Offset(0, 4)),
+              BoxShadow(color: primary.withValues(alpha: 0.15), blurRadius: 30, offset: const Offset(0, 10)),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 16, offset: const Offset(0, 4)),
             ],
           ),
           child: ClipRRect(
@@ -129,10 +126,10 @@ class _SellerMainHomeState extends State<AdminMainHome> with SingleTickerProvide
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [primary, primary.withOpacity(0.82)],
+                        colors: [primary, primary.withValues(alpha: 0.82)],
                       ),
                       borderRadius: BorderRadius.circular(22),
-                      boxShadow: [BoxShadow(color: primary.withOpacity(0.4), blurRadius: 14, offset: const Offset(0, 6))],
+                      boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.4), blurRadius: 14, offset: const Offset(0, 6))],
                     ),
                   ),
                 ),
