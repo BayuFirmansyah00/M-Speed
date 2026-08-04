@@ -783,7 +783,8 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
   // ─── LOGOUT HANDLER ───────────────────────────────────────────
   Future<void> _handleLogout() async {
     final prefs = await SharedPreferences.getInstance();
-    final isAdmin = prefs.getBool(Constant.kSetPrefIsAdmin) ?? false;
+    final isOriginalAdmin = prefs.getString('admin_original_token') != null && prefs.getString('admin_original_token')!.isNotEmpty;
+    final isAdmin = (prefs.getBool(Constant.kSetPrefIsAdmin) ?? false) || isOriginalAdmin;
 
     if (isAdmin) {
       _showLogoutBottomSheet(context);
@@ -841,7 +842,7 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
                 _logoutOption(
                   ctx: ctx,
                   icon: Icons.admin_panel_settings_rounded,
-                  title: 'Kembali ke Admin',
+                  title: 'Stop Impersonate (Kembali ke Admin)',
                   subtitle: 'Beralih ke mode administrator',
                   color: _C.navy,
                   onTap: () {

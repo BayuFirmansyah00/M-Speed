@@ -2,26 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/src/admin/user/model/basic_user_admin_model.dart';
-import 'package:mspeed/src/admin/user/provider/admin_form_audit_provider.dart';
+import 'package:mspeed/src/admin/user/provider/admin_form_direksi_provider.dart';
 import 'package:mspeed/src/admin/user/view/admin_form_widgets.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
 
-class CreateDataAuditAdminView extends StatefulWidget {
-  const CreateDataAuditAdminView({super.key, this.audit});
-  final BasicUserAdminModelData? audit;
+class CreateDataDireksiAdminView extends StatefulWidget {
+  const CreateDataDireksiAdminView({super.key, this.direksi});
+  final BasicUserAdminModelData? direksi;
 
   @override
-  State<CreateDataAuditAdminView> createState() =>
-      _CreateDataAuditAdminViewState();
+  State<CreateDataDireksiAdminView> createState() =>
+      _CreateDataDireksiAdminViewState();
 }
 
-class _CreateDataAuditAdminViewState
-    extends BaseState<CreateDataAuditAdminView> {
+class _CreateDataDireksiAdminViewState
+    extends BaseState<CreateDataDireksiAdminView> {
   static const _gradient = [Color(0xff14B8A6), Color(0xff0F766E)];
   static const _accent = Color(0xff14B8A6);
 
-  bool get isEdit => widget.audit != null;
+  bool get isEdit => widget.direksi != null;
 
   @override
   void initState() {
@@ -30,8 +30,8 @@ class _CreateDataAuditAdminViewState
   }
 
   getData() async {
-    final p = context.read<AdminFormAuditProvider>();
-    await p.setData(widget.audit);
+    final p = context.read<AdminFormDireksiProvider>();
+    await p.setData(widget.direksi);
   }
 
   Future<void> _save() async {
@@ -44,8 +44,8 @@ class _CreateDataAuditAdminViewState
           handleTap(() async {
             CusNav.nPop(context);
             await context
-                .read<AdminFormAuditProvider>()
-                .sendAudit(context, auditId: widget.audit?.ID);
+                .read<AdminFormDireksiProvider>()
+                .sendDireksi(context, direksiId: widget.direksi?.ID);
           });
         },
         noCallback: () => Navigator.pop(context),
@@ -55,7 +55,7 @@ class _CreateDataAuditAdminViewState
 
   @override
   Widget build(BuildContext context) {
-    final p = context.watch<AdminFormAuditProvider>();
+    final p = context.watch<AdminFormDireksiProvider>();
 
     return Scaffold(
       backgroundColor: const Color(0xffF5F6FA),
@@ -74,11 +74,11 @@ class _CreateDataAuditAdminViewState
             flexibleSpace: FlexibleSpaceBar(
               background: AdminFormHeader(
                 gradient: _gradient,
-                icon: Icons.fact_check_rounded,
-                title: isEdit ? 'Edit Audit' : 'Tambah Audit',
+                icon: Icons.assignment_ind_rounded,
+                title: isEdit ? 'Edit Direksi' : 'Tambah Direksi',
                 subtitle: isEdit
-                    ? 'Perbarui data pengguna audit'
-                    : 'Isi data untuk menambah audit baru',
+                    ? 'Perbarui data pengguna direksi'
+                    : 'Isi data untuk menambah direksi baru',
               ),
             ),
           ),

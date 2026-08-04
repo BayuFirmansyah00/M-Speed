@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
-import 'package:mspeed/src/admin/user/model/keuangan_admin_model.dart';
+import 'package:mspeed/src/admin/user/model/basic_user_admin_model.dart';
 import 'package:mspeed/src/admin/user/provider/admin_form_manager_provider.dart';
 import 'package:mspeed/src/admin/user/view/admin_form_widgets.dart';
 import 'package:mspeed/utils/utils.dart';
@@ -9,7 +9,7 @@ import 'package:provider/provider.dart';
 
 class CreateDataManagerAdminView extends StatefulWidget {
   const CreateDataManagerAdminView({super.key, this.manager});
-  final KeuanganAdminModelData? manager;
+  final BasicUserAdminModelData? manager;
 
   @override
   State<CreateDataManagerAdminView> createState() =>
@@ -142,6 +142,38 @@ class _CreateDataManagerAdminViewState
                     icon: Icons.lock_outline_rounded,
                     accentColor: _accent,
                     children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xffE2E8F0)),
+                        ),
+                        child: SwitchListTile(
+                          title: const Text(
+                            'Status Aktif',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xff1E293B),
+                            ),
+                          ),
+                          subtitle: Text(
+                            p.isActive ? 'Akun aktif dan dapat login' : 'Akun dinonaktifkan',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: p.isActive ? Colors.green : Colors.red,
+                            ),
+                          ),
+                          value: p.isActive,
+                          onChanged: (val) {
+                            setState(() {
+                              p.isActive = val;
+                            });
+                          },
+                          activeColor: _accent,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       AdminFormField(
                           controller: p.passwordC,
                           label: 'Password',

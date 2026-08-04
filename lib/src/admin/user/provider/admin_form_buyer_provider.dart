@@ -29,6 +29,8 @@ class AdminFormBuyerProvider extends BaseController with ChangeNotifier {
   final TextEditingController alamatC = TextEditingController();
   final TextEditingController cityC = TextEditingController();
   final TextEditingController passwordC = TextEditingController();
+  final TextEditingController accessC = TextEditingController();
+  bool isActive = true;
   String? selectedAddressId;
   String? selectedSubdit;
   String? selectedDepartment;
@@ -66,9 +68,6 @@ class AdminFormBuyerProvider extends BaseController with ChangeNotifier {
 
   setData(BuyerAdminModelData? buyer) async {
     clearData();
-    await fetchSubditAdmin();
-    await fetchProvinsi();
-    await fetchKota();
     await fetchMasterData();
     final subdit = subditAdminModel.data ?? [];
     if (buyer != null) {
@@ -87,6 +86,8 @@ class AdminFormBuyerProvider extends BaseController with ChangeNotifier {
       }
       phoneNumberC.text = buyer.telp ?? '';
       alamatC.text = buyer.alamat ?? '';
+      accessC.text = buyer.userData?.access?.toString() ?? '';
+      isActive = buyer.status == 'active' ? true : (buyer.status != null ? false : true);
 
       selectedDepartment = buyer.departmentId;
       bool deptExists = allDepartments.any(
@@ -141,6 +142,8 @@ class AdminFormBuyerProvider extends BaseController with ChangeNotifier {
     selectedAddressId = null;
     phoneNumberC.clear();
     passwordC.clear();
+    accessC.clear();
+    isActive = true;
     alamatC.clear();
     cityC.clear();
     selectedProvince = null;
@@ -167,7 +170,8 @@ class AdminFormBuyerProvider extends BaseController with ChangeNotifier {
       'first_name': firstNameC.text,
       'last_name': lastNameC.text,
       'phone': phoneNumberC.text,
-      'active': '1', // default active
+      'active': isActive ? '1' : '0',
+      'access': accessC.text,
       'department_id': selectedDepartment ?? '',
       'address_name': 'Utama',
       'address_phone': phoneNumberC.text,
@@ -283,75 +287,6 @@ class AdminFormBuyerProvider extends BaseController with ChangeNotifier {
   SubditAdminModel subditAdminModel = SubditAdminModel();
   TextEditingController subditSearchC = TextEditingController();
 
-  Future<void> fetchSubditAdmin({bool withLoading = false}) async {
-    if (withLoading) loading(true);
-    Map<String, String> param = {};
-    if (subditSearchC.text.isNotEmpty)
-      param.addAll({'search': subditSearchC.text});
-
-    try {
-      final response = await ApiClient().dio.get(
-        '/getsubditadmin', // Note: This might still be old API in Laravel, or unmigrated
-        queryParameters: param,
-      );
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        subditAdminModel = SubditAdminModel.fromJson(response.data);
-        notifyListeners();
-
-        if (withLoading) loading(false);
-      }
-    } catch (e) {
-      // FALLBACK SEMENTARA: Karena endpoint backend belum tersedia
-      subditAdminModel = SubditAdminModel(
-        result: 'success',
-        data: [
-          SubditAdminModelData(
-            id: '1',
-            subditCode: 'D-101',
-            subditName: 'OPERASI',
-          ),
-          SubditAdminModelData(id: '2', subditCode: 'D-102', subditName: 'SDM'),
-          SubditAdminModelData(
-            id: '3',
-            subditCode: 'D-103',
-            subditName: 'SEKRETARIAT PERUSAHAAN',
-          ),
-          SubditAdminModelData(
-            id: '4',
-            subditCode: 'D-104',
-            subditName: 'PEMASARAN',
-          ),
-        ],
-      );
-      notifyListeners();
-
-      if (withLoading) loading(false);
-    }
-  }
-
-  Future<void> fetchKota({bool withLoading = false}) async {
-    if (withLoading) loading(true);
-    try {
-      final response = await ApiClient().dio.get('/cities?per_page=-1');
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        kotaModel = KotaModel.fromJson(response.data);
-        if (kotaModel?.data != null) {
-          int count = kotaModel!.data!.length;
-          // Utils.showSuccess(msg: 'Berhasil load $count kota');
-        } else {
-          Utils.showFailed(msg: 'Data kota kosong (null)');
-        }
-      } else {
-        Utils.showFailed(msg: 'Gagal mengambil data kota dari API');
-      }
-    } catch (e) {
-      Utils.showFailed(msg: 'Error Load Kota: $e');
-    }
-    notifyListeners();
-    if (withLoading) loading(false);
-  }
-
   Future<void> fetchMasterData() async {
     try {
       final response = await ApiClient().dio.get(
@@ -359,7 +294,13 @@ class AdminFormBuyerProvider extends BaseController with ChangeNotifier {
       );
       if (response.data['status'] == 'success') {
         final data = response.data['data'];
+        
+        // Populate all master data dropdowns
         allDepartments = List<Map<String, dynamic>>.from(data['departments']);
+        provinsiModel = ProvinsiModel.fromJson({'data': data['provinces']});
+        kotaModel = KotaModel.fromJson({'data': data['cities']});
+        subditAdminModel = SubditAdminModel.fromJson({'data': data['sub_direktorates']});
+        
         notifyListeners();
       }
     } catch (e) {
@@ -367,19 +308,5 @@ class AdminFormBuyerProvider extends BaseController with ChangeNotifier {
     }
   }
 
-  Future<void> fetchProvinsi({bool withLoading = false}) async {
-    if (withLoading) loading(true);
-    try {
-      final response = await ApiClient().dio.get('/provinces');
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        provinsiModel = ProvinsiModel.fromJson(response.data);
-      } else {
-        Utils.showFailed(msg: 'Gagal mengambil data provinsi dari API');
-      }
-    } catch (e) {
-      Utils.showFailed(msg: 'Error Load Provinsi: $e');
-    }
-    notifyListeners();
-    if (withLoading) loading(false);
-  }
+
 }

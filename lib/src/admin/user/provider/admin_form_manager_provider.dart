@@ -7,7 +7,7 @@ import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/core/network/api_client.dart';
 import 'package:dio/dio.dart';
 import 'package:mspeed/common/helper/constant.dart';
-import 'package:mspeed/src/admin/user/model/keuangan_admin_model.dart';
+import 'package:mspeed/src/admin/user/model/basic_user_admin_model.dart';
 import 'package:mspeed/src/admin/user/view/user_data_admin_view.dart';
 import 'package:flutter/material.dart';
 import 'package:mspeed/utils/utils.dart';
@@ -23,8 +23,9 @@ class AdminFormManagerProvider extends BaseController with ChangeNotifier {
   final TextEditingController alamatC = TextEditingController();
   final TextEditingController cityC = TextEditingController();
   final TextEditingController passwordC = TextEditingController();
+  bool isActive = true;
 
-  setData(KeuanganAdminModelData? manager) async {
+  setData(BasicUserAdminModelData? manager) async {
     clearData();
     if (manager != null) {
       firstNameC.text = manager.firstname ?? '';
@@ -33,6 +34,17 @@ class AdminFormManagerProvider extends BaseController with ChangeNotifier {
       phoneNumberC.text = manager.telp ?? '';
       alamatC.text = manager.alamat ?? '';
       cityC.text = manager.kabkota ?? '';
+
+      if (manager.ID != null) {
+        try {
+          final res = await ApiClient().dio.get('/audit/v1/admin/managers/${manager.ID}');
+          if (res.statusCode == 200 || res.statusCode == 201) {
+            isActive = res.data['data']['status'] == 'active' ? true : false;
+          }
+        } catch (e) {
+          debugPrint("Failed to fetch detail: $e");
+        }
+      }
     }
   }
 
@@ -42,6 +54,7 @@ class AdminFormManagerProvider extends BaseController with ChangeNotifier {
     emailC.clear();
     phoneNumberC.clear();
     passwordC.clear();
+    isActive = true;
     alamatC.clear();
     cityC.clear();
   }
@@ -54,6 +67,7 @@ class AdminFormManagerProvider extends BaseController with ChangeNotifier {
       'first_name': firstNameC.text,
       'last_name': lastNameC.text,
       'phone': phoneNumberC.text,
+      'active': isActive ? '1' : '0',
     };
     if (passwordC.text.isNotEmpty) {
       param['password'] = passwordC.text;

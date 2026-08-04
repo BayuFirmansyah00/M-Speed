@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mspeed/common/base/base_controller.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/core/network/api_client.dart';
-import 'package:mspeed/src/admin/user/model/keuangan_admin_model.dart';
+import 'package:mspeed/src/admin/user/model/basic_user_admin_model.dart';
 import 'package:mspeed/src/admin/user/view/user_data_admin_view.dart';
 import 'package:mspeed/utils/utils.dart';
 
@@ -15,6 +15,8 @@ class AdminFormKeuanganProvider extends BaseController with ChangeNotifier {
   
   final TextEditingController subditC = TextEditingController();
   final TextEditingController departmentC = TextEditingController();
+  final TextEditingController accessC = TextEditingController();
+  bool isActive = true;
 
   String? selectedSubditId;
   String? selectedDepartmentId;
@@ -35,17 +37,18 @@ class AdminFormKeuanganProvider extends BaseController with ChangeNotifier {
       if (response.data['status'] == 'success') {
         final data = response.data['data'];
         
-        subdirektorates = List<Map<String, dynamic>>.from(data['sub_direktorates']);
-        allDepartments = List<Map<String, dynamic>>.from(data['departments']);
+        subdirektorates = List<Map<String, dynamic>>.from(data['sub_direktorates'] ?? []);
+        allDepartments = List<Map<String, dynamic>>.from(data['departments'] ?? []);
         
         notifyListeners();
       }
     } catch (e) {
       debugPrint("Failed to fetch finance master data: $e");
+      Utils.showFailed(msg: "Maaf, data master belum bisa dimuat (Endpoint Backend belum siap).");
     }
   }
 
-  setData(KeuanganAdminModelData? keuangan) async {
+  setData(BasicUserAdminModelData? keuangan) async {
     clearData();
     await fetchMasterData();
 
@@ -66,9 +69,21 @@ class AdminFormKeuanganProvider extends BaseController with ChangeNotifier {
         }
       }
       
-      // We assume user_data will contain department info from the API if it's the new API.
-      // But KeuanganAdminModelData is from the old API, so it might not have departmentId directly.
-      // We will handle editing in a later step if needed.
+      // Fetch detail for complete data (active, access)
+      if (keuangan.ID != null) {
+        try {
+          final res = await ApiClient().dio.get('/audit/v1/admin/finances/${keuangan.ID}');
+          if (res.statusCode == 200 || res.statusCode == 201) {
+            final Map<String, dynamic> data = res.data['data'] ?? {};
+            final Map<String, dynamic> uData = data['user_data'] ?? {};
+            isActive = data['status'] == 'active' ? true : false;
+            accessC.text = uData['access']?.toString() ?? '';
+            selectedDepartmentId = (uData['department'] as Map<String, dynamic>?)?['id']?.toString();
+          }
+        } catch (e) {
+          debugPrint("Failed to fetch detail: $e");
+        }
+      }
     }
   }
 
@@ -80,6 +95,8 @@ class AdminFormKeuanganProvider extends BaseController with ChangeNotifier {
     passwordC.clear();
     subditC.clear();
     departmentC.clear();
+    accessC.clear();
+    isActive = true;
     selectedSubditId = null;
     selectedDepartmentId = null;
     subdirektorates.clear();
@@ -100,7 +117,10 @@ class AdminFormKeuanganProvider extends BaseController with ChangeNotifier {
       'last_name': lastNameC.text,
       'email': emailC.text,
       'phone': phoneNumberC.text,
+      'subdit_id': selectedSubditId,
       'department_id': selectedDepartmentId,
+      'access': accessC.text,
+      'active': isActive ? '1' : '0',
     };
     
     if (passwordC.text.isNotEmpty) {

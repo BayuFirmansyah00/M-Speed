@@ -124,7 +124,7 @@ class _ListPesananViewState extends BaseState<ListPesananView> {
                 ),
                 SizedBox(height: 20),
                 _buildOption(
-                  'Login Admin',
+                  'Stop Impersonate (Kembali ke Admin)',
                   Assets.imagesIcLoginAdmin,
                   () async {
                     handleTap(() async {
@@ -244,9 +244,10 @@ class _ListPesananViewState extends BaseState<ListPesananView> {
                       onPressed: () async {
                         SharedPreferences prefs =
                             await SharedPreferences.getInstance();
-                        final isAdmin =
-                            await prefs.getBool(Constant.kSetPrefIsAdmin) ??
-                                false;
+                          final isOriginalAdmin = prefs.getString('admin_original_token') != null && prefs.getString('admin_original_token')!.isNotEmpty;
+                          final isAdmin =
+                              (await prefs.getBool(Constant.kSetPrefIsAdmin) ??
+                                  false) || isOriginalAdmin;
                         if (isAdmin) {
                           _showLogoutBottomSheet(context);
                         } else {

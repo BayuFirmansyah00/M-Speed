@@ -370,7 +370,7 @@ class _ProfileSellerViewState extends BaseState<ProfileSellerView> {
                 ),
                 SizedBox(height: 20),
                 _buildOption(
-                  'Login Admin',
+                  'Stop Impersonate (Kembali ke Admin)',
                   Assets.imagesIcLoginAdmin,
                   () async {
                     handleTap(() async {
@@ -446,8 +446,9 @@ class _ProfileSellerViewState extends BaseState<ProfileSellerView> {
           mainAxisAlignment: MainAxisAlignment.start,
           () async {
             SharedPreferences prefs = await SharedPreferences.getInstance();
+            final isOriginalAdmin = prefs.getString('admin_original_token') != null && prefs.getString('admin_original_token')!.isNotEmpty;
             final isAdmin =
-                await prefs.getBool(Constant.kSetPrefIsAdmin) ?? false;
+                (await prefs.getBool(Constant.kSetPrefIsAdmin) ?? false) || isOriginalAdmin;
             if (isAdmin) {
               _showLogoutBottomSheet(context);
             } else {

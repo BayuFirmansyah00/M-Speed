@@ -239,10 +239,49 @@ class _CreateDataPenerimaAdminViewState
                   ),
                   const SizedBox(height: 14),
                   AdminFormSection(
-                    title: 'Keamanan',
+                    title: 'Keamanan & Akses',
                     icon: Icons.lock_outline_rounded,
                     accentColor: _accent,
                     children: [
+                      AdminFormField(
+                        controller: p.accessC,
+                        label: 'Hak Akses',
+                        hint: 'Masukkan hak akses (opsional)',
+                        icon: Icons.admin_panel_settings_outlined,
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xffE2E8F0)),
+                        ),
+                        child: SwitchListTile(
+                          title: const Text(
+                            'Status Aktif',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xff1E293B),
+                            ),
+                          ),
+                          subtitle: Text(
+                            p.isActive ? 'Akun aktif dan dapat login' : 'Akun dinonaktifkan',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: p.isActive ? Colors.green : Colors.red,
+                            ),
+                          ),
+                          value: p.isActive,
+                          onChanged: (val) {
+                            setState(() {
+                              p.isActive = val;
+                            });
+                          },
+                          activeColor: _accent,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       AdminFormField(
                           controller: p.passwordC,
                           label: 'Password',

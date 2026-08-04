@@ -17,7 +17,8 @@ import 'package:mspeed/src/admin/user/view/create_data_penerima_admin_view.dart'
 import 'package:mspeed/src/admin/user/view/create_data_seller_admin_view.dart';
 import 'package:mspeed/src/admin/user/view/create_data_manager_admin_view.dart';
 import 'package:mspeed/src/admin/user/view/create_data_audit_admin_view.dart';
-import 'package:mspeed/src/admin/user/model/keuangan_admin_model.dart';
+import 'package:mspeed/src/admin/user/view/create_data_direksi_admin_view.dart';
+import 'package:mspeed/src/admin/user/model/basic_user_admin_model.dart';
 import 'package:mspeed/src/admin/user/model/penerima_admin_model.dart';
 import 'package:mspeed/src/admin/home/model/buyer_admin_model.dart';
 import 'package:mspeed/utils/utils.dart';
@@ -150,7 +151,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       // Backend seller belum tersedia, tampilkan pesan
       Utils.showFailed(msg: 'Fitur edit seller belum tersedia dari backend');
     } else if (widget.userType == UserDataType.FINANCE) {
-      final keuangan = KeuanganAdminModelData(
+      final keuangan = BasicUserAdminModelData(
         ID: user.id,
         firstname: user.name1,
         lastname: user.name2,
@@ -168,7 +169,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       );
       CusNav.nPush(context, CreateDataPenerimaAdminView(penerima: penerima));
     } else if (widget.userType == UserDataType.MANAGER) {
-      final manager = KeuanganAdminModelData(
+      final manager = BasicUserAdminModelData(
         ID: user.id,
         firstname: user.name1,
         lastname: user.name2,
@@ -177,7 +178,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       );
       CusNav.nPush(context, CreateDataManagerAdminView(manager: manager));
     } else if (widget.userType == UserDataType.AUDIT) {
-      final audit = KeuanganAdminModelData(
+      final audit = BasicUserAdminModelData(
         ID: user.id,
         firstname: user.name1,
         lastname: user.name2,
@@ -186,16 +187,14 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       );
       CusNav.nPush(context, CreateDataAuditAdminView(audit: audit));
     } else if (widget.userType == UserDataType.DIREKSI) {
-      // Direksi uses same model pattern as Audit
-      final direksi = KeuanganAdminModelData(
+      final direksi = BasicUserAdminModelData(
         ID: user.id,
         firstname: user.name1,
         lastname: user.name2,
         email: user.email,
         alamat: user.alamat,
       );
-      // TODO: Buat CreateDataDireksiAdminView jika diperlukan form terpisah
-      Utils.showFailed(msg: 'Form edit Direksi belum tersedia');
+      CusNav.nPush(context, CreateDataDireksiAdminView(direksi: direksi));
     }
   }
 
@@ -253,8 +252,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
     } else if (widget.userType == UserDataType.AUDIT) {
       CusNav.nPush(context, CreateDataAuditAdminView());
     } else if (widget.userType == UserDataType.DIREKSI) {
-      // TODO: Buat CreateDataDireksiAdminView jika diperlukan form terpisah
-      Utils.showFailed(msg: 'Form tambah Direksi belum tersedia');
+      CusNav.nPush(context, CreateDataDireksiAdminView());
     }
   }
 
@@ -832,7 +830,7 @@ class _UserCard extends StatelessWidget {
                       label: 'Ubah Data',
                       iconColor: const Color(0xff3B82F6),
                     ),
-                    if (!_isManagerOrAudit) ...[
+                    if (userType != UserDataType.AUDIT && userType != UserDataType.DIREKSI) ...[
                       _popupItem(
                         value: 'session',
                         icon: Icons.swap_horiz_rounded,
@@ -840,14 +838,14 @@ class _UserCard extends StatelessWidget {
                         iconColor: const Color(0xffF59E0B),
                       ),
                       const PopupMenuDivider(height: 1),
-                      _popupItem(
-                        value: 'delete',
-                        icon: Icons.delete_outline_rounded,
-                        label: 'Hapus Data',
-                        iconColor: const Color(0xffED1C24),
-                        textColor: const Color(0xffED1C24),
-                      ),
-                    ]
+                    ],
+                    _popupItem(
+                      value: 'delete',
+                      icon: Icons.delete_outline_rounded,
+                      label: 'Hapus Data',
+                      iconColor: const Color(0xffED1C24),
+                      textColor: const Color(0xffED1C24),
+                    ),
                   ],
                 ),
               ],

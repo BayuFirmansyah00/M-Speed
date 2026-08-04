@@ -115,19 +115,22 @@ class MasterProvider extends BaseController with ChangeNotifier {
       {bool withLoading = false, String search = ''}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/getalamatadmin',
-        body: search.isNotEmpty ? {"search": search} : {});
+    try {
+      final response = await ApiClient().dio.get('/getalamatadmin',
+          queryParameters: search.isNotEmpty ? {"search": search} : {});
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      alamatAdminModel = AlamatAdminModel.fromJson(jsonDecode(response.body));
-
-      notifyListeners();
-
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        alamatAdminModel = AlamatAdminModel.fromJson(response.data);
+        notifyListeners();
+        if (withLoading) loading(false);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data["messages"]?["error"] ?? e.message;
       loading(false);
       throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
     }
   }
 
@@ -135,19 +138,22 @@ class MasterProvider extends BaseController with ChangeNotifier {
       {bool withLoading = false, String search = ''}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/getpajakadmin',
-        body: search.isNotEmpty ? {"search": search} : {});
+    try {
+      final response = await ApiClient().dio.get('/getpajakadmin',
+          queryParameters: search.isNotEmpty ? {"search": search} : {});
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      pajakAdminModel = PajakAdminModel.fromJson(jsonDecode(response.body));
-
-      notifyListeners();
-
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        pajakAdminModel = PajakAdminModel.fromJson(response.data);
+        notifyListeners();
+        if (withLoading) loading(false);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data["messages"]?["error"] ?? e.message;
       loading(false);
       throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
     }
   }
 
@@ -155,19 +161,22 @@ class MasterProvider extends BaseController with ChangeNotifier {
       {bool withLoading = false, String search = ''}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/getsubditadmin',
-        body: search.isNotEmpty ? {"search": search} : {});
+    try {
+      final response = await ApiClient().dio.get('/audit/v1/admin/sub-direktorates',
+          queryParameters: search.isNotEmpty ? {"search": search} : {});
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      subditAdminModel = SubditAdminModel.fromJson(jsonDecode(response.body));
-
-      notifyListeners();
-
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        subditAdminModel = SubditAdminModel.fromJson(response.data);
+        notifyListeners();
+        if (withLoading) loading(false);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data["message"] ?? e.message;
       loading(false);
       throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
     }
   }
 
@@ -203,20 +212,24 @@ class MasterProvider extends BaseController with ChangeNotifier {
       url = '/editkategoriadmin';
       param.addAll({'kategori_id': kategoriid});
     }
-    final response = await post(Constant.BASE_API_FULL + url, body: param);
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final model = BaseResponse.from(response);
-      notifyListeners();
-      await Utils.showSuccess(msg: model.message);
-      await Future.delayed(Duration(seconds: 2), () {});
-      CusNav.nPushReplace(context, DataKategoriAdminView());
-
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+    
+    try {
+      final response = await ApiClient().dio.post(url, data: param);
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final message = response.data['message'] ?? 'Berhasil';
+        notifyListeners();
+        await Utils.showSuccess(msg: message);
+        await Future.delayed(Duration(seconds: 2), () {});
+        CusNav.nPushReplace(context, DataKategoriAdminView());
+        if (withLoading) loading(false);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data["messages"]?["error"] ?? e.message;
       loading(false);
       throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
     }
   }
 
@@ -282,23 +295,26 @@ class MasterProvider extends BaseController with ChangeNotifier {
     };
     if (alamatId != null) param.addAll({'alamat_id': alamatId});
 
-    final response = await post(
-        Constant.BASE_API_FULL +
-            '/${alamatId != null ? 'edit' : 'create'}alamatadmin',
-        body: param);
+    try {
+      final response = await ApiClient().dio.post(
+          '/${alamatId != null ? 'edit' : 'create'}alamatadmin',
+          data: param);
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final model = BaseResponse.from(response);
-      notifyListeners();
-      await Utils.showSuccess(msg: model.message);
-      await Future.delayed(Duration(seconds: 2), () {});
-      CusNav.nPushReplace(context, DataAlamatAdminView());
-
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final message = response.data['message'] ?? 'Berhasil';
+        notifyListeners();
+        await Utils.showSuccess(msg: message);
+        await Future.delayed(Duration(seconds: 2), () {});
+        CusNav.nPushReplace(context, DataAlamatAdminView());
+        if (withLoading) loading(false);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data["messages"]?["error"] ?? e.message;
       loading(false);
       throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
     }
   }
 
@@ -306,20 +322,25 @@ class MasterProvider extends BaseController with ChangeNotifier {
       {bool withLoading = false, String? alamatId}) async {
     if (withLoading) loading(true);
 
-    final response = await post(Constant.BASE_API_FULL + '/hapusalamatadmin',
-        body: {'alamat_id': alamatId});
+    try {
+      final response = await ApiClient().dio.post('/hapusalamatadmin',
+          data: {'alamat_id': alamatId});
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final model = BaseResponse.from(response);
-      notifyListeners();
-      await Utils.showSuccess(msg: model.message);
-      await Future.delayed(Duration(seconds: 2), () {});
-      if (withLoading) loading(false);
-      fetchAlamatAdmin(withLoading: true);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final message = response.data['message'] ?? 'Berhasil';
+        notifyListeners();
+        await Utils.showSuccess(msg: message);
+        await Future.delayed(Duration(seconds: 2), () {});
+        if (withLoading) loading(false);
+        fetchAlamatAdmin(withLoading: true);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data["messages"]?["error"] ?? e.message;
       loading(false);
       throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
     }
   }
 
@@ -332,23 +353,26 @@ class MasterProvider extends BaseController with ChangeNotifier {
     };
     if (pajakId != null) param.addAll({'pajak_id': pajakId});
 
-    final response = await post(
-        Constant.BASE_API_FULL +
-            '/${pajakId != null ? 'edit' : 'create'}pajakadmin',
-        body: param);
+    try {
+      final response = await ApiClient().dio.post(
+          '/${pajakId != null ? 'edit' : 'create'}pajakadmin',
+          data: param);
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final model = BaseResponse.from(response);
-      notifyListeners();
-      await Utils.showSuccess(msg: model.message);
-      await Future.delayed(Duration(seconds: 2), () {});
-      CusNav.nPushReplace(context, DataAlamatAdminView());
-
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final message = response.data['message'] ?? 'Berhasil';
+        notifyListeners();
+        await Utils.showSuccess(msg: message);
+        await Future.delayed(Duration(seconds: 2), () {});
+        CusNav.nPushReplace(context, DataAlamatAdminView());
+        if (withLoading) loading(false);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data["messages"]?["error"] ?? e.message;
       loading(false);
       throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
     }
   }
 }

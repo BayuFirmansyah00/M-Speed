@@ -113,10 +113,10 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
     if (selectedDate != null)
       body['start_date'] = DateFormat('yyyy-MM-dd').format(selectedDate!);
 
-    // GET /api/v1/admin/dashboard
+    // GET /api/audit/v1/admin/dashboard
     try {
       final response = await ApiClient().dio.get(
-        '/v1/admin/dashboard',
+        '/audit/v1/admin/dashboard',
         queryParameters: body,
       );
 
@@ -299,8 +299,8 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
     if (search.isNotEmpty) body['search'] = search;
 
     try {
-      // GET /api/v1/admin/buyers
-      final response = await ApiClient().dio.get('/v1/admin/buyers', queryParameters: body);
+      // GET /api/audit/v1/admin/buyers
+      final response = await ApiClient().dio.get('/audit/v1/admin/buyers', queryParameters: body);
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         userData.clear();

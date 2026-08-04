@@ -12,7 +12,7 @@ import 'package:mspeed/src/admin/user/view/user_data_admin_view.dart';
 import 'package:flutter/material.dart';
 import 'package:mspeed/utils/utils.dart';
 
-class AdminFormAuditProvider extends BaseController with ChangeNotifier {
+class AdminFormDireksiProvider extends BaseController with ChangeNotifier {
   List<UserData> userData = [];
   final searchC = TextEditingController();
 
@@ -25,19 +25,19 @@ class AdminFormAuditProvider extends BaseController with ChangeNotifier {
   final TextEditingController passwordC = TextEditingController();
   bool isActive = true;
 
-  setData(BasicUserAdminModelData? audit) async {
+  setData(BasicUserAdminModelData? direksi) async {
     clearData();
-    if (audit != null) {
-      firstNameC.text = audit.firstname ?? '';
-      lastNameC.text = audit.lastname ?? '';
-      emailC.text = audit.email ?? '';
-      phoneNumberC.text = audit.telp ?? '';
-      alamatC.text = audit.alamat ?? '';
-      cityC.text = audit.kabkota ?? '';
+    if (direksi != null) {
+      firstNameC.text = direksi.firstname ?? '';
+      lastNameC.text = direksi.lastname ?? '';
+      emailC.text = direksi.email ?? '';
+      phoneNumberC.text = direksi.telp ?? '';
+      alamatC.text = direksi.alamat ?? '';
+      cityC.text = direksi.kabkota ?? '';
 
-      if (audit.ID != null) {
+      if (direksi.ID != null) {
         try {
-          final res = await ApiClient().dio.get('/audit/v1/admin/audits/${audit.ID}');
+          final res = await ApiClient().dio.get('/audit/v1/admin/direksi/${direksi.ID}');
           if (res.statusCode == 200 || res.statusCode == 201) {
             isActive = res.data['data']['status'] == 'active' ? true : false;
           }
@@ -59,8 +59,8 @@ class AdminFormAuditProvider extends BaseController with ChangeNotifier {
     cityC.clear();
   }
 
-  Future<void> sendAudit(BuildContext context,
-      {bool withLoading = false, String? auditId}) async {
+  Future<void> sendDireksi(BuildContext context,
+      {bool withLoading = false, String? direksiId}) async {
     if (withLoading) loading(true);
     var param = {
       'email': emailC.text,
@@ -74,8 +74,8 @@ class AdminFormAuditProvider extends BaseController with ChangeNotifier {
     }
 
     try {
-      final isEdit = auditId != null;
-      final url = isEdit ? '/audit/v1/admin/audits/$auditId' : '/audit/v1/admin/audits';
+      final isEdit = direksiId != null;
+      final url = isEdit ? '/audit/v1/admin/direksi/$direksiId' : '/audit/v1/admin/direksi';
       
       final response = isEdit 
         ? await ApiClient().dio.put(url, data: param)
@@ -83,10 +83,10 @@ class AdminFormAuditProvider extends BaseController with ChangeNotifier {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         notifyListeners();
-        await Utils.showSuccess(msg: 'Data audit berhasil disimpan!');
+        await Utils.showSuccess(msg: 'Data direksi berhasil disimpan!');
         await Future.delayed(const Duration(seconds: 2), () {});
         CusNav.nPushReplace(
-            context, const UserDataAdminView(userType: UserDataType.AUDIT));
+            context, const UserDataAdminView(userType: UserDataType.DIREKSI));
       }
     } on DioException catch (e) {
       var decoded = e.response?.data;

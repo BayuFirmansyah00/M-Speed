@@ -115,6 +115,8 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
     String search = '',
   }) async {
     if (withLoading) loading(true);
+    userData.clear();
+    notifyListeners();
     Map<String, String> param = {};
     if (search.isNotEmpty) param.addAll({'search': search});
 
@@ -125,7 +127,6 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        userData.clear();
         final dataList = response.data['data'] as List<dynamic>? ?? [];
         
         for (var item in dataList) {
@@ -148,6 +149,7 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       }
     } catch (e) {
       debugPrint("fetchBuyers Error: $e");
+      Utils.showFailed(msg: "Gagal memuat data dari server (500)");
     } finally {
       if (withLoading) loading(false);
     }
@@ -206,6 +208,8 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
     String search = '',
   }) async {
     if (withLoading) loading(true);
+    userData.clear();
+    notifyListeners();
     Map<String, String> param = {};
     if (search.isNotEmpty) param.addAll({'search': search});
 
@@ -245,6 +249,7 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       }
     } catch (e) {
       debugPrint("fetchKeuangan Error: $e");
+      Utils.showFailed(msg: "Gagal memuat data dari server (500)");
     } finally {
       if (withLoading) loading(false);
     }
@@ -281,6 +286,8 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
     String search = '',
   }) async {
     if (withLoading) loading(true);
+    userData.clear();
+    notifyListeners();
     Map<String, String> param = {};
     if (search.isNotEmpty) param.addAll({'search': search});
 
@@ -291,7 +298,6 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        userData.clear();
         final dataList = response.data['data'] as List<dynamic>;
         
         for (var item in dataList) {
@@ -313,6 +319,7 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       }
     } catch (e) {
       debugPrint("fetchPenerima Error: $e");
+      Utils.showFailed(msg: "Gagal memuat data dari server (500)");
     } finally {
       if (withLoading) loading(false);
     }
@@ -349,6 +356,8 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
     String search = '',
   }) async {
     if (withLoading) loading(true);
+    userData.clear();
+    notifyListeners();
     Map<String, String> param = {};
     if (search.isNotEmpty) param.addAll({'search': search});
 
@@ -383,6 +392,7 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       }
     } catch (e) {
       debugPrint("fetchManager Error: $e");
+      Utils.showFailed(msg: "Gagal memuat data dari server (500)");
     } finally {
       if (withLoading) loading(false);
     }
@@ -419,6 +429,8 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
     String search = '',
   }) async {
     if (withLoading) loading(true);
+    userData.clear();
+    notifyListeners();
     Map<String, String> param = {};
     if (search.isNotEmpty) param.addAll({'search': search});
 
@@ -429,7 +441,6 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        userData.clear();
         final dataList = response.data['data'] as List<dynamic>;
         
         for (var item in dataList) {
@@ -440,7 +451,7 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
               name2: uData['last_name']?.toString() ?? '',
               email: item['email']?.toString() ?? '',
               id: item['id']?.toString() ?? '',
-              alamat: uData['address']?.toString() ?? '',
+              alamat: uData['phone']?.toString() ?? '',
             ),
           );
         }
@@ -451,6 +462,7 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       }
     } catch (e) {
       debugPrint("fetchAudit Error: $e");
+      Utils.showFailed(msg: "Gagal memuat data dari server (500)");
     } finally {
       if (withLoading) loading(false);
     }
@@ -487,6 +499,8 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
     String search = '',
   }) async {
     if (withLoading) loading(true);
+    userData.clear();
+    notifyListeners();
     Map<String, String> param = {};
     if (search.isNotEmpty) param.addAll({'search': search});
 
@@ -497,7 +511,6 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        userData.clear();
         final dataList = response.data['data'] as List<dynamic>;
         
         for (var item in dataList) {
@@ -508,7 +521,7 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
               name2: uData['last_name']?.toString() ?? '',
               email: item['email']?.toString() ?? '',
               id: item['id']?.toString() ?? '',
-              alamat: uData['address']?.toString() ?? '',
+              alamat: uData['phone']?.toString() ?? '',
             ),
           );
         }
@@ -519,6 +532,7 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       }
     } catch (e) {
       debugPrint("fetchDireksi Error: $e");
+      Utils.showFailed(msg: "Gagal memuat data dari server (500)");
     } finally {
       if (withLoading) loading(false);
     }

@@ -3,7 +3,7 @@
 ///
 /// CATATAN PENTING:
 /// Struktur field di bawah ini ASUMSI, mengikuti pola BuyerAdminModel /
-/// KeuanganAdminModel (firstname, lastname, email, telp, alamat).
+/// BasicUserAdminModel (firstname, lastname, email, telp, alamat).
 /// Field ini BELUM diverifikasi ke response API asli karena belum ada akses
 /// backend/Network tab untuk endpoint Manager.
 ///

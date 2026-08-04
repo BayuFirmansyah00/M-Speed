@@ -60,6 +60,13 @@ class _UserAdminViewState extends BaseState<UserAdminView> {
         gradient: [const Color(0xff14B8A6), const Color(0xff0F766E)],
         onTap: () => CusNav.nPush(context, const UserDataAdminView(userType: UserDataType.AUDIT)),
       ),
+      _UserMenu(
+        title: 'Data Direksi',
+        subtitle: 'Kelola data jajaran direksi',
+        icon: Icons.corporate_fare_rounded,
+        gradient: [const Color(0xff6366F1), const Color(0xff4338CA)],
+        onTap: () => CusNav.nPush(context, const UserDataAdminView(userType: UserDataType.DIREKSI)),
+      ),
     ];
 
     return Scaffold(

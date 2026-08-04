@@ -26,6 +26,8 @@ class AdminFormPenerimaProvider extends BaseController with ChangeNotifier {
   final TextEditingController cityC = TextEditingController();
   final TextEditingController passwordC = TextEditingController();
   final TextEditingController departmentC = TextEditingController();
+  final TextEditingController accessC = TextEditingController();
+  bool isActive = true;
 
   String? selectedDepartmentId;
   List<Map<String, dynamic>> allDepartments = [];
@@ -37,6 +39,7 @@ class AdminFormPenerimaProvider extends BaseController with ChangeNotifier {
   KotaModel? kotaModel;
   String? selectedCity;
   String? selectedCityId;
+  String? selectedAddressId;
 
   List<KotaModelData?> get filteredKotaList {
     if (kotaModel?.data == null) return [];
@@ -60,12 +63,34 @@ class AdminFormPenerimaProvider extends BaseController with ChangeNotifier {
       phoneNumberC.text = penerima.telp ?? '';
       alamatC.text = penerima.alamat ?? '';
       selectedDepartmentId = penerima.subditId;
+      String? cityName = penerima.kabkota;
+
+      // Fetch detail for complete data (active, access)
+      if (penerima.ID != null) {
+        try {
+          final res = await ApiClient().dio.get('/audit/v1/admin/receivers/${penerima.ID}');
+          if (res.statusCode == 200 || res.statusCode == 201) {
+            final Map<String, dynamic> data = res.data['data'] ?? {};
+            final Map<String, dynamic> uData = data['user_data'] ?? {};
+            isActive = data['status'] == 'active' ? true : false;
+            accessC.text = uData['access']?.toString() ?? '';
+            selectedDepartmentId = (uData['department'] as Map<String, dynamic>?)?['id']?.toString();
+            if (data['addresses'] != null && (data['addresses'] as List).isNotEmpty) {
+              var addr = data['addresses'][0];
+              selectedAddressId = addr['id']?.toString();
+              alamatC.text = addr['detail']?.toString() ?? '';
+              cityName = addr['city']?.toString();
+            }
+          }
+        } catch (e) {
+          debugPrint("Failed to fetch detail: $e");
+        }
+      }
 
       // Set City
-      String? cityName = penerima.kabkota;
       if (cityName != null && kotaModel?.data != null) {
         var matchedCity = kotaModel!.data!.firstWhere(
-          (e) => e?.kota?.toLowerCase() == cityName.toLowerCase(),
+          (e) => e?.kota?.toLowerCase() == cityName!.toLowerCase(),
           orElse: () => null,
         );
         if (matchedCity != null) {
@@ -94,12 +119,15 @@ class AdminFormPenerimaProvider extends BaseController with ChangeNotifier {
     alamatC.clear();
     cityC.clear();
     departmentC.clear();
+    accessC.clear();
+    isActive = true;
     allDepartments.clear();
     selectedDepartmentId = null;
     selectedProvince = null;
     selectedProvinceId = null;
     selectedCity = null;
     selectedCityId = null;
+    selectedAddressId = null;
   }
 
   Future<void> sendPenerima(BuildContext context,
@@ -111,6 +139,8 @@ class AdminFormPenerimaProvider extends BaseController with ChangeNotifier {
       'last_name': lastNameC.text,
       'phone': phoneNumberC.text,
       'department_id': selectedDepartmentId ?? '1',
+      'access': accessC.text,
+      'active': isActive ? '1' : '0',
       'address_name': 'Utama',
       'address_phone': phoneNumberC.text,
       'city_id': selectedCityId ?? '1',
@@ -118,6 +148,9 @@ class AdminFormPenerimaProvider extends BaseController with ChangeNotifier {
     };
     if (passwordC.text.isNotEmpty) {
       param['password'] = passwordC.text;
+    }
+    if (penerimaId != null && selectedAddressId != null) {
+      param['address_id'] = selectedAddressId!;
     }
 
     try {
@@ -159,6 +192,7 @@ class AdminFormPenerimaProvider extends BaseController with ChangeNotifier {
       }
     } catch (e) {
       debugPrint("Failed to fetch receiver master data: $e");
+      Utils.showFailed(msg: "Maaf, data master belum bisa dimuat (Endpoint Backend belum siap).");
     }
   }
 

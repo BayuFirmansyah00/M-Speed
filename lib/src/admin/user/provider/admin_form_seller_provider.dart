@@ -197,20 +197,25 @@ class AdminFormSellerProvider extends BaseController with ChangeNotifier {
     Map<String, String> param = {};
     if (subditSearchC.text.isNotEmpty)
       param.addAll({'search': subditSearchC.text});
-    final response = await get(
-      Constant.BASE_API_FULL + '/getsubditadmin',
-      body: param,
-    );
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      subditAdminModel = SubditAdminModel.fromJson(jsonDecode(response.body));
-      notifyListeners();
+    try {
+      final response = await ApiClient().dio.get(
+        '/audit/v1/admin/sub-direktorates',
+        queryParameters: param,
+      );
 
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        subditAdminModel = SubditAdminModel.fromJson(response.data);
+        notifyListeners();
+        if (withLoading) loading(false);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data["message"] ?? e.message;
       loading(false);
-      throw Exception(message);
+      debugPrint('Error fetchSubditAdmin: $message');
+    } catch (e) {
+      loading(false);
+      debugPrint('Error fetchSubditAdmin: $e');
     }
   }
 }

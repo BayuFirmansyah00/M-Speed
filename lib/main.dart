@@ -15,6 +15,7 @@ import 'package:mspeed/src/admin/user/provider/admin_form_penerima_provider.dart
 import 'package:mspeed/src/admin/user/provider/admin_form_seller_provider.dart';
 import 'package:mspeed/src/admin/user/provider/admin_form_manager_provider.dart';
 import 'package:mspeed/src/admin/user/provider/admin_form_audit_provider.dart';
+import 'package:mspeed/src/admin/user/provider/admin_form_direksi_provider.dart';
 import 'package:mspeed/src/admin/user/provider/admin_user_provider.dart';
 import 'package:mspeed/src/auth/provider/register_provider.dart';
 import 'package:mspeed/src/auth/view/confirmation_view.dart';
@@ -409,6 +410,7 @@ class MyApp extends StatelessWidget {
               ChangeNotifierProvider(create: (_) => AdminFormSellerProvider()),
               ChangeNotifierProvider(create: (_) => AdminFormManagerProvider()),
               ChangeNotifierProvider(create: (_) => AdminFormAuditProvider()),
+              ChangeNotifierProvider(create: (_) => AdminFormDireksiProvider()),
               ChangeNotifierProvider(create: (_) => AdminBannerProvider()),
             ],
             child: MaterialApp(
