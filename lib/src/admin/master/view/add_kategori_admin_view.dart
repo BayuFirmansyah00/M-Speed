@@ -67,33 +67,34 @@ class _AddKategoriAdminViewState extends BaseState<AddKategoriAdminView> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomAppBar(
+      bottomNavigationBar: Container(
         color: Colors.white,
-        child: CustomButton.mainButton(
-          'Simpan',
-          borderRadius: BorderRadius.circular(12),
-          () async {
-            await handleTap(() async {
-              Utils.showYesNoDialog(
-                context: context,
-                title: "Konfirmasi",
-                desc: "Apakah Anda Yakin Ingin Menyimpan Data Ini",
-                yesCallback: () async {
-                  handleTap(() async {
-                    CusNav.nPop(context);
-                    await context.read<MasterProvider>().sendKategori(
-                          context,
-                          kategoriid: widget.kategori?.ID,
-                        );
-                  });
-                },
-                noCallback: () {
-                  Navigator.pop(context);
-                },
-              );
-            });
-          },
-          // margin: EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.all(16),
+        child: SafeArea(
+          child: SizedBox(
+            height: 50,
+            child: CustomButton.mainButton('Simpan', () async {
+              await handleTap(() async {
+                Utils.showYesNoDialog(
+                  context: context,
+                  title: "Konfirmasi",
+                  desc: "Apakah Anda Yakin Ingin Menyimpan Data Ini",
+                  yesCallback: () async {
+                    handleTap(() async {
+                      CusNav.nPop(context);
+                      await context.read<MasterProvider>().sendKategori(
+                        context,
+                        kategoriid: widget.kategori?.ID,
+                      );
+                    });
+                  },
+                  noCallback: () {
+                    Navigator.pop(context);
+                  },
+                );
+              });
+            }, borderRadius: BorderRadius.circular(12)),
+          ),
         ),
       ),
     );

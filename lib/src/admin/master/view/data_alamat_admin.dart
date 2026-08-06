@@ -296,19 +296,34 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
                                           color: const Color(0xff059669).withValues(alpha: 0.1),
                                           borderRadius: BorderRadius.circular(8),
                                         ),
-                                        child: const Icon(Icons.map_rounded,
+                                        child: const Icon(Icons.person_rounded,
                                             color: Color(0xff059669), size: 16),
                                       ),
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: Text(
-                                          item.prov ?? '-',
+                                          item.recipientName ?? '-',
                                           style: const TextStyle(
                                               fontWeight: FontWeight.w700,
                                               fontSize: 13,
                                               color: Color(0xff100629)),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: (item.status == 'active' || item.status == '1') ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          (item.status == 'active' || item.status == '1') ? 'Aktif' : 'Tidak Aktif',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                            color: (item.status == 'active' || item.status == '1') ? Colors.green : Colors.red,
+                                          ),
                                         ),
                                       ),
                                       IconButton(
@@ -321,51 +336,81 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
                                 const Divider(height: 1, color: Color(0xffF0F0F0)),
                                 Padding(
                                   padding: const EdgeInsets.all(16),
-                                  child: Row(
+                                  child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Expanded(
-                                        flex: 2,
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              'Kabupaten / Kota',
-                                              style: TextStyle(fontSize: 11, color: Color(0xff8A93A3)),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text('No. Telepon', style: TextStyle(fontSize: 11, color: Color(0xff8A93A3))),
+                                                const SizedBox(height: 4),
+                                                Text(item.phone ?? '-', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xff100629))),
+                                              ],
                                             ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              item.kota ?? '-',
-                                              style: const TextStyle(
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Color(0xff100629)),
+                                          ),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text('Provinsi', style: TextStyle(fontSize: 11, color: Color(0xff8A93A3))),
+                                                const SizedBox(height: 4),
+                                                Text(item.prov ?? '-', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xff100629)), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                              ],
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        flex: 3,
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              'Alamat Lengkap',
-                                              style: TextStyle(fontSize: 11, color: Color(0xff8A93A3)),
+                                      const SizedBox(height: 12),
+                                      Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            flex: 2,
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text(
+                                                  'Kabupaten / Kota',
+                                                  style: TextStyle(fontSize: 11, color: Color(0xff8A93A3)),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  item.kota ?? '-',
+                                                  style: const TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: Color(0xff100629)),
+                                                ),
+                                              ],
                                             ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              item.nama ?? '-',
-                                              style: const TextStyle(
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: Color(0xff4A5568)),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                            flex: 3,
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text(
+                                                  'Alamat Lengkap',
+                                                  style: TextStyle(fontSize: 11, color: Color(0xff8A93A3)),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  item.nama ?? '-',
+                                                  style: const TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.w500,
+                                                      color: Color(0xff4A5568)),
+                                                  maxLines: 2,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ],
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),

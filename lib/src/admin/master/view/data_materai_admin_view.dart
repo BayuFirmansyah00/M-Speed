@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/src/admin/master/provider/master_provider.dart';
-import 'package:mspeed/src/admin/master/view/add_subdit_admin_view.dart';
+import 'package:mspeed/src/admin/master/view/add_materai_admin_view.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:provider/provider.dart';
 
-class DataSubditAdminView extends StatefulWidget {
-  const DataSubditAdminView({super.key});
+class DataMateraiAdminView extends StatefulWidget {
+  const DataMateraiAdminView({super.key});
 
   @override
-  State<DataSubditAdminView> createState() => _DataSubditAdminViewState();
+  State<DataMateraiAdminView> createState() => _DataMateraiAdminViewState();
 }
 
-class _DataSubditAdminViewState extends BaseState<DataSubditAdminView> {
-  static const _gradient = [Color(0xff7C3AED), Color(0xff6D28D9)];
+class _DataMateraiAdminViewState extends BaseState<DataMateraiAdminView> {
+  static const _gradient = [Color(0xffDC2626), Color(0xffB91C1C)];
 
   @override
   void initState() {
@@ -22,7 +22,7 @@ class _DataSubditAdminViewState extends BaseState<DataSubditAdminView> {
   }
 
   void refresh({String q = ''}) {
-    context.read<MasterProvider>().fetchSubditAdmin(
+    context.read<MasterProvider>().fetchMateraiAdmin(
       withLoading: true,
       search: q,
     );
@@ -30,8 +30,9 @@ class _DataSubditAdminViewState extends BaseState<DataSubditAdminView> {
 
   @override
   Widget build(BuildContext context) {
-    final data = context.watch<MasterProvider>().getSubditAdminModel;
-    final searchC = context.read<MasterProvider>().searchSubditC;
+    final data = context.watch<MasterProvider>().getMateraiAdminModel;
+    final model = data.data;
+    final searchC = context.read<MasterProvider>().searchMateraiC;
 
     return Scaffold(
       backgroundColor: const Color(0xffF5F6FA),
@@ -51,6 +52,7 @@ class _DataSubditAdminViewState extends BaseState<DataSubditAdminView> {
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
               ),
+              actions: [const SizedBox(width: 8)],
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(
                   decoration: const BoxDecoration(
@@ -85,7 +87,7 @@ class _DataSubditAdminViewState extends BaseState<DataSubditAdminView> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(
-                                Icons.lan_rounded,
+                                Icons.percent_rounded,
                                 color: Colors.white,
                                 size: 22,
                               ),
@@ -96,7 +98,7 @@ class _DataSubditAdminViewState extends BaseState<DataSubditAdminView> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'Data Subdit',
+                                  'Data Materai',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w700,
@@ -105,7 +107,7 @@ class _DataSubditAdminViewState extends BaseState<DataSubditAdminView> {
                                 ),
                                 SizedBox(height: 2),
                                 Text(
-                                  'Daftar subdivisi dan direktorat',
+                                  'Konfigurasi tarif dan data Materai',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.white70,
@@ -146,7 +148,7 @@ class _DataSubditAdminViewState extends BaseState<DataSubditAdminView> {
                     textInputAction: TextInputAction.search,
                     style: const TextStyle(fontSize: 14),
                     decoration: InputDecoration(
-                      hintText: 'Cari berdasarkan kode atau nama...',
+                      hintText: 'Cari berdasarkan nama Materai...',
                       hintStyle: const TextStyle(
                         color: Color(0xffA0AEC0),
                         fontSize: 13,
@@ -183,24 +185,24 @@ class _DataSubditAdminViewState extends BaseState<DataSubditAdminView> {
             // ── Data List ──
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              sliver: (data.data?.isEmpty ?? true)
+              sliver: (model?.isEmpty ?? true)
                   ? const SliverFillRemaining(
                       child: Center(
                         child: Text(
-                          'Tidak ada data subdit.',
+                          'Tidak ada data Materai.',
                           style: TextStyle(color: Color(0xff8A93A3)),
                         ),
                       ),
                     )
                   : SliverList(
                       delegate: SliverChildBuilderDelegate((context, index) {
-                        final model = data.data?[index];
-                        if (model == null) return const SizedBox.shrink();
+                        final item = model?[index];
+                        if (item == null) return const SizedBox.shrink();
                         return GestureDetector(
                           onTap: () {
                             CusNav.nPush(
                               context,
-                              AddSubditAdminView(subdit: model),
+                              AddMateraiAdminView(materai: item),
                             );
                           },
                           child: Container(
@@ -222,9 +224,9 @@ class _DataSubditAdminViewState extends BaseState<DataSubditAdminView> {
                                 Padding(
                                   padding: const EdgeInsets.fromLTRB(
                                     16,
-                                    14,
-                                    16,
                                     10,
+                                    10,
+                                    8,
                                   ),
                                   child: Row(
                                     children: [
@@ -232,46 +234,29 @@ class _DataSubditAdminViewState extends BaseState<DataSubditAdminView> {
                                         padding: const EdgeInsets.all(6),
                                         decoration: BoxDecoration(
                                           color: const Color(
-                                            0xff7C3AED,
+                                            0xffDC2626,
                                           ).withValues(alpha: 0.1),
                                           borderRadius: BorderRadius.circular(
                                             8,
                                           ),
                                         ),
                                         child: const Icon(
-                                          Icons.lan_rounded,
-                                          color: Color(0xff7C3AED),
+                                          Icons.percent_rounded,
+                                          color: Color(0xffDC2626),
                                           size: 16,
                                         ),
                                       ),
                                       const SizedBox(width: 8),
-                                      Text(
-                                        model.subditCode ?? '-',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 13,
-                                          color: Color(0xff100629),
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xffF5F6FA),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
+                                      Expanded(
                                         child: Text(
-                                          'ID: ${model.id ?? '-'}',
+                                          item.type ?? '-',
                                           style: const TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w600,
-                                            color: Color(0xff8A93A3),
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 13,
+                                            color: Color(0xff100629),
                                           ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                     ],
@@ -282,63 +267,32 @@ class _DataSubditAdminViewState extends BaseState<DataSubditAdminView> {
                                   color: Color(0xffF0F0F0),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    16,
-                                    12,
-                                    16,
-                                    16,
-                                  ),
+                                  padding: const EdgeInsets.all(16),
                                   child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              'Nama Subdit',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color: Color(0xff8A93A3),
-                                              ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Harga E-Materai',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: Color(0xff8A93A3),
                                             ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              model.subditName ?? '-',
-                                              style: const TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                                color: Color(0xff100629),
-                                              ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            item.nominal ?? '-',
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: Color(0xff100629),
                                             ),
-                                          ],
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              'Total Departemen',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color: Color(0xff8A93A3),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              model.totalDepartments ?? '0',
-                                              style: const TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                                color: Color(0xff100629),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
@@ -347,7 +301,7 @@ class _DataSubditAdminViewState extends BaseState<DataSubditAdminView> {
                             ),
                           ),
                         );
-                      }, childCount: data.data?.length ?? 0),
+                      }, childCount: model?.length ?? 0),
                     ),
             ),
           ],

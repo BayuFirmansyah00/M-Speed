@@ -11,7 +11,7 @@ import 'package:mspeed/utils/utils.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mspeed/common/helper/session_helper.dart';
 
 class ChatSellerProvider extends BaseController with ChangeNotifier {
   ChatSellerModel _chatSellerModel = ChatSellerModel();
@@ -45,39 +45,65 @@ class ChatSellerProvider extends BaseController with ChangeNotifier {
     return formatter.format(date);
   }
 
+  int currentPage = 1;
+
   Future<void> fetchListChat(BuildContext context,
-      {bool withLoading = true, required String idSeller}) async {
+      {bool withLoading = true, required String idSeller, bool isLoadMore = false}) async {
+    
+    if (!isLoadMore) {
+      chatSellerModel = ChatSellerModel();
+      currentPage = 1;
+    } else {
+      currentPage++;
+    }
+
     if (withLoading) loading(true);
 
     try {
+      // TODO: Remove per_page=${Constant.maxPaginationPerPage} when infinite scroll is fully implemented in UI
       final parsed = await getRest(
-        Constant.BASE_API_FULL + '/chats?user_id=$idSeller'
+        Constant.BASE_API_FULL + '${Constant.epChats}?user_id=$idSeller&page=$currentPage&per_page=${Constant.maxPaginationPerPage}'
       );
       
-      // Bungkus data menjadi format yang diharapkan (Map { seller: [...] })
-      Map<String, dynamic> dataMap = {};
-      if (parsed is List) {
-        dataMap = {'seller': parsed};
-      } else if (parsed is Map<String, dynamic> && parsed.containsKey('data')) {
-        dataMap = {'seller': parsed['data']};
+      // Mengubah respon menjadi format yang diharapkan ChatSellerModel
+      // Laravel mengembalikan JSON { data: [...] } (paginasi).
+      // Model Flutter kita (ChatSellerModel) sebelumnya mengharapkan `data: { seller: [...] }`.
+      Map<String, dynamic> formattedJson = {};
+      if (parsed is Map<String, dynamic> && parsed.containsKey('data')) {
+        formattedJson = {
+          'result': 'success',
+          'data': {'seller': parsed['data']},
+          'meta': parsed['meta']
+        };
       } else {
-        dataMap = {'seller': parsed};
+        formattedJson = {
+          'result': 'success',
+          'data': {'seller': parsed}
+        };
       }
       
-      chatSellerModel = ChatSellerModel.fromJson({'result': 'success', 'data': dataMap});
+      final responseModel = ChatSellerModel.fromJson(formattedJson);
+
+      if (isLoadMore) {
+        chatSellerModel.data?.seller?.addAll(responseModel.data?.seller ?? []);
+      } else {
+        chatSellerModel = responseModel;
+      }
+
       chatSellerModel.data?.seller?.forEach((element) {
         if (element?.createdAt != null)
           element?.createdAt = formatDate(element.createdAt ?? "");
       });
       notifyListeners();
     } catch (e) {
+      if (isLoadMore) currentPage--;
       if (e.toString().contains("Unauthorized")) {
         Utils.showFailed(msg: "Unauthorized");
         Future.delayed(Duration(seconds: 1)).then((value) {
           Navigator.pushReplacementNamed(context, '/login');
         });
       }
-      throw Exception(e);
+      Utils.showFailed(msg: e.toString());
     } finally {
       if (withLoading) loading(false);
     }
@@ -93,7 +119,7 @@ class ChatSellerProvider extends BaseController with ChangeNotifier {
 
     try {
       final parsed = await getRest(
-        Constant.BASE_API_FULL + '/chats?user_id=$idBuyer&seller_id=$idSeller'
+        Constant.BASE_API_FULL + '${Constant.epChats}?user_id=$idBuyer&seller_id=$idSeller'
       );
       
       // Jika parsed adalah List, sesuaikan ke format DetailChatSellerModel
@@ -131,7 +157,7 @@ class ChatSellerProvider extends BaseController with ChangeNotifier {
 
     try {
       final parsed = await postRest(
-        Constant.BASE_API_FULL + '/chats',
+        Constant.BASE_API_FULL + '${Constant.epChats}',
         body: {
           'user_id': idPenerima, // Asumsi buyer
           'seller_id': idPengirim,
@@ -161,8 +187,7 @@ class ChatSellerProvider extends BaseController with ChangeNotifier {
   Future<void> fetchRiwayat(
       {bool withLoading = false, required String order_id}) async {
     if (withLoading) loading(true);
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String userId = prefs.getString(Constant.kSetPrefId) ?? '1';
+    String userId = await SessionHelper.getSellerId();
     // userId = "124";
 
     final response = await get(
@@ -189,8 +214,7 @@ class ChatSellerProvider extends BaseController with ChangeNotifier {
       required String nomor_order,
       File? file}) async {
     if (withLoading) loading(true);
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String userId = prefs.getString(Constant.kSetPrefId) ?? '1';
+    String userId = await SessionHelper.getSellerId();
     // userId = "124";
 
     final http.MultipartFile? _file = (file == null)

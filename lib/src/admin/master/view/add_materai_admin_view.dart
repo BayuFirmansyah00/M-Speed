@@ -2,24 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_appbar.dart';
 import 'package:mspeed/common/component/custom_button.dart';
-import 'package:mspeed/common/component/custom_dropdown.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/common/component/custom_textField.dart';
-import 'package:mspeed/src/admin/master/model/alamat_admin_model.dart';
+import 'package:mspeed/src/admin/master/model/materai_admin_model.dart';
 import 'package:mspeed/src/admin/master/provider/master_provider.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
 
-class AddAddressAdminView extends StatefulWidget {
-  const AddAddressAdminView({super.key, this.alamat});
+class AddMateraiAdminView extends StatefulWidget {
+  const AddMateraiAdminView({super.key, this.materai});
 
-  final AlamatAdminModelData? alamat;
+  final MateraiAdminModelData? materai;
 
   @override
-  State<AddAddressAdminView> createState() => _AddAddressAdminViewState();
+  State<AddMateraiAdminView> createState() => _AddMateraiAdminViewState();
 }
 
-class _AddAddressAdminViewState extends BaseState<AddAddressAdminView> {
+class _AddMateraiAdminViewState extends BaseState<AddMateraiAdminView> {
   @override
   void initState() {
     getData();
@@ -28,7 +27,7 @@ class _AddAddressAdminViewState extends BaseState<AddAddressAdminView> {
 
   getData() async {
     final p = context.read<MasterProvider>();
-    await p.setData(widget.alamat);
+    await p.setDataMaterai(widget.materai);
   }
 
   @override
@@ -39,7 +38,7 @@ class _AddAddressAdminViewState extends BaseState<AddAddressAdminView> {
       backgroundColor: Colors.white,
       appBar: CustomAppBar.appBar(
         context,
-        "${widget.alamat == null ? "Buat" : "Ubah"} Alamat",
+        "${widget.materai == null ? "Buat" : "Edit"} Materai",
         color: Colors.white,
         isCenter: true,
         foregroundColor: Colors.black,
@@ -59,61 +58,27 @@ class _AddAddressAdminViewState extends BaseState<AddAddressAdminView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CustomTextField.borderTextField(
-                  controller: p.namaC,
-                  labelText: "Nama Penerima",
-                  hintText: "Nama Penerima",
+                  controller: p.typeMateraiC,
+                  labelText: "Tipe Materai",
+                  hintText: 'Tipe Materai',
                 ),
                 SizedBox(height: 12),
                 CustomTextField.borderTextField(
-                  controller: p.nomorTeleponC,
-                  labelText: "Nomor Telepon",
-                  hintText: "08xxx",
+                  controller: p.nominalMateraiC,
+                  labelText: "Nominal Materai",
+                  hintText: 'Nominal Materai',
                 ),
                 SizedBox(height: 12),
-                CustomDropdown.normalDropdown(
-                  controller: p.provinceC,
-                  hintText: 'Pilih Provinsi',
-                  list: (p.provinsiAdminModel.data ?? [])
-                      .map(
-                        (e) => DropdownMenuItem(
-                          child: Text(e?.nama ?? ''),
-                          value: e?.ID ?? '0',
-                        ),
-                      )
-                      .toList(),
-                  selectedItem: p.selectedProvince,
-                  labelText: 'Provinsi',
-                  onChanged: (value) async {
-                    p.selectedProvince = value;
-                    await p.fetchKotaAdmin();
-                    setState(() {});
-                  },
+                CustomTextField.borderTextField(
+                  controller: p.pathMateraiC,
+                  labelText: "Path",
+                  hintText: 'Misal: materai.pdf',
                 ),
                 SizedBox(height: 12),
-                CustomDropdown.normalDropdown(
-                  controller: p.cityC,
-                  hintText: 'Pilih Kota',
-                  list: (p.kotaAdminModel.data ?? [])
-                      .map(
-                        (e) => DropdownMenuItem(
-                          child: Text(e?.nama ?? ''),
-                          value: e?.ID ?? '0',
-                        ),
-                      )
-                      .toList(),
-                  selectedItem: p.selectedCity,
-                  labelText: 'Kota',
-                  onChanged: (value) {
-                    p.selectedCity = value;
-                    setState(() {});
-                  },
-                ),
-                SizedBox(height: 12),
-                CustomTextField.borderTextArea(
-                  controller: p.alamatC,
-                  labelText: "Alamat",
-                  hintText: "Alamat",
-                  focusNode: FocusNode(),
+                CustomTextField.borderTextField(
+                  controller: p.orderDocumentIdMateraiC,
+                  labelText: "Order Document ID",
+                  hintText: 'ID',
                 ),
               ],
             ),
@@ -135,9 +100,9 @@ class _AddAddressAdminViewState extends BaseState<AddAddressAdminView> {
                   yesCallback: () async {
                     handleTap(() async {
                       CusNav.nPop(context);
-                      await context.read<MasterProvider>().sendAlamat(
+                      await context.read<MasterProvider>().sendMaterai(
                         context,
-                        alamatId: widget.alamat?.id,
+                        materaiId: widget.materai?.id?.toString(),
                       );
                     });
                   },

@@ -4,6 +4,11 @@ import 'package:mspeed/generated/assets.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/src/admin/master/view/data_banner_admin_view.dart';
+import 'package:mspeed/src/admin/master/view/data_subdit_admin_view.dart';
+import 'package:mspeed/src/admin/master/view/data_alamat_admin.dart';
+import 'package:mspeed/src/admin/master/view/data_pajak_admin.dart';
+import 'package:mspeed/src/admin/master/view/data_kategori_admin.dart';
+import 'package:mspeed/src/admin/master/view/data_materai_admin_view.dart';
 
 class MasterAdminView extends StatefulWidget {
   const MasterAdminView({super.key});
@@ -21,9 +26,9 @@ class _MasterAdminViewState extends State<MasterAdminView> {
         subtitle: 'Kelola data subdivisi dan direktorat',
         svgAsset: Assets.svgsIcMasterKategori,
         gradient: [const Color(0xff7C3AED), const Color(0xff6D28D9)],
-        isComingSoon: true,
+        isComingSoon: false,
         onTap: () {
-          Utils.showSuccess(msg: 'Fitur Subdit sedang dalam pengembangan API baru.');
+          CusNav.nPush(context, const DataSubditAdminView());
         },
       ),
       _MasterMenu(
@@ -41,9 +46,9 @@ class _MasterAdminViewState extends State<MasterAdminView> {
         subtitle: 'Kelola data alamat pengiriman',
         svgAsset: Assets.svgsIcMasterAlamat,
         gradient: [const Color(0xff059669), const Color(0xff047857)],
-        isComingSoon: true,
+        isComingSoon: false,
         onTap: () {
-          Utils.showSuccess(msg: 'Fitur Alamat sedang dalam pengembangan API baru.');
+          CusNav.nPush(context, const DataAlamatAdminView());
         },
       ),
       _MasterMenu(
@@ -51,9 +56,19 @@ class _MasterAdminViewState extends State<MasterAdminView> {
         subtitle: 'Konfigurasi tarif dan data pajak',
         svgAsset: Assets.svgsIcMasterPajak,
         gradient: [const Color(0xffDC2626), const Color(0xffB91C1C)],
-        isComingSoon: true,
+        isComingSoon: false,
         onTap: () {
-          Utils.showSuccess(msg: 'Fitur Pajak sedang dalam pengembangan API baru.');
+          CusNav.nPush(context, const DataPajakAdminView());
+        },
+      ),
+      _MasterMenu(
+        title: 'E-Materai',
+        subtitle: 'Konfigurasi harga e-materai sistem',
+        svgAsset: Assets.svgsIcMasterPajak, // or another appropriate asset
+        gradient: [const Color(0xffDC2626), const Color(0xffB91C1C)], // using red similar to materai badge
+        isComingSoon: false,
+        onTap: () {
+          CusNav.nPush(context, const DataMateraiAdminView());
         },
       ),
       _MasterMenu(
@@ -61,9 +76,9 @@ class _MasterAdminViewState extends State<MasterAdminView> {
         subtitle: 'Kelola kategori produk di platform',
         svgAsset: Assets.svgsIcMasterKategori,
         gradient: [const Color(0xffEA580C), const Color(0xffC2410C)],
-        isComingSoon: true,
+        isComingSoon: false,
         onTap: () {
-          Utils.showSuccess(msg: 'Fitur Kategori sedang dalam pengembangan API baru.');
+          CusNav.nPush(context, const DataKategoriAdminView());
         },
       ),
     ];
@@ -167,7 +182,7 @@ class _MasterAdminViewState extends State<MasterAdminView> {
                       color: const Color(0xff7C3AED).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Text('5 menu',
+                    child: const Text('6 menu',
                       style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xff7C3AED))),
                   ),
                 ],

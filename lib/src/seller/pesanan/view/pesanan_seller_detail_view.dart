@@ -228,6 +228,7 @@ class _PesananSellerDetailViewState extends BaseState<PesananSellerDetailView> {
       );
     }
 
+    // ignore: unused_element
     Widget detailInfo() {
       return Padding(
         padding: const EdgeInsets.all(16.0),
@@ -974,7 +975,8 @@ class _PesananSellerDetailViewState extends BaseState<PesananSellerDetailView> {
           ),
         );
 
-      final ttdPesananBuyer = dataSeller?.ParentOrderModel?.ttdPesananBuyer;
+      // ignore: unused_local_variable
+      String ttdPesananBuyer = dataSeller?.ParentOrderModel?.ttdPesananBuyer ?? "";
       if (status == 'PESANAN_DITOLAK') {
         return SizedBox();
       }
@@ -1091,7 +1093,7 @@ class _PesananSellerDetailViewState extends BaseState<PesananSellerDetailView> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: Constant.statusColor(dataSeller?.ParentOrderModel?.status ?? "-").withOpacity(0.1),
+                            color: Constant.statusColor(dataSeller?.ParentOrderModel?.status ?? "-").withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(

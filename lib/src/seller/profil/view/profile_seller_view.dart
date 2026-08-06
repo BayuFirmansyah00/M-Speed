@@ -213,7 +213,7 @@ class _ProfileSellerViewState extends BaseState<ProfileSellerView> {
     Widget textDownload({required String text, required String url}) {
       return InkWell(
         onTap: () async {
-          await launch(url);
+          await launchUrl(Uri.parse(url));
         },
         child: Text(
           'Download $text',

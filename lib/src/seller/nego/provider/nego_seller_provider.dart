@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:mspeed/common/base/base_response.dart';
 import 'package:mspeed/src/seller/nego/model/nego_seller_model.dart';
 import 'package:mspeed/utils/utils.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mspeed/common/helper/session_helper.dart';
 import '../../../../common/base/base_controller.dart';
 import '../../../../common/helper/constant.dart';
 import 'package:flutter/material.dart';
@@ -25,33 +25,41 @@ class NegoSellerProvider extends BaseController with ChangeNotifier {
   FocusNode negoHargaN = FocusNode();
   TextEditingController searchNegoC = TextEditingController();
 
-  Future<void> fetchNego({bool withLoading = false}) async {
+  int currentPage = 1;
+
+  Future<void> fetchNego({bool withLoading = false, bool isLoadMore = false}) async {
+    if (!isLoadMore) {
+      negoSellerModel = NegoSellerModel();
+      currentPage = 1;
+    } else {
+      currentPage++;
+    }
+
     if (withLoading) loading(true);
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    var userId = await prefs.getString(Constant.kSetPrefId);
-    String endpoint = Constant.BASE_API_FULL + '/negos?seller_id=${userId ?? ''}';
+    final userId = await SessionHelper.getSellerId();
+    
+    // TODO: Remove per_page=${Constant.maxPaginationPerPage} when infinite scroll is fully implemented in UI
+    String endpoint = Constant.BASE_API_FULL + '${Constant.epNegos}?seller_id=$userId&page=$currentPage&per_page=${Constant.maxPaginationPerPage}';
     if (searchNegoC.text.isNotEmpty) {
       endpoint += '&search=${searchNegoC.text}';
     }
 
     try {
       final parsed = await getRest(endpoint);
-      
-      // Jika responsenya berupa List, bungkus jadi Map
-      Map<String, dynamic> dataMap = {};
-      if (parsed is List) {
-        dataMap = {'result': 'success', 'data': parsed};
-      } else if (parsed is Map<String, dynamic> && parsed.containsKey('data')) {
-        dataMap = {'result': 'success', 'data': parsed['data']};
+      final responseModel = NegoSellerModel.fromJson(parsed);
+
+      if (isLoadMore) {
+        negoSellerModel.data?.addAll(responseModel.data ?? []);
+        negoSellerModel.meta = responseModel.meta;
       } else {
-        dataMap = {'result': 'success', 'data': parsed};
+        negoSellerModel = responseModel;
       }
 
-      negoSellerModel = NegoSellerModel.fromJson(dataMap);
       notifyListeners();
     } catch (e) {
-      throw Exception(e);
+      if (isLoadMore) currentPage--;
+      Utils.showFailed(msg: e.toString());
     } finally {
       if (withLoading) loading(false);
     }
@@ -81,14 +89,14 @@ class NegoSellerProvider extends BaseController with ChangeNotifier {
       });
     }
     try {
-      final parsed = await postRest(
-        Constant.BASE_API_FULL + '/negos/$negoId/${isAccept ? 'accept' : 'reject'}',
+      await postRest(
+        Constant.BASE_API_FULL + '${Constant.epNegos}/$negoId/${isAccept ? 'accept' : 'reject'}',
         body: body,
       );
 
       final result = BaseResponse("Berhasil", true, null);
       notifyListeners();
-      await Utils.showSuccess(msg: result.message ?? "Berhasil");
+      await Utils.showSuccess(msg: result.message);
       await Future.delayed(Duration(seconds: 2));
     } catch (e) {
       throw Exception(e);
@@ -109,8 +117,8 @@ class NegoSellerProvider extends BaseController with ChangeNotifier {
       'harga': negoHargaC.text.replaceAll('.', ''),
     };
     try {
-      final parsed = await postRest(
-        Constant.BASE_API_FULL + '/negos/$negoId',
+      await postRest(
+        Constant.BASE_API_FULL + '${Constant.epNegos}/$negoId',
         body: {'_method': 'PUT', 'value': body['harga']},
       );
 
@@ -118,7 +126,7 @@ class NegoSellerProvider extends BaseController with ChangeNotifier {
       negoHargaN.unfocus();
       final result = BaseResponse("Berhasil", true, null);
       notifyListeners();
-      await Utils.showSuccess(msg: result.message ?? "Berhasil");
+      await Utils.showSuccess(msg: result.message);
       await Future.delayed(Duration(seconds: 2));
     } catch (e) {
       throw Exception(e);

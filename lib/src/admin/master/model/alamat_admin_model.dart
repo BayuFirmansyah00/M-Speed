@@ -19,6 +19,9 @@ class AlamatAdminModelData {
   String? nama;
   String? prov;
   String? kota;
+  String? phone;
+  String? status;
+  String? recipientName;
 
   AlamatAdminModelData({
     this.id,
@@ -27,14 +30,27 @@ class AlamatAdminModelData {
     this.nama,
     this.prov,
     this.kota,
+    this.phone,
+    this.status,
+    this.recipientName,
   });
   AlamatAdminModelData.fromJson(Map<String, dynamic> json) {
     id = json['id']?.toString();
-    provId = json['prov_id']?.toString();
-    kotaId = json['kota_id']?.toString();
-    nama = json['nama']?.toString();
-    prov = json['prov']?.toString();
-    kota = json['kota']?.toString();
+    if (json['location'] != null) {
+      provId = json['location']['province_id']?.toString();
+      kotaId = json['location']['city_id']?.toString();
+      prov = json['location']['province_name']?.toString();
+      kota = json['location']['city_name']?.toString();
+    } else {
+      provId = json['prov_id']?.toString();
+      kotaId = json['kota_id']?.toString();
+      prov = json['prov']?.toString();
+      kota = json['kota']?.toString();
+    }
+    nama = json['detail']?.toString() ?? json['nama']?.toString();
+    phone = json['phone']?.toString();
+    status = json['status']?.toString();
+    recipientName = json['recipient_name']?.toString();
   }
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
@@ -44,6 +60,9 @@ class AlamatAdminModelData {
     data['nama'] = nama;
     data['prov'] = prov;
     data['kota'] = kota;
+    data['phone'] = phone;
+    data['status'] = status;
+    data['recipient_name'] = recipientName;
     return data;
   }
 }

@@ -508,7 +508,7 @@ class _DppCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Sub Jumlah',
+                        'Jumlah',
                         style:
                             TextStyle(fontSize: 11, color: Color(0xff8A93A3)),
                       ),

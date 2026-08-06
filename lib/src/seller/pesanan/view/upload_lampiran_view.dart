@@ -44,6 +44,7 @@ class _PdfSignatureScreenState extends BaseState<UploadLampiranView> {
 
   @override
   Widget build(BuildContext context) {
+    // ignore: unused_element
     Widget fileButton({String? title, required Function(XFile) onChoose}) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -61,6 +62,7 @@ class _PdfSignatureScreenState extends BaseState<UploadLampiranView> {
             ),
           InkWell(
             onTap: () async {
+              // ignore: deprecated_member_use
               final result = await FilePicker.pickFiles(
                 allowMultiple: false,
               );
@@ -415,6 +417,7 @@ class _FileButtonState extends State<FileButton> {
           ),
         InkWell(
           onTap: () async {
+            // ignore: deprecated_member_use
             final result = await FilePicker.pickFiles(
               allowMultiple: false,
             );

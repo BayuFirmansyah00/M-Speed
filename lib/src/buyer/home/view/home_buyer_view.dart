@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:dots_indicator/dots_indicator.dart';
@@ -20,53 +19,41 @@ import '../../cart/provider/shopping_cart_provider.dart';
 import '../provider/home_provider.dart';
 import 'product_or_seller_search_view.dart';
 
-// ─── PALET WARNA : Ultra-Premium 2026 ─────────────────────────
+// ─── COLOR TOKENS (mapped from Constant.dart) ─────────────────
 class _C {
   // Brand
-  static const primary    = Color(0xFFE50012);
-  static const primaryL   = Color(0xFFFF4D5B); // lighter variant
-  static const primaryBg  = Color(0xFFFFEBED);
+  static Color get primary => Constant.primaryColor;       // #2E7DAB
+  static Color get secondary => Constant.secondaryColor;   // #E53935
+  static Color get accent => Constant.tertiaryColor;       // #FBC02D
+  static Color get primaryBg => Constant.primaryColor.withValues(alpha: 0.08);
 
   // Background & Surface
-  static const bg         = Color(0xFFF5F7FA);
-  static const surface    = Color(0xFFFFFFFF);
-  static const surfaceAlt = Color(0xFFF0F4F8);
+  static Color get bg => Constant.backgroundColor;         // #F8F9FB
+  static Color get surface => Constant.textColorWhite;
+  static Color get surfaceAlt => const Color(0xFFF0F4F8);
 
   // Text
-  static const txt1       = Color(0xFF0D1117); // heading
-  static const txt2       = Color(0xFF4A5568); // body
-  static const txt3       = Color(0xFF9AA5B1); // hint/caption
+  static Color get txt1 => Constant.textColorBlack;        // #212121
+  static Color get txt2 => Constant.textColor2;            // #757575
+  static Color get txt3 => Constant.textHintColor;         // #999999
+  static Color get divider => Constant.borderLightColor;   // #E0E0E0
 
-
-
-  // Shadow tokens
-  static BoxShadow shadow1 = BoxShadow(
-    color: const Color(0x0A000000),
+  // Shadow
+  static BoxShadow get cardShadow => BoxShadow(
+    color: Colors.black.withValues(alpha: 0.04),
     blurRadius: 12,
-    offset: const Offset(0, 4),
-  );
-  static BoxShadow shadow2 = BoxShadow(
-    color: const Color(0x14000000),
-    blurRadius: 24,
-    offset: const Offset(0, 8),
-  );
-  static BoxShadow shadowPrimary = BoxShadow(
-    color: primary.withValues(alpha: 0.25),
-    blurRadius: 20,
-    offset: const Offset(0, 8),
+    offset: const Offset(0, 2),
   );
 }
 
-
-
-// ─── KATEGORI GRADIENT PALETTE ────────────────────────────────
-const _catGradients = [
-  [Color(0xFFE50012), Color(0xFFFF6B6B)],   // Consumable - Red
-  [Color(0xFF3B82F6), Color(0xFF60A5FA)],   // APD - Blue
-  [Color(0xFF10B981), Color(0xFF34D399)],   // Tools - Green
-  [Color(0xFFF59E0B), Color(0xFFFBBF24)],   // Stationery - Amber
-  [Color(0xFF8B5CF6), Color(0xFFA78BFA)],   // Services - Purple
-  [Color(0xFF06B6D4), Color(0xFF22D3EE)],   // Other - Cyan
+// ─── KATEGORI SOLID COLORS ────────────────────────────────────
+const _catColors = [
+  Color(0xFFE53935), // Consumable - Red
+  Color(0xFF2E7DAB), // APD - Blue (primary)
+  Color(0xFF43A047), // Tools - Green
+  Color(0xFFFBC02D), // Stationery - Yellow (accent)
+  Color(0xFF7B1FA2), // Services - Purple
+  Color(0xFF00897B), // Other - Teal
 ];
 
 // ─── BADGE PRODUK ─────────────────────────────────────────────
@@ -78,10 +65,24 @@ class _Badge {
 }
 
 _Badge? _getBadge(int index, dynamic item) {
-  if (item?.terjual != null && (item.terjual is int ? item.terjual : int.tryParse('${item.terjual}') ?? 0) > 50) {
-    return const _Badge(label: 'TERLARIS', color: Color(0xFFDC2626), bg: Color(0xFFFFEBED));
+  if (item?.terjual != null &&
+      (item.terjual is int
+              ? item.terjual
+              : int.tryParse('${item.terjual}') ?? 0) >
+          50) {
+    return const _Badge(
+      label: 'TERLARIS',
+      color: Color(0xFFE53935),
+      bg: Color(0xFFFFEBEE),
+    );
   }
-  if (index < 3) return const _Badge(label: 'BARU', color: Color(0xFF2563EB), bg: Color(0xFFDBEAFE));
+  if (index < 3) {
+    return const _Badge(
+      label: 'BARU',
+      color: Color(0xFF2E7DAB),
+      bg: Color(0xFFE3F2FD),
+    );
+  }
   return null;
 }
 
@@ -138,7 +139,9 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
   Future<void> _loadUser() async {
     final p = await SharedPreferences.getInstance();
     if (mounted) {
-      setState(() => _userName = p.getString(Constant.kSetPrefFirstName) ?? 'Pengguna');
+      setState(
+        () => _userName = p.getString(Constant.kSetPrefFirstName) ?? 'Pengguna',
+      );
     }
   }
 
@@ -159,32 +162,25 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
     super.dispose();
   }
 
-  // ── Shimmer Box ──────────────────────────────────────────────
-  Widget _shimBox({double? w, double? h, double r = 16}) => AnimatedBuilder(
+  // ── Shimmer placeholder ─────────────────────────────────────
+  Widget _shimBox({double? w, double? h, double r = 12}) => AnimatedBuilder(
     animation: _shimmer,
     builder: (_, __) => Container(
       width: w,
       height: h,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(r),
-        gradient: LinearGradient(
-          colors: const [Color(0xFFEEF0F3), Color(0xFFF8F9FB), Color(0xFFEEF0F3)],
-          stops: [
-            (_shimmer.value - 0.4).clamp(0.0, 1.0),
-            _shimmer.value.clamp(0.0, 1.0),
-            (_shimmer.value + 0.4).clamp(0.0, 1.0),
-          ],
-        ),
+        color: const Color(0xFFEEF0F3),
       ),
     ),
   );
 
   @override
   Widget build(BuildContext context) {
-    final homeP    = context.watch<HomeProvider>();
+    final homeP = context.watch<HomeProvider>();
     final products = homeP.buyerHomeProductModel.data ?? [];
     final categories = homeP.kategoriModel?.data ?? [];
-    final cartTotal  = context.watch<ShoppingCartProvider>().countQtyCartItem();
+    final cartTotal = context.watch<ShoppingCartProvider>().countQtyCartItem();
 
     return Scaffold(
       backgroundColor: _C.bg,
@@ -193,13 +189,20 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
         strokeWidth: 2.5,
         displacement: 40,
         onRefresh: () async {
-          await context.read<HomeProvider>().getHomeProducts(withLoading: false);
+          await context.read<HomeProvider>().getHomeProducts(
+            withLoading: false,
+          );
           await context.read<HomeProvider>().fetchKategori(withLoading: false);
-          await context.read<ShoppingCartProvider>().fetchShoppingCart(context, withLoading: false);
+          await context.read<ShoppingCartProvider>().fetchShoppingCart(
+            context,
+            withLoading: false,
+          );
         },
         child: CustomScrollView(
           controller: _scroll,
-          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
           slivers: [
             // ── Hero Header ──────────────────────────────────
             _buildHeroHeader(cartTotal),
@@ -208,10 +211,16 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
             SliverToBoxAdapter(child: _buildBanner(homeP)),
 
             // ── Section: Kategori ────────────────────────────
-            SliverToBoxAdapter(child: _sectionHead('Kategori Pilihan', icon: Icons.grid_view_rounded, onTap: () {})),
+            SliverToBoxAdapter(
+              child: _sectionHead(
+                'Kategori Pilihan',
+                icon: Icons.grid_view_rounded,
+                onTap: () {},
+              ),
+            ),
             SliverToBoxAdapter(child: _buildCategories(categories)),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 28)),
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
             // ── Section: Produk ──────────────────────────────
             SliverToBoxAdapter(
@@ -236,7 +245,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
                     crossAxisCount: 2,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 14,
-                    childAspectRatio: 0.56,
+                    childAspectRatio: 0.52,
                   ),
                 ),
               ),
@@ -258,13 +267,20 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
         userName: _userName,
         greeting: _greeting,
         cartTotal: cartTotal,
-        onChat: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ChatListView())),
-        onCart: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ShoppingCartView())),
+        onChat: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => ChatListView()),
+        ),
+        onCart: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => ShoppingCartView()),
+        ),
         onSearch: () => CusNav.nPush(context, ProductOrSellerSearchView()),
       ),
     );
   }
 
+  // ─── BANNER CAROUSEL ───────────────────────────────────────
   Widget _buildBanner(HomeProvider p) {
     final banners = [
       Assets.imagesHomeHeader,
@@ -278,66 +294,68 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
           itemCount: banners.length,
           options: CarouselOptions(
             autoPlay: true,
-            height: 200, // Diperbesar dari 160 ke 200
-            viewportFraction: 0.95, // Dibuat lebih lebar (dari 0.9 ke 0.95)
+            height: 180,
+            viewportFraction: 0.92,
             enlargeCenterPage: true,
-            enlargeFactor: 0.1, // Dikurangi agar tidak terlalu menyusut di samping
+            enlargeFactor: 0.12,
             autoPlayCurve: Curves.easeOutCubic,
             autoPlayAnimationDuration: const Duration(milliseconds: 800),
             onPageChanged: (i, _) => setState(() => p.currentIndex = i),
           ),
           itemBuilder: (ctx, i, realIdx) {
             return Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4), // Jarak tipis antar banner
+              margin: const EdgeInsets.symmetric(horizontal: 4),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [_C.shadow1],
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: _C.divider, width: 1),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(15),
                 child: Image.asset(
                   banners[i],
-                  fit: BoxFit.cover, // Ensures image fills the larger area
+                  fit: BoxFit.cover,
                   width: double.infinity,
                 ),
               ),
             );
           },
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         DotsIndicator(
           dotsCount: banners.length,
           position: p.currentIndex.toDouble(),
           decorator: DotsDecorator(
-            color: _C.txt3.withValues(alpha: 0.3),
+            color: _C.divider,
             activeColor: _C.primary,
-            size: const Size(6, 6),
-            activeSize: const Size(20, 6),
-            spacing: const EdgeInsets.symmetric(horizontal: 4),
+            size: const Size(7, 7),
+            activeSize: const Size(24, 7),
+            spacing: const EdgeInsets.symmetric(horizontal: 3),
             activeShape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(4),
             ),
           ),
         ),
+        const SizedBox(height: 24),
       ],
     );
   }
 
   // ─── SECTION HEADER ───────────────────────────────────────
-  Widget _sectionHead(String title, {required VoidCallback onTap, required IconData icon}) {
+  Widget _sectionHead(
+    String title, {
+    required VoidCallback onTap,
+    required IconData icon,
+  }) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 16, 14),
       child: Row(
         children: [
+          // Solid color icon container
           Container(
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [_C.primary, _C.primaryL],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: _C.primary,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, size: 16, color: Colors.white),
@@ -345,11 +363,11 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
           const SizedBox(width: 12),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w800,
               color: _C.txt1,
-              letterSpacing: -0.4,
+              letterSpacing: -0.3,
             ),
           ),
           const Spacer(),
@@ -362,10 +380,21 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(
-                children: const [
-                  Text('Lihat', style: TextStyle(fontSize: 12, color: _C.primary, fontWeight: FontWeight.w700)),
-                  SizedBox(width: 4),
-                  Icon(Icons.arrow_forward_ios_rounded, size: 10, color: _C.primary),
+                children: [
+                  Text(
+                    'Lihat Semua',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _C.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 10,
+                    color: _C.primary,
+                  ),
                 ],
               ),
             ),
@@ -375,6 +404,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
     );
   }
 
+  // ─── CATEGORY LIST ────────────────────────────────────────
   Widget _buildCategories(List categories) {
     final icons = [
       Assets.iconsIcConsumable,
@@ -396,7 +426,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
           separatorBuilder: (_, __) => const SizedBox(width: 16),
           itemBuilder: (_, __) => Column(
             children: [
-              _shimBox(w: 64, h: 64, r: 18),
+              _shimBox(w: 64, h: 64, r: 16),
               const SizedBox(height: 8),
               _shimBox(w: 50, h: 10, r: 6),
             ],
@@ -416,9 +446,8 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
         itemBuilder: (ctx, i) {
           final cat = categories[i];
           final icon = i < icons.length ? icons[i] : Assets.iconsIcOther;
-          final gradPair = _catGradients[i % _catGradients.length];
-          // Use the primary color of the gradient for a soft pastel background
-          final softBg = gradPair[0].withValues(alpha: 0.12);
+          final solidColor = _catColors[i % _catColors.length];
+          final softBg = solidColor.withValues(alpha: 0.10);
 
           return AnimatedBuilder(
             animation: _entranceAnim,
@@ -426,7 +455,11 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
               final delay = (0.2 + i * 0.08).clamp(0.0, 1.0);
               final t = CurvedAnimation(
                 parent: _entranceAnim,
-                curve: Interval(delay, (delay + 0.4).clamp(0.0, 1.0), curve: Curves.easeOutBack),
+                curve: Interval(
+                  delay,
+                  (delay + 0.4).clamp(0.0, 1.0),
+                  curve: Curves.easeOutBack,
+                ),
               );
               return Transform.translate(
                 offset: Offset(0, 30 * (1 - t.value)),
@@ -452,18 +485,17 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
                       height: 64,
                       decoration: BoxDecoration(
                         color: softBg,
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: gradPair[0].withValues(alpha: 0.1),
+                          color: solidColor.withValues(alpha: 0.15),
                           width: 1,
                         ),
                       ),
                       child: Center(
                         child: Image.asset(
-                          icon, 
-                          width: 36, 
-                          height: 36,
-                          // Render gambar icon aslinya (tanpa di-tint putih) agar warnanya lebih hidup
+                          icon,
+                          width: 34,
+                          height: 34,
                         ),
                       ),
                     ),
@@ -473,12 +505,11 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
                         color: _C.txt1,
-                        fontWeight: FontWeight.w700,
-                        height: 1.15,
-                        letterSpacing: -0.2,
+                        fontWeight: FontWeight.w600,
+                        height: 1.2,
                       ),
                     ),
                   ],
@@ -504,65 +535,80 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
           final delay = (0.3 + (i * 0.04)).clamp(0.0, 0.9);
           final t = CurvedAnimation(
             parent: _entranceAnim,
-            curve: Interval(delay, (delay + 0.4).clamp(0.0, 1.0), curve: Curves.easeOut),
+            curve: Interval(
+              delay,
+              (delay + 0.4).clamp(0.0, 1.0),
+              curve: Curves.easeOut,
+            ),
           );
           return Transform.translate(
-            offset: Offset(0, 40 * (1 - t.value)),
+            offset: Offset(0, 30 * (1 - t.value)),
             child: Opacity(opacity: t.value.clamp(0.0, 1.0), child: child),
           );
         },
         child: Container(
           decoration: BoxDecoration(
             color: _C.surface,
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: [_C.shadow1, _C.shadow2],
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _C.divider, width: 1),
+            boxShadow: [_C.cardShadow],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Gambar + Badge ───────────────────────────
+              // ── Image + Badge ──────────────────────────────
               Stack(
                 children: [
                   ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(15),
+                    ),
                     child: AspectRatio(
                       aspectRatio: 1,
                       child: CachedNetworkImage(
                         imageUrl: item?.foto ?? '',
                         fit: BoxFit.cover,
-                        cacheManager: CacheManager(Config(
-                          'ms_${item?.ID ?? i}',
-                          stalePeriod: const Duration(days: 7),
-                        )),
-                        placeholder: (_, __) => _shimBox(h: double.infinity, r: 0),
+                        cacheManager: CacheManager(
+                          Config(
+                            'ms_${item?.ID ?? i}',
+                            stalePeriod: const Duration(days: 7),
+                          ),
+                        ),
+                        placeholder: (_, __) =>
+                            _shimBox(h: double.infinity, r: 0),
                         errorWidget: (_, __, ___) => Container(
                           color: _C.surfaceAlt,
-                          child: const Center(
-                            child: Icon(Icons.image_not_supported_rounded, color: _C.txt3, size: 32),
+                          child: Center(
+                            child: Icon(
+                              Icons.image_not_supported_rounded,
+                              color: _C.txt3,
+                              size: 32,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  // Badge (BARU / TERLARIS)
                   if (badge != null)
                     Positioned(
-                      top: 10,
-                      left: 10,
+                      top: 8,
+                      left: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: badge.bg,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: badge.color.withValues(alpha: 0.3), width: 1),
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           badge.label,
                           style: TextStyle(
                             fontSize: 9,
                             color: badge.color,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.5,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.3,
                           ),
                         ),
                       ),
@@ -570,69 +616,76 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
                 ],
               ),
 
-              // ── Info Produk ──────────────────────────────
+              // ── Product Info ──────────────────────────────
               Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                padding: const EdgeInsets.all(10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Nama Produk
+                    // Product name
                     Text(
                       item?.nama ?? '-',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                         color: _C.txt1,
                         height: 1.3,
                       ),
                     ),
                     const SizedBox(height: 6),
 
-                    // Harga
+                    // Price
                     Text(
-                      'Rp ${Utils.thousandSeparatorFromString(item?.harga ?? '0')}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w900,
-                        color: _C.primary,
+                      Utils.thousandSeparatorFromString(item?.harga ?? '0'),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: _C.secondary,
                         letterSpacing: -0.3,
                       ),
                     ),
                     const SizedBox(height: 6),
 
-                    // Kategori chip + Toko (satu baris)
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: _C.primaryBg,
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Text(
-                            item?.NamaKategori ?? '-',
-                            style: const TextStyle(
-                              fontSize: 9,
-                              color: _C.primary,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
+                    // Category chip
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _C.primaryBg,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        item?.NamaKategori ?? '-',
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: _C.primary,
+                          fontWeight: FontWeight.w700,
                         ),
-                      ],
+                      ),
                     ),
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 6),
 
-                    // Store
+                    // Store name
                     Row(
                       children: [
-                        const Icon(Icons.storefront_rounded, size: 11, color: _C.txt3),
+                        Icon(
+                          Icons.storefront_rounded,
+                          size: 11,
+                          color: _C.txt3,
+                        ),
                         const SizedBox(width: 3),
                         Expanded(
                           child: Text(
                             item?.SellerNama ?? '-',
-                            style: const TextStyle(fontSize: 10, color: _C.txt2, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: _C.txt2,
+                              fontWeight: FontWeight.w500,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -641,17 +694,31 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
                     ),
                     const SizedBox(height: 4),
 
-                    // Rating & Terjual
+                    // Rating & sold
                     Row(
                       children: [
-                        const Icon(Icons.star_rounded, size: 11, color: Color(0xFFF59E0B)),
+                        Icon(
+                          Icons.star_rounded,
+                          size: 11,
+                          color: _C.accent,
+                        ),
                         const SizedBox(width: 2),
-                        const Text('4.9', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: _C.txt2)),
-                        const Text(' · ', style: TextStyle(fontSize: 10, color: _C.txt3)),
+                        Text(
+                          '4.9',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: _C.txt2,
+                          ),
+                        ),
+                        Text(
+                          ' · ',
+                          style: TextStyle(fontSize: 10, color: _C.txt3),
+                        ),
                         Flexible(
                           child: Text(
                             '${item?.terjual ?? 0} terjual',
-                            style: const TextStyle(fontSize: 10, color: _C.txt2),
+                            style: TextStyle(fontSize: 10, color: _C.txt2),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -673,56 +740,54 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Ilustrasi
+          // Illustration circle - solid color
           Container(
-            width: 120,
-            height: 120,
+            width: 100,
+            height: 100,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [_C.primaryBg, _C.primaryBg.withValues(alpha: 0.5)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: _C.primaryBg,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.inventory_2_rounded, color: _C.primary, size: 56),
+            child: Icon(Icons.inventory_2_rounded, color: _C.primary, size: 48),
           ),
-          const SizedBox(height: 24),
-          const Text(
+          const SizedBox(height: 20),
+          Text(
             'Belum Ada Produk',
             style: TextStyle(
               color: _C.txt1,
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Produk belum tersedia saat ini.\nCoba refresh halaman.',
             textAlign: TextAlign.center,
             style: TextStyle(color: _C.txt2, fontSize: 14, height: 1.5),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 24),
+          // Solid color button
           GestureDetector(
             onTap: _loadData,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [_C.primary, _C.primaryL],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [_C.shadowPrimary],
+                color: _C.primary,
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.refresh_rounded, color: Colors.white, size: 18),
-                  SizedBox(width: 8),
-                  Text('Muat Ulang', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800)),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Muat Ulang',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -732,7 +797,6 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
     );
   }
 }
-
 
 // ─── HERO HEADER DELEGATE ─────────────────────────────────────
 class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
@@ -771,41 +835,40 @@ class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     final pct = (shrinkOffset / (maxHeight - minHeight)).clamp(0.0, 1.0);
 
     return Stack(
       children: [
-        // ── 1. Gradient Header Background ──────────────────
+        // ── 1. Solid Header Background ────────────────────
         Positioned.fill(
           child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFD10010), Color(0xFFE50012), Color(0xFFFF4444)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: CustomPaint(painter: _HeaderPatternPainter()),
+            color: Constant.primaryColor, // Solid M-SPEED Blue
           ),
         ),
 
-        // ── 2. Rounded Bottom Clipper ───────────────────────
+        // ── 2. Rounded Bottom Clipper ─────────────────────
         Positioned(
-          left: 0, right: 0, bottom: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
           child: Container(
-            height: 28,
-            decoration: const BoxDecoration(
-              color: Color(0xFFF5F7FA),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(28),
-                topRight: Radius.circular(28),
+            height: 24,
+            decoration: BoxDecoration(
+              color: Constant.backgroundColor,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
               ),
             ),
           ),
         ),
 
-        // ── 3. Greeting + Avatar + Icons ────────────────────
+        // ── 3. Greeting + Avatar + Icons ──────────────────
         Positioned(
           top: MediaQuery.of(context).padding.top + 14,
           left: 20,
@@ -814,14 +877,17 @@ class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
             opacity: (1 - pct * 2).clamp(0.0, 1.0),
             child: Row(
               children: [
-                // Avatar
+                // Avatar circle
                 Container(
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.25),
+                    color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 2),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.4),
+                      width: 2,
+                    ),
                   ),
                   child: Center(
                     child: Text(
@@ -842,7 +908,7 @@ class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
                       Text(
                         '$greeting,',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.85),
+                          color: Colors.white.withValues(alpha: 0.8),
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
@@ -864,7 +930,7 @@ class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
                 // Chat Icon
                 _HeaderIconBtn(
                   icon: Icons.chat_bubble_outline_rounded,
-                  badge: '2',
+                  badge: null,
                   onTap: onChat,
                 ),
                 const SizedBox(width: 10),
@@ -879,71 +945,61 @@ class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
           ),
         ),
 
-        // ── 4. Search Bar ────────────────────────────────────
+        // ── 4. Search Bar ─────────────────────────────────
         Positioned(
-          bottom: 34,
+          bottom: 30,
           left: 16,
           right: 16,
           child: GestureDetector(
             onTap: onSearch,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                child: Container(
-                  height: 50,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: pct > 0.5 ? 1.0 : 0.92),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      width: 1.5,
+            child: Container(
+              height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.search_rounded, color: _C.txt3, size: 22),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Cari sparepart, tools, APD...',
+                      style: TextStyle(
+                        color: _C.txt3,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.10),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
                   ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.search_rounded, color: _C.txt3, size: 22),
-                      const SizedBox(width: 10),
-                      const Expanded(
-                        child: Text(
-                          'Cari sparepart, tools, APD...',
-                          style: TextStyle(
-                            color: _C.txt3,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                  // Solid "Cari" button
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _C.primary,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      'Cari',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [_C.primary, _C.primaryL],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Text(
-                          'Cari',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
@@ -959,26 +1015,6 @@ class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
       old.cartTotal != cartTotal ||
       old.minHeight != minHeight ||
       old.maxHeight != maxHeight;
-}
-
-// ─── HEADER PATTERN PAINTER ───────────────────────────────────
-class _HeaderPatternPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.05)
-      ..style = PaintingStyle.fill;
-
-    // Decorative circles
-    canvas.drawCircle(Offset(size.width * 1.1, size.height * 0.1), size.width * 0.45, paint);
-    paint.color = Colors.white.withValues(alpha: 0.04);
-    canvas.drawCircle(Offset(size.width * 0.85, size.height * 0.9), size.width * 0.35, paint);
-    paint.color = Colors.white.withValues(alpha: 0.03);
-    canvas.drawCircle(Offset(-size.width * 0.1, size.height * 0.5), size.width * 0.3, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter old) => false;
 }
 
 // ─── HEADER ICON BUTTON ───────────────────────────────────────
@@ -1000,9 +1036,8 @@ class _HeaderIconBtn extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.18),
+              color: Colors.white.withValues(alpha: 0.15),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1.5),
             ),
             child: Icon(icon, color: Colors.white, size: 21),
           ),
@@ -1014,16 +1049,17 @@ class _HeaderIconBtn extends StatelessWidget {
                 width: 18,
                 height: 18,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Constant.secondaryColor, // Red badge
                   shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 4, offset: const Offset(0, 2)),
-                  ],
                 ),
                 child: Center(
                   child: Text(
                     badge!,
-                    style: const TextStyle(color: _C.primary, fontSize: 9, fontWeight: FontWeight.w900),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ),

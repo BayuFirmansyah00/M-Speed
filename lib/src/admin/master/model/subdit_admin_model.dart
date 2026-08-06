@@ -13,22 +13,26 @@ class SubditAdminModelData {
   String? id;
   String? subditCode;
   String? subditName;
+  String? totalDepartments;
 
   SubditAdminModelData({
     this.id,
     this.subditCode,
     this.subditName,
+    this.totalDepartments,
   });
   SubditAdminModelData.fromJson(Map<String, dynamic> json) {
     id = json['id']?.toString();
     subditCode = json['subdit_code']?.toString();
     subditName = json['subdit_name']?.toString();
+    totalDepartments = json['total_departments']?.toString();
   }
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
     data['id'] = id;
     data['subdit_code'] = subditCode;
     data['subdit_name'] = subditName;
+    data['total_departments'] = totalDepartments;
     return data;
   }
 }

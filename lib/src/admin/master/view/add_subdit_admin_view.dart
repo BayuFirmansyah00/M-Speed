@@ -4,21 +4,21 @@ import 'package:mspeed/common/component/custom_appbar.dart';
 import 'package:mspeed/common/component/custom_button.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/common/component/custom_textField.dart';
-import 'package:mspeed/src/admin/master/model/pajak_admin_model.dart';
+import 'package:mspeed/src/admin/master/model/subdit_admin_model.dart';
 import 'package:mspeed/src/admin/master/provider/master_provider.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
 
-class AddPajakAdminView extends StatefulWidget {
-  const AddPajakAdminView({super.key, this.pajak});
+class AddSubditAdminView extends StatefulWidget {
+  const AddSubditAdminView({super.key, this.subdit});
 
-  final PajakAdminModelData? pajak;
+  final SubditAdminModelData? subdit;
 
   @override
-  State<AddPajakAdminView> createState() => _AddPajakAdminViewState();
+  State<AddSubditAdminView> createState() => _AddSubditAdminViewState();
 }
 
-class _AddPajakAdminViewState extends BaseState<AddPajakAdminView> {
+class _AddSubditAdminViewState extends BaseState<AddSubditAdminView> {
   @override
   void initState() {
     getData();
@@ -27,7 +27,7 @@ class _AddPajakAdminViewState extends BaseState<AddPajakAdminView> {
 
   getData() async {
     final p = context.read<MasterProvider>();
-    await p.setDataPajak(widget.pajak);
+    await p.setDataSubdit(widget.subdit);
   }
 
   @override
@@ -38,7 +38,7 @@ class _AddPajakAdminViewState extends BaseState<AddPajakAdminView> {
       backgroundColor: Colors.white,
       appBar: CustomAppBar.appBar(
         context,
-        "${widget.pajak == null ? "Buat" : "Edit"} Pajak",
+        "${widget.subdit == null ? "Buat" : "Edit"} Sub Direktorat",
         color: Colors.white,
         isCenter: true,
         foregroundColor: Colors.black,
@@ -58,21 +58,15 @@ class _AddPajakAdminViewState extends BaseState<AddPajakAdminView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CustomTextField.borderTextField(
-                  controller: p.pajakC,
-                  labelText: "Nama Pajak",
-                  hintText: 'Nama Pajak',
+                  controller: p.subditCodeC,
+                  labelText: "Kode Subdit",
+                  hintText: 'Kode Subdit',
                 ),
                 SizedBox(height: 12),
                 CustomTextField.borderTextField(
-                  controller: p.prosentaseC,
-                  labelText: "Prosentase",
-                  hintText: 'Prosentase',
-                ),
-                SizedBox(height: 12),
-                CustomTextField.borderTextField(
-                  controller: p.typePajakC,
-                  labelText: "Tipe Pajak",
-                  hintText: 'Misal: 1 atau type_name',
+                  controller: p.subditNameC,
+                  labelText: "Nama Subdit",
+                  hintText: 'Nama Subdit',
                 ),
               ],
             ),
@@ -94,9 +88,9 @@ class _AddPajakAdminViewState extends BaseState<AddPajakAdminView> {
                   yesCallback: () async {
                     handleTap(() async {
                       CusNav.nPop(context);
-                      await context.read<MasterProvider>().sendPajak(
+                      await context.read<MasterProvider>().sendSubdit(
                         context,
-                        pajakId: widget.pajak?.id,
+                        subditId: widget.subdit?.id?.toString(),
                       );
                     });
                   },

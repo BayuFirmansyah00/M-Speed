@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-// import 'package:google_fonts/google_fonts.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:intl/intl.dart';
 // import 'package:string_validator/string_validator.dart';
@@ -23,6 +23,11 @@ class Constant {
   static const String BASE_API_FULL = "http://${DOMAIN_LOCAL}/api"; // Local Dev
   static const String BASE_API_FULL2 = "https://${DOMAIN2}/api";
   static const String APP_NAME = "M-Speed";
+  static const int maxPaginationPerPage = 1000;
+  static const String epProducts = "/products";
+  static const String epParentOrders = "/parent-orders";
+  static const String epNegos = "/negos";
+  static const String epChats = "/chats";
 
   /// COlORS
   ///
@@ -31,9 +36,9 @@ class Constant {
   ///
   /// Constant.firstColor;
   ///
-  static Color primaryColor = Color(0xFFED1C24);
-  static Color secondaryColor = Color(0xFF0B4177);
-  static Color tertiaryColor = Color(0xFF8CC6FF);
+  static Color primaryColor = Color(0xFF2E7DAB); // M-SPEED Primary Blue
+  static Color secondaryColor = Color(0xFFE53935); // M-SPEED Primary Red
+  static Color tertiaryColor = Color(0xFFFBC02D); // M-SPEED Accent Yellow
   static Color quarteryColor = Color(0xFFC5E2FF);
   static Color tableBlueColor = Color(0xFFE9F0FF);
   static Color textHyperlinkColor = Color(0xFF0095FF);
@@ -41,33 +46,57 @@ class Constant {
   static Color darkGrayColor = Colors.grey.shade800;
   static Color grayColor = Colors.grey.shade600;
   static Color lightGrayColor = Colors.grey.shade400;
-  static Color textHintColor = Color(0xFFE6E8E7);
+  static Color textHintColor = Color(0xFF999999);
   static Color textHintColor2 = Color(0xFF949494);
   static Color darkGrayButtonColor = Colors.black;
   static Color bgFieldColor = Color(0xff8CC6FF4D);
-  static Color textColor = Color(0xFF100629);
-  static Color textColor2 = Color(0xFF6D7588);
+  static Color textColor = Color(0xFF212121); // Primary Text
+  static Color textColor2 = Color(0xFF757575); // Secondary Text
   static Color textKomisiColor = Color(0xFFFFCB47);
-  static Color textPriceColor = Color(0xFF3DA11A);
-  static Color backgroundColor = Color(0xFFF9F9F9);
-  static Color textColorBlack = Color(0xff414D55);
+  static Color textPriceColor = Color(0xFFE53935); // Using red for price
+  static Color backgroundColor = Color(0xFFF8F9FB); // Background
+  static Color textColorBlack = Color(0xFF212121);
   static Color textColorWhite = Colors.white;
-  static Color textColorBlue = Color(0xFF041E42);
+  static Color textColorBlue = Color(0xFF2E7DAB);
   static Color timerColor = Color(0xFFE7B641);
-  static Color progressColor = Color(0xFFF5C34B);
+  static Color progressColor = Color(0xFFFBC02D);
   // static Color textPriceColor = Color(0xFF3DA11A);
   static Color textOnAuthColor = Color(0xFF21272A);
   static Color greyIndicatorColor = Color(0xFFD9D9D9);
   // static Color backgroundColor = Color(0xFFF9F9F9);
-  static Color borderLightColor = Color(0xFFEAEAEA);
+  static Color borderLightColor = Color(0xFFE0E0E0); // Divider
   static Color borderRegularColor = Color(0xFF9D9B9B);
   static Color borderSearchColor = Color(0xFF949494);
   static Color greenColor = Color(0xFF1ABC62);
-  static Color redColor = Color(0xFFED1C24);
-  static Color blueColor = Color(0xFF093CA9);
+  static Color redColor = Color(0xFFE53935);
+  static Color blueColor = Color(0xFF2E7DAB);
   static Color blueGreenColor = Color(0xFF5397AA);
   static Color pesananBaruColor = greenColor;
   static Color pesananDiterimaColor = Color(0xff2B64F5);
+
+  // --- NEW DESIGN SYSTEM TOKENS (BUYER) ---
+  static const Color dsTeal = Color(0xFF45B0A8);
+  static const Color dsPeach = Color(0xFFFF9F43);
+  static const Color dsRedAccent = Color(0xFFE55959);
+  static const Color dsBackground = Color(0xFFF8F9FA);
+  static const Color dsSurface = Colors.white;
+  static const Color dsTextHeading = Color(0xFF333333);
+  static const Color dsTextBody = Color(0xFF666666);
+  static const Color dsTextHint = Color(0xFF999999);
+  static const Color dsBorder = Color(0xFFEEEEEE);
+  
+  static BoxShadow dsSoftShadow = BoxShadow(
+    color: Colors.black.withValues(alpha: 0.05),
+    blurRadius: 20,
+    spreadRadius: 0,
+    offset: Offset(0, 4),
+  );
+  static BoxShadow dsSoftGlow = BoxShadow(
+    color: dsPeach.withValues(alpha: 0.3),
+    blurRadius: 15,
+    spreadRadius: 2,
+    offset: Offset(0, 4),
+  );
   static Color pesananDikirimColor = Color(0xffF58B2B);
   static Color barangDiterimaColor = Color(0xffF40BA7);
   static Color prosesPembayaranColor = Color(0xffF40BA7);
@@ -89,100 +118,100 @@ class Constant {
   }
 
   static TextStyle primaryTextStyle = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColor,
   );
   static TextStyle secondaryTextStyle = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColor2,
   );
   static TextStyle komisiTextStyle = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textKomisiColor,
   );
   static TextStyle priceTextStyle = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textPriceColor,
   );
   static TextStyle s12BoldBlack = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColor,
     fontWeight: FontWeight.bold,
   );
 
   static TextStyle primaryTextStyle2 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColor,
   );
   static TextStyle secondaryTextStyle2 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColor2,
   );
   static TextStyle komisiTextStyle2 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textKomisiColor,
   );
   static TextStyle priceTextStyle2 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textPriceColor,
   );
   static TextStyle s12BoldBlack2 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColor,
     fontWeight: FontWeight.bold,
   );
-  static TextStyle iBlack = TextStyle(fontFamily: 'SourceSansPro');
+  static TextStyle iBlack = TextStyle(fontFamily: GoogleFonts.inter().fontFamily);
 
   static TextStyle iPrimaryMedium8 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: primaryColor,
     fontSize: 8,
     fontWeight: medium,
   );
   static TextStyle iPrimaryMedium12 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: primaryColor,
     fontSize: 12,
     fontWeight: medium,
   );
 
   static TextStyle iBlackMedium8 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 8,
     fontWeight: medium,
   );
   static TextStyle iBlackMedium10 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 8,
     fontWeight: medium,
   );
   static TextStyle iBlackMedium12 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 12,
     fontWeight: medium,
   );
   static TextStyle iBlackMedium13 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 13,
     fontWeight: medium,
   );
   static TextStyle iBlackMedium = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontWeight: medium,
   );
   static TextStyle iBlackMedium18 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 18,
     fontWeight: medium,
   );
   static TextStyle iBlackMedium16StrkWhite = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 16,
     shadows: [
@@ -210,19 +239,19 @@ class Constant {
     fontWeight: medium,
   );
   static TextStyle iBlackMedium16 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 16,
     fontWeight: medium,
   );
   static TextStyle iBlackMedium20 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 20,
     fontWeight: medium,
   );
   static TextStyle iBlackMedium40StrkWhite = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 40,
     shadows: [
@@ -251,7 +280,7 @@ class Constant {
   );
 
   static TextStyle primaryBold15 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: primaryColor,
     fontSize: 15,
     fontWeight: bold,
@@ -263,291 +292,291 @@ class Constant {
     fontWeight: medium,
   );
   static TextStyle primaryBold16 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: primaryColor,
     fontSize: 16,
     fontWeight: bold,
   );
   static TextStyle primaryBold20 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: primaryColor,
     fontSize: 20,
     fontWeight: bold,
   );
   static TextStyle productDark14 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 14,
     fontWeight: medium,
   );
   static TextStyle quartenary = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: quarteryColor,
     fontWeight: regular,
   );
   static TextStyle whiteExtraBold18 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: Colors.white,
     fontSize: 18,
     fontWeight: bold,
   );
 
   static TextStyle purple16 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: Colors.purple,
     fontSize: 16,
     fontWeight: medium,
   );
   static TextStyle dark14 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 14,
     fontWeight: medium,
   );
   static TextStyle dark15 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 15,
     fontWeight: medium,
   );
   static TextStyle dark16 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 15,
     fontWeight: medium,
   );
   static TextStyle darkBold12 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 12,
     fontWeight: bold,
   );
   static TextStyle darkBold14 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 14,
     fontWeight: bold,
   );
   static TextStyle darkBold16 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 16,
     fontWeight: bold,
   );
   static TextStyle darkBold18 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 18,
     fontWeight: bold,
   );
   static TextStyle darkBold20 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 20,
     fontWeight: bold,
   );
   static TextStyle darkBold22 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 22,
     fontWeight: bold,
   );
   static TextStyle darkMedium14 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 14,
     fontWeight: bold,
   );
   static TextStyle darkMedium16 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 16,
     fontWeight: bold,
   );
   static TextStyle darkUnderline14 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 14,
     fontWeight: bold,
   );
 
   static TextStyle blackBold10 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 10,
     fontWeight: bold,
   );
   static TextStyle blackBold13 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: Colors.black,
     fontSize: 13,
     fontWeight: bold,
   );
   static TextStyle blackBold = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontWeight: bold,
   );
   static TextStyle blackBold15 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 15,
     fontWeight: bold,
   );
   static TextStyle blackBold16 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 16,
     fontWeight: bold,
   );
   static TextStyle blackBold20 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: textColorBlack,
     fontSize: 20,
     fontWeight: bold,
   );
 
   static TextStyle grayRegular = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: lightGrayColor,
   );
   static TextStyle grayRegular8 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: lightGrayColor,
     fontSize: 8,
   );
   static TextStyle grayRegular12 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: lightGrayColor,
     fontSize: 12,
   );
   static TextStyle greyRegular12 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: lightGrayColor,
     fontSize: 12,
   );
   static TextStyle grayRegular13 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: lightGrayColor,
     fontSize: 13,
   );
   static TextStyle greyThrough12 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: lightGrayColor,
     fontSize: 12,
   );
   static TextStyle greyThrough14 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: lightGrayColor,
     fontSize: 14,
     decoration: TextDecoration.lineThrough,
   );
   static TextStyle greyThrough16 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: lightGrayColor,
     fontSize: 16,
   );
   static TextStyle grayMedium10 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: lightGrayColor,
     fontSize: 10,
     fontWeight: medium,
   );
   static TextStyle grayMedium13 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: lightGrayColor,
     fontSize: 13,
     fontWeight: medium,
   );
   static TextStyle grayMedium = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: lightGrayColor,
     fontWeight: medium,
   );
   static TextStyle grayMedium15 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: lightGrayColor,
     fontSize: 15,
     fontWeight: medium,
   );
   static TextStyle grayBold12 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: lightGrayColor,
     fontSize: 12,
     fontWeight: bold,
   );
   static TextStyle grayBold15 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: lightGrayColor,
     fontSize: 15,
     fontWeight: bold,
   );
   static TextStyle grayBold16 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: lightGrayColor,
     fontSize: 16,
     fontWeight: bold,
   );
   static TextStyle whiteRegular12 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: Colors.white,
     fontSize: 12,
   );
   static TextStyle whiteBold = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: Colors.white,
     fontWeight: bold,
   );
   static TextStyle whiteBold15 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: Colors.white,
     fontSize: 15,
     fontWeight: bold,
   );
   static TextStyle whiteBold16 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: Colors.white,
     fontSize: 16,
     fontWeight: bold,
   );
   static TextStyle whiteExtraBold = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: Colors.white,
     fontWeight: extraBold,
   );
 
   static TextStyle greenBold12 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: greenColor,
     fontSize: 12,
     fontWeight: bold,
   );
   static TextStyle blueBold12 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: blueColor,
     fontSize: 12,
     fontWeight: bold,
   );
   static TextStyle blueMedium14 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: blueColor,
     fontSize: 14,
     fontWeight: medium,
   );
   static TextStyle blue12 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: blueColor,
     fontSize: 12,
     fontWeight: regular,
   );
   static TextStyle redBold12 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: redColor,
     fontSize: 12,
     fontWeight: bold,
   );
   static TextStyle brandGrey13 = TextStyle(
-    fontFamily: 'SourceSansPro',
+    fontFamily: GoogleFonts.inter().fontFamily,
     color: grayColor,
     fontSize: 13,
     fontWeight: regular,
@@ -562,46 +591,83 @@ class Constant {
   static FontWeight black = FontWeight.w900;
 
   static ThemeData mainThemeData = ThemeData(
-    useMaterial3: false,
+    useMaterial3: true,
     visualDensity: VisualDensity.adaptivePlatformDensity,
-    indicatorColor: Colors.black,
-    dividerColor: Colors.transparent,
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        backgroundColor: primaryColor,
+    indicatorColor: primaryColor,
+    dividerColor: borderLightColor,
+    scaffoldBackgroundColor: backgroundColor,
+    primaryColor: primaryColor,
+    focusColor: primaryColor,
+    fontFamily: GoogleFonts.inter().fontFamily,
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: primaryColor,
+      primary: primaryColor,
+      secondary: secondaryColor,
+      surface: Colors.white,
+    ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: Colors.white,
+      foregroundColor: textColorBlack,
+      elevation: 0,
+      centerTitle: true,
+      systemOverlayStyle: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
       ),
     ),
-    // colorSchemeSeed: Colors.black,
-    appBarTheme: AppBarTheme(
-      backgroundColor: primaryColor,
+    cardTheme: CardThemeData(
+      color: Colors.white,
       elevation: 0,
-      systemOverlayStyle: SystemUiOverlayStyle(
-        statusBarColor: Colors.white, // <-- SEE HERE
-        // systemNavigationBarColor: primaryColor,
-        // systemNavigationBarIconBrightness: Brightness.dark,
-        statusBarIconBrightness:
-            Brightness.light, //<-- For Android SEE HERE (dark icons)
-        statusBarBrightness:
-            Brightness.light, //<-- For iOS SEE HERE (dark icons)
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: borderLightColor, width: 1),
+      ),
+      margin: EdgeInsets.zero,
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: borderLightColor),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: borderLightColor),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: primaryColor, width: 1.5),
+      ),
+      hintStyle: TextStyle(color: textHintColor, fontSize: 14),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
-      style: ButtonStyle(
-        side: WidgetStateProperty.all(BorderSide(color: primaryColor)),
-        foregroundColor: WidgetStateProperty.all(primaryColor),
+      style: OutlinedButton.styleFrom(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        foregroundColor: primaryColor,
+        side: BorderSide(color: primaryColor),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
       ),
     ),
-    scaffoldBackgroundColor: Constant.backgroundColor,
-    primaryColor: primaryColor,
-    focusColor: Colors.black,
-    fontFamily: 'SourceSansPro',
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: primaryColor,
-      primary: primaryColor, //<-- SEE HERE
-    ).copyWith(
-      primary: Constant.primaryColor,
-      surface: Constant.backgroundColor,
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+      backgroundColor: Colors.white,
+      selectedItemColor: primaryColor,
+      unselectedItemColor: textHintColor,
+      elevation: 8,
+      type: BottomNavigationBarType.fixed,
     ),
   );
 

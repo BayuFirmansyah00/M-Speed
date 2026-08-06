@@ -4,6 +4,7 @@ import 'package:mspeed/common/base/base_response.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/src/admin/master/model/alamat_admin_model.dart';
 import 'package:mspeed/src/admin/master/model/kategori_admin_model.dart';
+import 'package:mspeed/src/admin/master/model/materai_admin_model.dart';
 import 'package:mspeed/src/admin/master/model/kota_admin_model.dart';
 import 'package:mspeed/src/admin/master/model/pajak_admin_model.dart';
 import 'package:mspeed/src/admin/master/model/provinsi_admin_model.dart';
@@ -15,6 +16,9 @@ import 'package:dio/dio.dart';
 import 'package:mspeed/core/network/api_client.dart';
 import 'package:mspeed/src/admin/master/view/data_alamat_admin.dart';
 import 'package:mspeed/src/admin/master/view/data_kategori_admin.dart';
+import 'package:mspeed/src/admin/master/view/data_materai_admin_view.dart';
+import 'package:mspeed/src/admin/master/view/data_subdit_admin_view.dart';
+import 'package:mspeed/src/admin/master/view/data_pajak_admin.dart';
 import 'package:mspeed/utils/utils.dart';
 
 class MasterProvider extends BaseController with ChangeNotifier {
@@ -27,6 +31,7 @@ class MasterProvider extends BaseController with ChangeNotifier {
   final searchAlamatC = TextEditingController();
   final searchPajakC = TextEditingController();
   final searchKategoriC = TextEditingController();
+  final searchMateraiC = TextEditingController();
   SubditAdminModel subditAdminModel = SubditAdminModel();
   SubditAdminModel get getSubditAdminModel => this.subditAdminModel;
   set setSubditAdminModel(SubditAdminModel subditAdminModel) =>
@@ -52,16 +57,36 @@ class MasterProvider extends BaseController with ChangeNotifier {
   set setKategoriAdminModel(KategoriAdminModel kategoriAdminModel) =>
       this.kategoriAdminModel = kategoriAdminModel;
 
+  MateraiAdminModel materaiAdminModel = MateraiAdminModel();
+  MateraiAdminModel get getMateraiAdminModel => this.materaiAdminModel;
+  set setMateraiAdminModel(MateraiAdminModel materaiAdminModel) =>
+      this.materaiAdminModel = materaiAdminModel;
+
   final TextEditingController provinceC = TextEditingController();
   final TextEditingController cityC = TextEditingController();
-  final TextEditingController alamatC = TextEditingController();
+  final TextEditingController alamatC =
+      TextEditingController(); // This is 'detail'
+  final TextEditingController namaC = TextEditingController(); // This is 'name'
+  final TextEditingController nomorTeleponC =
+      TextEditingController(); // This is 'phone'
   String? selectedProvince;
   String? selectedCity;
-
+  int statusValue = 1;
   final TextEditingController pajakC = TextEditingController();
   final TextEditingController prosentaseC = TextEditingController();
+  final TextEditingController typePajakC = TextEditingController();
 
   final TextEditingController namaKategoriC = TextEditingController();
+
+  // Controllers for Materai
+  final TextEditingController typeMateraiC = TextEditingController();
+  final TextEditingController nominalMateraiC = TextEditingController();
+  final TextEditingController pathMateraiC = TextEditingController();
+  final TextEditingController orderDocumentIdMateraiC = TextEditingController();
+
+  // Controllers for Subdit
+  final TextEditingController subditCodeC = TextEditingController();
+  final TextEditingController subditNameC = TextEditingController();
 
   setData(AlamatAdminModelData? alamat) async {
     clearData();
@@ -79,6 +104,9 @@ class MasterProvider extends BaseController with ChangeNotifier {
         cityC.text = city.firstWhere((e) => e?.ID == alamat.kotaId)?.nama ?? '';
       }
       alamatC.text = alamat.nama ?? '';
+      namaC.text = alamat.recipientName ?? '';
+      nomorTeleponC.text = alamat.phone ?? '';
+      statusValue = (alamat.status ?? '1') == '1' ? 1 : 0;
     }
   }
 
@@ -88,6 +116,30 @@ class MasterProvider extends BaseController with ChangeNotifier {
     if (pajak != null) {
       pajakC.text = pajak.nama ?? '';
       prosentaseC.text = pajak.persentase ?? '';
+      typePajakC.text =
+          '1'; // Default type for existing taxes since API needs it
+    }
+  }
+
+  Future<void> setDataMaterai(MateraiAdminModelData? materai) async {
+    typeMateraiC.clear();
+    nominalMateraiC.clear();
+    pathMateraiC.clear();
+    orderDocumentIdMateraiC.clear();
+    if (materai != null) {
+      typeMateraiC.text = materai.type ?? '';
+      nominalMateraiC.text = materai.nominal ?? '';
+      pathMateraiC.text = 'dummy.pdf';
+      orderDocumentIdMateraiC.text = '1';
+    }
+  }
+
+  Future<void> setDataSubdit(SubditAdminModelData? subdit) async {
+    subditCodeC.clear();
+    subditNameC.clear();
+    if (subdit != null) {
+      subditCodeC.text = subdit.subditCode ?? '';
+      subditNameC.text = subdit.subditName ?? '';
     }
   }
 
@@ -111,13 +163,17 @@ class MasterProvider extends BaseController with ChangeNotifier {
 
   // FocusNode catatanNode = FocusNode();
 
-  Future<void> fetchAlamatAdmin(
-      {bool withLoading = false, String search = ''}) async {
+  Future<void> fetchAlamatAdmin({
+    bool withLoading = false,
+    String search = '',
+  }) async {
     if (withLoading) loading(true);
 
     try {
-      final response = await ApiClient().dio.get('/getalamatadmin',
-          queryParameters: search.isNotEmpty ? {"search": search} : {});
+      final response = await ApiClient().dio.get(
+        '/audit/v1/admin/addresses',
+        queryParameters: search.isNotEmpty ? {"search": search} : {},
+      );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         alamatAdminModel = AlamatAdminModel.fromJson(response.data);
@@ -134,13 +190,17 @@ class MasterProvider extends BaseController with ChangeNotifier {
     }
   }
 
-  Future<void> fetchPajakAdmin(
-      {bool withLoading = false, String search = ''}) async {
+  Future<void> fetchPajakAdmin({
+    bool withLoading = false,
+    String search = '',
+  }) async {
     if (withLoading) loading(true);
 
     try {
-      final response = await ApiClient().dio.get('/getpajakadmin',
-          queryParameters: search.isNotEmpty ? {"search": search} : {});
+      final response = await ApiClient().dio.get(
+        '/audit/v1/admin/taxes',
+        queryParameters: search.isNotEmpty ? {"search": search} : {},
+      );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         pajakAdminModel = PajakAdminModel.fromJson(response.data);
@@ -157,13 +217,17 @@ class MasterProvider extends BaseController with ChangeNotifier {
     }
   }
 
-  Future<void> fetchSubditAdmin(
-      {bool withLoading = false, String search = ''}) async {
+  Future<void> fetchSubditAdmin({
+    bool withLoading = false,
+    String search = '',
+  }) async {
     if (withLoading) loading(true);
 
     try {
-      final response = await ApiClient().dio.get('/audit/v1/admin/sub-direktorates',
-          queryParameters: search.isNotEmpty ? {"search": search} : {});
+      final response = await ApiClient().dio.get(
+        '/audit/v1/admin/sub-direktorates',
+        queryParameters: search.isNotEmpty ? {"search": search} : {},
+      );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         subditAdminModel = SubditAdminModel.fromJson(response.data);
@@ -180,13 +244,17 @@ class MasterProvider extends BaseController with ChangeNotifier {
     }
   }
 
-  Future<void> fetchKategoriAdmin(
-      {bool withLoading = false, String search = ''}) async {
+  Future<void> fetchKategoriAdmin({
+    bool withLoading = false,
+    String search = '',
+  }) async {
     if (withLoading) loading(true);
 
     try {
-      final response = await ApiClient().dio.get('/categories',
-          queryParameters: search.isNotEmpty ? {"search": search} : {});
+      final response = await ApiClient().dio.get(
+        '/audit/v1/admin/categories',
+        queryParameters: search.isNotEmpty ? {"search": search} : {},
+      );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         kategoriAdminModel = KategoriAdminModel.fromJson(response.data);
@@ -203,18 +271,28 @@ class MasterProvider extends BaseController with ChangeNotifier {
     }
   }
 
-  Future<void> sendKategori(BuildContext context,
-      {bool withLoading = false, String? kategoriid}) async {
+  Future<void> sendKategori(
+    BuildContext context, {
+    bool withLoading = false,
+    String? kategoriid,
+  }) async {
     if (withLoading) loading(true);
-    var param = {'nama': namaKategoriC.text};
-    var url = '/createkategoriadmin';
-    if (kategoriid != null) {
-      url = '/editkategoriadmin';
-      param.addAll({'kategori_id': kategoriid});
-    }
-    
+    var param = {'name': namaKategoriC.text};
+
     try {
-      final response = await ApiClient().dio.post(url, data: param);
+      dynamic response;
+      if (kategoriid != null) {
+        response = await ApiClient().dio.put(
+          '/audit/v1/admin/categories/$kategoriid',
+          data: param,
+        );
+      } else {
+        response = await ApiClient().dio.post(
+          '/audit/v1/admin/categories',
+          data: param,
+        );
+      }
+
       if (response.statusCode == 201 || response.statusCode == 200) {
         final message = response.data['message'] ?? 'Berhasil';
         notifyListeners();
@@ -240,9 +318,12 @@ class MasterProvider extends BaseController with ChangeNotifier {
     Map<String, dynamic> param = {};
     if (provinsiSearchC.text.isNotEmpty)
       param.addAll({'search': provinsiSearchC.text});
-    
+
     try {
-      final response = await ApiClient().dio.get('/provinces', queryParameters: param);
+      final response = await ApiClient().dio.get(
+        '/provinces',
+        queryParameters: param,
+      );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         provinsiAdminModel = ProvinsiAdminModel.fromJson(response.data);
@@ -266,9 +347,12 @@ class MasterProvider extends BaseController with ChangeNotifier {
     Map<String, dynamic> param = {};
     if (kotaSearchC.text.isNotEmpty) param.addAll({'search': kotaSearchC.text});
     param.addAll({'prov_id': "${selectedProvince ?? 0}"});
-    
+
     try {
-      final response = await ApiClient().dio.get('/cities', queryParameters: param);
+      final response = await ApiClient().dio.get(
+        '/cities',
+        queryParameters: param,
+      );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         kotaAdminModel = KotaAdminModel.fromJson(response.data);
@@ -285,27 +369,41 @@ class MasterProvider extends BaseController with ChangeNotifier {
     }
   }
 
-  Future<void> sendAlamat(BuildContext context,
-      {bool withLoading = false, String? alamatId}) async {
+  Future<void> sendAlamat(
+    BuildContext context, {
+    bool withLoading = false,
+    String? alamatId,
+  }) async {
     if (withLoading) loading(true);
     var param = {
-      'prov_id': "${selectedProvince}",
-      'kota_id': "${selectedCity}",
-      'nama': alamatC.text,
+      'name': namaC.text,
+      'phone': nomorTeleponC.text,
+      'detail': alamatC.text,
+      'status': statusValue.toString(),
+      'city_id': selectedCity ?? '1',
+      'user_data_id': '1', // required for store/update, dummy
     };
-    if (alamatId != null) param.addAll({'alamat_id': alamatId});
 
     try {
-      final response = await ApiClient().dio.post(
-          '/${alamatId != null ? 'edit' : 'create'}alamatadmin',
-          data: param);
+      dynamic response;
+      if (alamatId != null) {
+        response = await ApiClient().dio.put(
+          '/audit/v1/admin/addresses/$alamatId',
+          data: param,
+        );
+      } else {
+        response = await ApiClient().dio.post(
+          '/audit/v1/admin/addresses',
+          data: param,
+        );
+      }
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         final message = response.data['message'] ?? 'Berhasil';
         notifyListeners();
         await Utils.showSuccess(msg: message);
         await Future.delayed(Duration(seconds: 2), () {});
-        CusNav.nPushReplace(context, DataAlamatAdminView());
+        CusNav.nPushReplace(context, const DataAlamatAdminView());
         if (withLoading) loading(false);
       }
     } on DioException catch (e) {
@@ -318,13 +416,17 @@ class MasterProvider extends BaseController with ChangeNotifier {
     }
   }
 
-  Future<void> deleteAlamat(
-      {bool withLoading = false, String? alamatId}) async {
+  Future<void> deleteAlamat({
+    bool withLoading = false,
+    String? alamatId,
+  }) async {
     if (withLoading) loading(true);
 
     try {
-      final response = await ApiClient().dio.post('/hapusalamatadmin',
-          data: {'alamat_id': alamatId});
+      final response = await ApiClient().dio.post(
+        '/hapusalamatadmin',
+        data: {'alamat_id': alamatId},
+      );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         final message = response.data['message'] ?? 'Berhasil';
@@ -344,26 +446,156 @@ class MasterProvider extends BaseController with ChangeNotifier {
     }
   }
 
-  Future<void> sendPajak(BuildContext context,
-      {bool withLoading = false, String? pajakId}) async {
+  Future<void> sendPajak(
+    BuildContext context, {
+    bool withLoading = false,
+    String? pajakId,
+  }) async {
     if (withLoading) loading(true);
     var param = {
-      'nama': pajakC.text,
-      'persentase': prosentaseC.text,
+      'name': pajakC.text,
+      'percentage': prosentaseC.text,
+      'type': typePajakC.text.isNotEmpty
+          ? typePajakC.text
+          : '1', // default type
     };
-    if (pajakId != null) param.addAll({'pajak_id': pajakId});
 
     try {
-      final response = await ApiClient().dio.post(
-          '/${pajakId != null ? 'edit' : 'create'}pajakadmin',
-          data: param);
+      dynamic response;
+      if (pajakId != null) {
+        response = await ApiClient().dio.put(
+          '/audit/v1/admin/taxes/$pajakId',
+          data: param,
+        );
+      } else {
+        response = await ApiClient().dio.post(
+          '/audit/v1/admin/taxes',
+          data: param,
+        );
+      }
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         final message = response.data['message'] ?? 'Berhasil';
         notifyListeners();
         await Utils.showSuccess(msg: message);
         await Future.delayed(Duration(seconds: 2), () {});
-        CusNav.nPushReplace(context, DataAlamatAdminView());
+        CusNav.nPushReplace(context, const DataPajakAdminView());
+        if (withLoading) loading(false);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data["messages"]?["error"] ?? e.message;
+      loading(false);
+      throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
+    }
+  }
+
+  fetchMateraiAdmin({bool withLoading = true, String search = ""}) async {
+    if (withLoading) loading(true);
+
+    try {
+      final response = await ApiClient().dio.get(
+        '/audit/v1/admin/materais',
+        queryParameters: search.isNotEmpty ? {"search": search} : {},
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        print('FETCH MATERAI RESPONSE: ${response.data}');
+        materaiAdminModel = MateraiAdminModel.fromJson(response.data);
+        notifyListeners();
+      } else {
+        Utils.showFailed(
+          msg: response.data?['message'] ?? 'Gagal mengambil data materai',
+        );
+      }
+
+      if (withLoading) loading(false);
+    } catch (e) {
+      if (withLoading) loading(false);
+      Utils.showFailed(msg: 'Terjadi Kesalahan: $e');
+    }
+  }
+
+  Future<void> sendMaterai(
+    BuildContext context, {
+    bool withLoading = false,
+    String? materaiId,
+  }) async {
+    if (withLoading) loading(true);
+    var param = {
+      'type': typeMateraiC.text,
+      'nominal': nominalMateraiC.text,
+      'path': pathMateraiC.text.isNotEmpty ? pathMateraiC.text : 'dummy.pdf',
+      'order_document_id': orderDocumentIdMateraiC.text.isNotEmpty
+          ? orderDocumentIdMateraiC.text
+          : '1',
+    };
+
+    try {
+      dynamic response;
+      if (materaiId != null) {
+        response = await ApiClient().dio.put(
+          '/audit/v1/admin/materais/$materaiId',
+          data: param,
+        );
+      } else {
+        response = await ApiClient().dio.post(
+          '/audit/v1/admin/materais',
+          data: param,
+        );
+      }
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final message = response.data['message'] ?? 'Berhasil';
+        notifyListeners();
+        await Utils.showSuccess(msg: message);
+        await Future.delayed(Duration(seconds: 2), () {});
+        CusNav.nPushReplace(context, const DataMateraiAdminView());
+        if (withLoading) loading(false);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data["messages"]?["error"] ?? e.message;
+      loading(false);
+      throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<void> sendSubdit(
+    BuildContext context, {
+    bool withLoading = false,
+    String? subditId,
+  }) async {
+    if (withLoading) loading(true);
+    var param = {
+      'subdit_code': subditCodeC.text,
+      'subdit_name': subditNameC.text,
+    };
+
+    try {
+      dynamic response;
+      if (subditId != null) {
+        response = await ApiClient().dio.put(
+          '/audit/v1/admin/sub-direktorates/$subditId',
+          data: param,
+        );
+      } else {
+        response = await ApiClient().dio.post(
+          '/audit/v1/admin/sub-direktorates',
+          data: param,
+        );
+      }
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final message = response.data['message'] ?? 'Berhasil';
+        notifyListeners();
+        await Utils.showSuccess(msg: message);
+        await Future.delayed(Duration(seconds: 2), () {});
+        CusNav.nPushReplace(context, const DataSubditAdminView());
         if (withLoading) loading(false);
       }
     } on DioException catch (e) {

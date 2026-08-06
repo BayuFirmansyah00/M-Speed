@@ -67,7 +67,7 @@ class _ChatPersonViewState extends State<ChatPersonView> {
           children: [
             CircleAvatar(
               radius: 20,
-              backgroundImage: NetworkImage('https://placehold.co/400x400.jpg'),
+              backgroundImage: AssetImage(Assets.imagesImgPlaceholder),
             ),
             SizedBox(width: 10),
             Column(

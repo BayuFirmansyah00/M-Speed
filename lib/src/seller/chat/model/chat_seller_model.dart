@@ -18,6 +18,7 @@
 /// }
 /// ```
 
+import 'package:mspeed/common/model/pagination_meta_model.dart';
 class ChatSellerModelDataSeller {
   String? id;
   String? message;
@@ -142,23 +143,30 @@ class ChatSellerModelData {
   }
 }
 
+
+
 class ChatSellerModel {
   String? result;
   ChatSellerModelData? data;
+  PaginationMetaModel? meta;
 
-  ChatSellerModel({this.result, this.data});
+  ChatSellerModel({this.result, this.data, this.meta});
 
   ChatSellerModel.fromJson(Map<String, dynamic> json) {
     result = json['result']?.toString() ?? 'success';
     data = json['data'] != null
         ? ChatSellerModelData.fromJson(json['data'])
         : null;
+    if (json['meta'] != null) {
+      meta = PaginationMetaModel.fromJson(json['meta']);
+    }
   }
 
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
     data['result'] = result;
     if (this.data != null) data['data'] = this.data!.toJson();
+    if (this.meta != null) data['meta'] = this.meta!.toJson();
     return data;
   }
 }

@@ -18,9 +18,9 @@ import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
 
 class ProdukAddSellerView extends StatefulWidget {
-  ProdukAddSellerView({super.key, this.isEdit = false, this.productId});
-  bool isEdit;
-  String? productId;
+  const ProdukAddSellerView({super.key, this.isEdit = false, this.productId});
+  final bool isEdit;
+  final String? productId;
   @override
   State<ProdukAddSellerView> createState() => _ProdukAddSellerViewState();
 }

@@ -24,7 +24,7 @@ class _TransaksiAdminViewState extends State<TransaksiAdminView> {
         onTap: () => CusNav.nPush(context, DataDppAdminView()),
       ),
       _TxMenu(
-        title: 'Data Order',
+        title: 'Data Transaction',
         subtitle: 'Riwayat dan status semua pesanan',
         icon: Icons.assignment_rounded,
         gradient: [const Color(0xffF97316), const Color(0xffEA580C)],

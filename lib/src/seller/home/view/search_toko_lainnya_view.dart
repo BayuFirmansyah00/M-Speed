@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mspeed/generated/assets.dart';
 
 import '../../../buyer/seller/view/seller_home_product_view.dart';
 
@@ -99,7 +100,7 @@ class SearchTokoLainnyaView extends StatelessWidget {
       child: ListTile(
         leading: ClipRRect(
             borderRadius: BorderRadius.circular(36),
-            child: Image.network('https://via.placeholder.com/150.jpg')),
+            child: Image.asset(Assets.imagesImgPlaceholder)),
         title: Text(
           title,
           style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),

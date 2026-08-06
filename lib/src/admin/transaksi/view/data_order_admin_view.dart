@@ -97,7 +97,7 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'Data Order',
+                                  'Data Transaction',
                                   style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w700,
@@ -175,7 +175,7 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
                   ? const SliverFillRemaining(
                       child: Center(
                         child: Text(
-                          'Tidak ada data order.',
+                          'Tidak ada data transaction.',
                           style: TextStyle(color: Color(0xff8A93A3)),
                         ),
                       ),
@@ -307,8 +307,8 @@ class _OrderCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: _buildInfoIcon(Icons.person_pin_rounded,
-                            Colors.purple, 'Penerima', model.PenerimaName ?? '-'),
+                        child: _buildInfoIcon(Icons.info_outline_rounded,
+                            Colors.purple, 'Status', (model.status ?? '-').replaceAll('_', ' ')),
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,

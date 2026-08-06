@@ -11,7 +11,7 @@ import 'package:mspeed/common/component/custom_image_picker.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/common/component/custom_textfield.dart';
 import 'package:mspeed/common/helper/constant.dart';
-import 'package:mspeed/common/helper/download.dart';
+
 import 'package:mspeed/common/helper/safe_network_image.dart';
 import 'package:mspeed/generated/assets.dart';
 import 'package:mspeed/src/buyer/address/view/custom_map_view.dart';
@@ -370,12 +370,14 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
               }
               Position? pos;
               try {
+                // ignore: deprecated_member_use
                 pos = await Geolocator.getCurrentPosition(
                   forceAndroidLocationManager: true,
                   desiredAccuracy: LocationAccuracy.best,
                   timeLimit: Duration(seconds: 3),
                 ).timeout(Duration(seconds: 20));
               } catch (e) {
+                // ignore: deprecated_member_use
                 pos = await Geolocator.getLastKnownPosition(
                     forceAndroidLocationManager: true);
               }

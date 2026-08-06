@@ -29,8 +29,6 @@ class _ProdukDetailSellerViewState extends BaseState<ProdukDetailSellerView> {
   @override
   Widget build(BuildContext context) {
     final p = context.watch<ProdukSellerProvider>();
-    final data =
-        context.watch<ProdukSellerProvider>().productDetailSellerModel.data;
     final detailData = p.productDetailSellerModel.data?.produk;
     PreferredSizeWidget appBar() {
       return CustomAppBar.appBar(context, 'View Produk',
@@ -145,7 +143,7 @@ class _ProdukDetailSellerViewState extends BaseState<ProdukDetailSellerView> {
       );
     }
 
-    String deskripsi = detailData?.deskripsi ?? '-';
+    // String deskripsi = detailData?.deskripsi ?? '-';
 
     Widget kategoriDeskripsi() {
       return Padding(

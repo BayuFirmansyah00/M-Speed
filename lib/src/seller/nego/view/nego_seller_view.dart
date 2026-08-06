@@ -31,6 +31,12 @@ class _NegoSellerViewState extends State<NegoSellerView> {
   List<NegoSellerModelData?> negoData = [];
   final searchController = TextEditingController();
 
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
   refresh() async {
     final p = context.read<NegoSellerProvider>();
     await p.fetchNego(withLoading: true);

@@ -41,6 +41,12 @@ class _PesananSellerViewState extends BaseState<PesananSellerView> {
   List<PesananSellerModelData?> listPesanan = [];
   final searchController = TextEditingController();
 
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
   refresh() async {
     final p = context.read<SellerPesananProvider>();
     await p.fetchListPesanan(withLoading: true);

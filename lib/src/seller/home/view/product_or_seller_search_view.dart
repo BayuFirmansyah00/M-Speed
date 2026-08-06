@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dynamic_height_grid_view/dynamic_height_grid_view.dart';
 import 'package:flutter/material.dart';
+import 'package:mspeed/generated/assets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/common/helper/Constant.dart';
@@ -261,8 +262,8 @@ class _ProductOrSellerSearchViewState
                 children: [
                   ClipRRect(
                       borderRadius: BorderRadius.circular(36),
-                      child: Image.network(
-                        'https://via.placeholder.com/150.jpg',
+                      child: Image.asset(
+                        Assets.imagesImgPlaceholder,
                         width: 64,
                         height: 64,
                       )),

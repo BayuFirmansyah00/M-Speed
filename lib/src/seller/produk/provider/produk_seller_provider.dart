@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mspeed/common/base/base_controller.dart';
-import 'package:mspeed/common/base/base_response.dart';
 import 'package:mspeed/common/component/custom_image_picker.dart';
 import 'package:mspeed/common/helper/multipart.dart';
 import 'package:mspeed/src/buyer/product/model/product_model.dart';
@@ -14,7 +12,7 @@ import 'package:mspeed/src/seller/home/model/kategori_model.dart';
 import 'package:mspeed/src/seller/produk/model/produk_detail_seller_model.dart';
 import 'package:mspeed/src/seller/produk/model/produk_list_seller_model.dart';
 import 'package:mspeed/utils/utils.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mspeed/common/helper/session_helper.dart';
 import '../../../../common/helper/constant.dart';
 
 class ProdukSellerProvider extends BaseController with ChangeNotifier {
@@ -88,18 +86,38 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
   set produkSellerListModel(ProdukListSellerModel value) =>
       this._produkSellerListModel = value;
 
-  Future<void> fetchProductListSeller({bool withLoading = false}) async {
-    produkSellerListModel = ProdukListSellerModel();
+  int currentPage = 1;
+
+  Future<void> fetchProductListSeller({bool withLoading = false, bool isLoadMore = false}) async {
+    if (!isLoadMore) {
+      produkSellerListModel = ProdukListSellerModel();
+      currentPage = 1;
+    } else {
+      currentPage++;
+    }
+
     if (withLoading) loading(true);
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    var userId = await prefs.getString(Constant.kSetPrefId);
+    final userId = await SessionHelper.getSellerId();
     
     try {
+      // TODO: Remove per_page=${Constant.maxPaginationPerPage} when infinite scroll is fully implemented in UI
+      // Saat ini UI flutter belum memilki logic infinite scroll yang membaca currentPage.
       final response = await getRest(
-        Constant.BASE_API_FULL + '/products?seller_id=${userId ?? ''}',
+        Constant.BASE_API_FULL + '${Constant.epProducts}?seller_id=$userId&page=$currentPage&per_page=${Constant.maxPaginationPerPage}',
       );
-      produkSellerListModel = ProdukListSellerModel.fromJson(response);
+      
+      final parsed = ProdukListSellerModel.fromJson(response);
+      if (isLoadMore) {
+        produkSellerListModel.data?.addAll(parsed.data ?? []);
+        produkSellerListModel.meta = parsed.meta;
+      } else {
+        produkSellerListModel = parsed;
+      }
+      
       notifyListeners();
+    } catch (e) {
+      Utils.showFailed(msg: e.toString());
+      if (isLoadMore) currentPage--;
     } finally {
       if (withLoading) loading(false);
     }
@@ -123,7 +141,7 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
     try {
       final response = await getRest(
-        Constant.BASE_API_FULL + '/products/$productId',
+        Constant.BASE_API_FULL + '${Constant.epProducts}/$productId',
       );
       productDetailSellerModel = ProdukDetailSellerModel.fromJson(response);
       notifyListeners();
@@ -174,8 +192,7 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
     try {
       if (withLoading) loading(true);
 
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? userId = prefs.getString(Constant.kSetPrefId);
+      final userId = await SessionHelper.getSellerId();
       final data = productDetailSellerModel.data;
 
       // Prepare request body
@@ -185,7 +202,7 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
         'kategori_id': selectedKategori ?? '0',
         'qty': stokC.text,
         'deskripsi': deskripsiC.text,
-        'seller_id': userId ?? '0',
+        'seller_id': userId,
       };
 
       if (isEdit) {
@@ -381,8 +398,8 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     try {
-      final parsed = await deleteRest(
-        Constant.BASE_API_FULL + '/products/$productId',
+      await deleteRest(
+        Constant.BASE_API_FULL + '${Constant.epProducts}/$productId',
       );
       // final result = BaseResponse.from(parsed); // Usually Laravel just returns a message or success 204
       await Utils.showSuccess(msg: "Produk berhasil dihapus");

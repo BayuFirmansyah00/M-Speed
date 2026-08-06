@@ -21,8 +21,8 @@ class PajakAdminModelData {
   });
   PajakAdminModelData.fromJson(Map<String, dynamic> json) {
     id = json['id']?.toString();
-    nama = json['nama']?.toString();
-    persentase = json['persentase']?.toString();
+    nama = json['nama']?.toString() ?? json['name']?.toString();
+    persentase = json['persentase']?.toString() ?? json['percentage']?.toString();
   }
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};

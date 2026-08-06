@@ -11,28 +11,46 @@ import 'package:mspeed/src/seller/pesanan/view/pesanan_buat_surat_view.dart';
 import 'package:mspeed/src/seller/pesanan/view/upload_lampiran_view.dart';
 import 'package:path/path.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mspeed/common/helper/session_helper.dart';
+import 'package:mspeed/utils/utils.dart';
 
 class SellerPesananProvider extends BaseController with ChangeNotifier {
   var pesananSellerModel = PesananSellerModel();
+  int currentPage = 1;
   Future<void> fetchListPesanan({
     bool withLoading = false,
+    bool isLoadMore = false,
   }) async {
+    if (!isLoadMore) {
+      pesananSellerModel = PesananSellerModel();
+      currentPage = 1;
+    } else {
+      currentPage++;
+    }
+
     if (withLoading) loading(true);
     
     try {
       // Ambil seller_id dari sesi login (bukan hardcode)
-      final prefs = await SharedPreferences.getInstance();
-      final sellerId = prefs.getString(Constant.kSetPrefId) ?? '';
+      final sellerId = await SessionHelper.getSellerId();
 
+      // TODO: Remove per_page=${Constant.maxPaginationPerPage} when infinite scroll is fully implemented in UI
       final parsed = await getRest(
-        Constant.BASE_API_FULL + '/parent-orders?seller_id=$sellerId',
+        Constant.BASE_API_FULL + '${Constant.epParentOrders}?seller_id=$sellerId&page=$currentPage&per_page=${Constant.maxPaginationPerPage}',
       );
       
-      pesananSellerModel = PesananSellerModel.fromJson(parsed);
+      final responseModel = PesananSellerModel.fromJson(parsed);
+      if (isLoadMore) {
+        pesananSellerModel.data?.addAll(responseModel.data ?? []);
+        pesananSellerModel.meta = responseModel.meta;
+      } else {
+        pesananSellerModel = responseModel;
+      }
+
       notifyListeners();
     } catch (e) {
-      throw Exception(e);
+      if (isLoadMore) currentPage--;
+      Utils.showFailed(msg: e.toString());
     } finally {
       if (withLoading) loading(false);
     }
@@ -55,11 +73,10 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
 
     try {
       // Ambil seller_id dari sesi login (bukan hardcode)
-      final prefs = await SharedPreferences.getInstance();
-      final sellerId = prefs.getString(Constant.kSetPrefId) ?? '';
+      final sellerId = await SessionHelper.getSellerId();
 
       final parsed = await getRest(
-        Constant.BASE_API_FULL + '/parent-orders/$parent_id?seller_id=$sellerId',
+        Constant.BASE_API_FULL + '${Constant.epParentOrders}/$parent_id?seller_id=$sellerId',
       );
       
       detailPesananSellerModel = DetailPesananSellerModel.fromJson(parsed);
@@ -95,9 +112,9 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
     } else {
       final decoded = jsonDecode(response.body);
       final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
+      Utils.showFailed(msg: message);
       loading(false);
       return false;
-      // throw Exception(message); // exception dihilangkan karena return false
     }
   }
 
@@ -121,6 +138,7 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
     } else {
       final decoded = jsonDecode(response.body);
       final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
+      Utils.showFailed(msg: message);
       loading(false);
       return false;
     }
@@ -263,10 +281,10 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
 
       // return model;
     } else {
-      return false;
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final message = jsonDecode(response.body)["messages"]?["error"] ?? 'Terjadi kesalahan';
+      Utils.showFailed(msg: message);
       loading(false);
-      throw Exception(message);
+      return false;
     }
   }
 
@@ -290,7 +308,8 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
         return null;
       }
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final message = jsonDecode(response.body)["messages"]?["error"] ?? 'Terjadi kesalahan';
+      Utils.showFailed(msg: message);
       loading(false);
       return null;
     }

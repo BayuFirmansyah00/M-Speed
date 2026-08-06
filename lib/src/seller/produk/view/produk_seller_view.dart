@@ -36,6 +36,13 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
   List<ProdukListSellerModelData?> listProdukModel = [];
   final searchController = TextEditingController();
 
+  @override
+  void dispose() {
+    scrollC.dispose();
+    searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> refresh() async {
     final p = context.read<ProdukSellerProvider>();
     await p.fetchProductListSeller(withLoading: true);
@@ -301,7 +308,7 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
                   },
                   child: ListView.separated(
                     controller: scrollC,
-                    itemCount: listProdukModel.length ?? 0,
+                    itemCount: listProdukModel.length,
                     itemBuilder: (c, i) {
                       final item = listProdukModel[i];
                       return produkItem(item);
