@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
+import 'package:mspeed/common/helper/Constant.dart';
 import 'package:mspeed/generated/assets.dart';
 import 'package:mspeed/src/admin/master/model/kategori_admin_model.dart';
 import 'package:mspeed/src/admin/master/provider/master_provider.dart';
@@ -16,7 +17,7 @@ class DataKategoriAdminView extends StatefulWidget {
 }
 
 class _DataKategoriAdminViewState extends BaseState<DataKategoriAdminView> {
-  static const _gradient = [Color(0xffEA580C), Color(0xffC2410C)];
+  static const _gradient = [Color(0xffDC2626), Color(0xffB91C1C)];
 
   @override
   void initState() {
@@ -62,10 +63,10 @@ class _DataKategoriAdminViewState extends BaseState<DataKategoriAdminView> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xffEA580C).withValues(alpha: 0.1),
+                    color: const Color(0xffDC2626).withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: SvgPicture.asset(Assets.svgsIcAdminEdit, color: const Color(0xffEA580C), width: 18, height: 18),
+                  child: SvgPicture.asset(Assets.svgsIcAdminEdit, color: const Color(0xffDC2626), width: 18, height: 18),
                 ),
                 title: const Text('Ubah Kategori', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                 onTap: () {
@@ -101,7 +102,7 @@ class _DataKategoriAdminViewState extends BaseState<DataKategoriAdminView> {
             // ── Gradient SliverAppBar ──
             SliverAppBar(
               pinned: true,
-              expandedHeight: 120,
+              expandedHeight: 140,
               backgroundColor: _gradient[1],
               surfaceTintColor: Colors.transparent,
               leading: IconButton(
@@ -116,7 +117,7 @@ class _DataKategoriAdminViewState extends BaseState<DataKategoriAdminView> {
                   icon: Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: Colors.white.withOpacity(0.2),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
@@ -142,19 +143,19 @@ class _DataKategoriAdminViewState extends BaseState<DataKategoriAdminView> {
                           width: 120,
                           height: 120,
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.08),
+                            color: Colors.white.withOpacity(0.08),
                             shape: BoxShape.circle,
                           ),
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 60, 20, 16),
+                        padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 60, 20, 16),
                         child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.18),
+                                color: Colors.white.withOpacity(0.18),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(Icons.category_rounded,
@@ -199,7 +200,7 @@ class _DataKategoriAdminViewState extends BaseState<DataKategoriAdminView> {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
+                        color: Colors.black.withOpacity(0.04),
                         blurRadius: 10,
                         offset: const Offset(0, 3),
                       ),
@@ -261,7 +262,7 @@ class _DataKategoriAdminViewState extends BaseState<DataKategoriAdminView> {
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.04),
+                                  color: Colors.black.withOpacity(0.04),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -274,11 +275,11 @@ class _DataKategoriAdminViewState extends BaseState<DataKategoriAdminView> {
                                   Container(
                                     padding: const EdgeInsets.all(6),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xffEA580C).withValues(alpha: 0.1),
+                                      color: const Color(0xffDC2626).withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: const Icon(Icons.category_rounded,
-                                        color: Color(0xffEA580C), size: 16),
+                                        color: Color(0xffDC2626), size: 16),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(

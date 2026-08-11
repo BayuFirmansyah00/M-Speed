@@ -603,8 +603,9 @@ class _HomeViewState extends BaseState<HomeView> {
                 () async {
                   await Utils.showYesNoDialog(
                     context: context,
-                    title: "Konfirmasi",
-                    desc: "Apakah Anda Yakin Ingin Keluar?",
+                    title: 'Konfirmasi',
+                    desc: 'Apakah Anda yakin?',
+                    noCallback: () => Navigator.pop(context),
                     yesCallback: () => handleTap(() async {
                       Navigator.pop(context);
                       try {
@@ -623,7 +624,6 @@ class _HomeViewState extends BaseState<HomeView> {
                                 : "$e");
                       }
                     }),
-                    noCallback: () => Navigator.pop(context),
                   );
                 },
               )

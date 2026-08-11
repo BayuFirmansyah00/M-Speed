@@ -77,11 +77,13 @@ class PurchaseStatistics {
   int totalItemsBought;
   double totalNominalBought;
   int totalOrders;
+  double totalShippingCost;
 
   PurchaseStatistics({
     this.totalItemsBought = 0,
     this.totalNominalBought = 0.0,
     this.totalOrders = 0,
+    this.totalShippingCost = 0.0,
   });
 
   factory PurchaseStatistics.fromJson(Map<String, dynamic>? json) {
@@ -90,6 +92,7 @@ class PurchaseStatistics {
       totalItemsBought: json['total_items_bought'] ?? 0,
       totalNominalBought: (json['total_nominal_bought'] ?? 0).toDouble(),
       totalOrders: json['total_orders'] ?? 0,
+      totalShippingCost: (json['total_shipping_cost'] ?? 0).toDouble(),
     );
   }
 }
@@ -99,6 +102,7 @@ class PurchaseStatistics {
 class OrderStatusMonitoring {
   int pesananBaru;
   int approveManager;
+  int notApproveManager;
   int pesananDikirim;
   int pesananDiterima;
   int tagihan;
@@ -109,6 +113,7 @@ class OrderStatusMonitoring {
   OrderStatusMonitoring({
     this.pesananBaru = 0,
     this.approveManager = 0,
+    this.notApproveManager = 0,
     this.pesananDikirim = 0,
     this.pesananDiterima = 0,
     this.tagihan = 0,
@@ -122,6 +127,7 @@ class OrderStatusMonitoring {
     return OrderStatusMonitoring(
       pesananBaru: json['pesanan_baru'] ?? 0,
       approveManager: json['approve_manager'] ?? 0,
+      notApproveManager: json['not_approve_manager'] ?? 0,
       pesananDikirim: json['pesanan_dikirim'] ?? 0,
       pesananDiterima: json['pesanan_diterima'] ?? 0,
       tagihan: json['tagihan'] ?? 0,
@@ -134,6 +140,7 @@ class OrderStatusMonitoring {
   int get total =>
       pesananBaru +
       approveManager +
+      notApproveManager +
       pesananDikirim +
       pesananDiterima +
       tagihan +
@@ -239,6 +246,19 @@ class TopRankings {
 // ── Root Model ─────────────────────────────────────────────────────────────
 
 class HomeAdminModel {
+  // Aliases for UI compatibility
+  int get totalUser => userStatistics.activeUsers.total;
+  int get totalSeller => userStatistics.activeUsers.seller;
+  int get totalBuyer => userStatistics.activeUsers.buyer;
+  int get totalFinance => 0;
+  int get totalPenerima => userStatistics.activeUsers.receiver;
+  int get totalManager => 0;
+  int get totalAudit => 0;
+  int get totalDireksi => 0;
+  List<dynamic> get tbuyer => topRankings.buyers;
+  List<dynamic> get tseller => topRankings.sellers;
+  List<dynamic> get tproduk => topRankings.products;
+
   UserStatistics userStatistics;
   PurchaseStatistics purchaseStatistics;
   OrderStatusMonitoring orderStatusMonitoring;

@@ -170,16 +170,8 @@ class MasterProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     try {
-      final response = await ApiClient().dio.get(
-        '/audit/v1/admin/addresses',
-        queryParameters: search.isNotEmpty ? {"search": search} : {},
-      );
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        alamatAdminModel = AlamatAdminModel.fromJson(response.data);
-        notifyListeners();
-        if (withLoading) loading(false);
-      }
+      // API endpoint /audit/v1/admin/addresses TIDAK TERSEDIA DI LARAVEL
+      throw Exception('BACKEND API NOT AVAILABLE');
     } on DioException catch (e) {
       final message = e.response?.data["messages"]?["error"] ?? e.message;
       loading(false);
@@ -197,16 +189,8 @@ class MasterProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     try {
-      final response = await ApiClient().dio.get(
-        '/audit/v1/admin/taxes',
-        queryParameters: search.isNotEmpty ? {"search": search} : {},
-      );
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        pajakAdminModel = PajakAdminModel.fromJson(response.data);
-        notifyListeners();
-        if (withLoading) loading(false);
-      }
+      // API endpoint /audit/v1/admin/taxes TIDAK TERSEDIA DI LARAVEL
+      throw Exception('BACKEND API NOT AVAILABLE');
     } on DioException catch (e) {
       final message = e.response?.data["messages"]?["error"] ?? e.message;
       loading(false);
@@ -251,16 +235,8 @@ class MasterProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     try {
-      final response = await ApiClient().dio.get(
-        '/audit/v1/admin/categories',
-        queryParameters: search.isNotEmpty ? {"search": search} : {},
-      );
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        kategoriAdminModel = KategoriAdminModel.fromJson(response.data);
-        notifyListeners();
-        if (withLoading) loading(false);
-      }
+      // API endpoint /audit/v1/admin/categories TIDAK TERSEDIA DI LARAVEL
+      throw Exception('BACKEND API NOT AVAILABLE');
     } on DioException catch (e) {
       final message = e.response?.data["message"] ?? e.message;
       loading(false);
@@ -364,22 +340,8 @@ class MasterProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     try {
-      final response = await ApiClient().dio.get(
-        '/audit/v1/admin/materais',
-        queryParameters: search.isNotEmpty ? {"search": search} : {},
-      );
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        print('FETCH MATERAI RESPONSE: ${response.data}');
-        materaiAdminModel = MateraiAdminModel.fromJson(response.data);
-        notifyListeners();
-      } else {
-        Utils.showFailed(
-          msg: response.data?['message'] ?? 'Gagal mengambil data materai',
-        );
-      }
-
-      if (withLoading) loading(false);
+      // API endpoint /audit/v1/admin/materais TIDAK TERSEDIA DI LARAVEL
+      throw Exception('BACKEND API NOT AVAILABLE');
     } catch (e) {
       if (withLoading) loading(false);
       Utils.showFailed(msg: 'Terjadi Kesalahan: $e');

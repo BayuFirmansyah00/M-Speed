@@ -35,7 +35,7 @@ class _AddPajakAdminViewState extends BaseState<AddPajakAdminView> {
     final p = context.watch<MasterProvider>();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xffF5F6FA),
       appBar: CustomAppBar.appBar(
         context,
         "${widget.pajak == null ? "Buat" : "Edit"} Pajak",
@@ -43,7 +43,7 @@ class _AddPajakAdminViewState extends BaseState<AddPajakAdminView> {
         isCenter: true,
         foregroundColor: Colors.black,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -52,61 +52,64 @@ class _AddPajakAdminViewState extends BaseState<AddPajakAdminView> {
           return true;
         },
         child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CustomTextField.borderTextField(
-                  controller: p.pajakC,
-                  labelText: "Nama Pajak",
-                  hintText: 'Nama Pajak',
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xffE2E4E9), width: 1),
                 ),
-                SizedBox(height: 12),
-                CustomTextField.borderTextField(
-                  controller: p.prosentaseC,
-                  labelText: "Prosentase",
-                  hintText: 'Prosentase',
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CustomTextField.borderTextField(
+                      controller: p.pajakC,
+                      labelText: "Nama Pajak",
+                      hintText: 'Contoh: PPN, PPh',
+                    ),
+                    const SizedBox(height: 16),
+                    CustomTextField.borderTextField(
+                      controller: p.prosentaseC,
+                      labelText: "Persentase (%)",
+                      hintText: 'Contoh: 11',
+                      textInputType: TextInputType.number,
+                    ),
+                  ],
                 ),
-                SizedBox(height: 12),
-                CustomTextField.borderTextField(
-                  controller: p.typePajakC,
-                  labelText: "Tipe Pajak",
-                  hintText: 'Misal: 1 atau type_name',
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
-      bottomNavigationBar: Container(
+      bottomNavigationBar: BottomAppBar(
         color: Colors.white,
-        padding: const EdgeInsets.all(16),
-        child: SafeArea(
-          child: SizedBox(
-            height: 50,
-            child: CustomButton.mainButton('Simpan', () async {
-              await handleTap(() async {
-                Utils.showYesNoDialog(
-                  context: context,
-                  title: "Konfirmasi",
-                  desc: "Apakah Anda Yakin Ingin Menyimpan Data Ini",
-                  yesCallback: () async {
-                    handleTap(() async {
-                      CusNav.nPop(context);
-                      await context.read<MasterProvider>().sendPajak(
-                        context,
-                        pajakId: widget.pajak?.id,
-                      );
-                    });
-                  },
-                  noCallback: () {
-                    Navigator.pop(context);
-                  },
-                );
-              });
-            }, borderRadius: BorderRadius.circular(12)),
-          ),
+        child: CustomButton.mainButton(
+          'Simpan',
+          borderRadius: BorderRadius.circular(12),
+          () async {
+            await handleTap(() async {
+              Utils.showYesNoDialog(
+                context: context,
+                title: "Konfirmasi",
+                desc: "Apakah Anda Yakin Ingin Menyimpan Data Ini?",
+                yesCallback: () async {
+                  handleTap(() async {
+                    CusNav.nPop(context);
+                    await context
+                        .read<MasterProvider>()
+                        .sendPajak(context, pajakId: widget.pajak?.id);
+                  });
+                },
+                noCallback: () {
+                  Navigator.pop(context);
+                },
+              );
+            });
+          },
         ),
       ),
     );

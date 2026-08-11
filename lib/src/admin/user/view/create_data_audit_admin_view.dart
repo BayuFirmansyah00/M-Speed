@@ -18,7 +18,7 @@ class CreateDataAuditAdminView extends StatefulWidget {
 
 class _CreateDataAuditAdminViewState
     extends BaseState<CreateDataAuditAdminView> {
-  static const _gradient = [Color(0xff14B8A6), Color(0xff0F766E)];
+  static const _gradient = [Color(0xffDC2626), Color(0xffB91C1C)];
   static const _accent = Color(0xff14B8A6);
 
   bool get isEdit => widget.audit != null;
@@ -63,7 +63,7 @@ class _CreateDataAuditAdminViewState
         slivers: [
           SliverAppBar(
             pinned: true,
-            expandedHeight: 120,
+            expandedHeight: 140,
             backgroundColor: _gradient[1],
             surfaceTintColor: Colors.transparent,
             leading: IconButton(
@@ -119,42 +119,29 @@ class _CreateDataAuditAdminViewState
                   ),
                   const SizedBox(height: 14),
                   AdminFormSection(
+                    title: 'Lokasi',
+                    icon: Icons.location_on_outlined,
+                    accentColor: _accent,
+                    children: [
+                      AdminFormField(
+                          controller: p.cityC,
+                          label: 'Kota',
+                          hint: 'Masukkan kota',
+                          icon: Icons.location_city_outlined),
+                      AdminFormField(
+                          controller: p.alamatC,
+                          label: 'Alamat Lengkap',
+                          hint: 'Masukkan alamat lengkap',
+                          icon: Icons.map_outlined,
+                          maxLines: 3),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  AdminFormSection(
                     title: 'Keamanan',
                     icon: Icons.lock_outline_rounded,
                     accentColor: _accent,
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xffE2E8F0)),
-                        ),
-                        child: SwitchListTile(
-                          title: const Text(
-                            'Status Aktif',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xff1E293B),
-                            ),
-                          ),
-                          subtitle: Text(
-                            p.isActive ? 'Akun aktif dan dapat login' : 'Akun dinonaktifkan',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: p.isActive ? Colors.green : Colors.red,
-                            ),
-                          ),
-                          value: p.isActive,
-                          onChanged: (val) {
-                            setState(() {
-                              p.isActive = val;
-                            });
-                          },
-                          activeColor: _accent,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
                       AdminFormField(
                           controller: p.passwordC,
                           label: 'Password',

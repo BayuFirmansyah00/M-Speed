@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
+import 'package:mspeed/common/helper/Constant.dart';
 import 'package:mspeed/src/admin/transaksi/model/order_admin_model.dart';
 import 'package:mspeed/src/admin/transaksi/provider/transaction_admin_provider.dart';
 import 'package:mspeed/src/admin/transaksi/view/detail_pesanan_admin_view.dart';
+import 'package:mspeed/src/buyer/transaction/provider/transaction_status.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
 
@@ -14,7 +16,7 @@ class DataOrderAdminView extends StatefulWidget {
 }
 
 class _DataOrderAdminViewState extends State<DataOrderAdminView> {
-  static const _gradient = [Color(0xffF97316), Color(0xffEA580C)];
+  static const _gradient = [Color(0xffDC2626), Color(0xffB91C1C)];
 
   @override
   void initState() {
@@ -48,7 +50,7 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
             // ── Gradient SilverAppBar ──
             SliverAppBar(
               pinned: true,
-              expandedHeight: 120,
+              expandedHeight: 140,
               backgroundColor: _gradient[1],
               surfaceTintColor: Colors.transparent,
               leading: IconButton(
@@ -73,19 +75,19 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
                           width: 120,
                           height: 120,
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.08),
+                            color: Colors.white.withOpacity(0.08),
                             shape: BoxShape.circle,
                           ),
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 60, 20, 16),
+                        padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 60, 20, 16),
                         child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.18),
+                                color: Colors.white.withOpacity(0.18),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(Icons.assignment_rounded,
@@ -97,7 +99,7 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'Data Transaction',
+                                  'Data Order',
                                   style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w700,
@@ -130,7 +132,7 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
+                        color: Colors.black.withOpacity(0.04),
                         blurRadius: 10,
                         offset: const Offset(0, 3),
                       ),
@@ -175,7 +177,7 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
                   ? const SliverFillRemaining(
                       child: Center(
                         child: Text(
-                          'Tidak ada data transaction.',
+                          'Tidak ada data order.',
                           style: TextStyle(color: Color(0xff8A93A3)),
                         ),
                       ),
@@ -226,7 +228,7 @@ class _OrderCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: Colors.black.withOpacity(0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -241,45 +243,42 @@ class _OrderCard extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xffF97316).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(Icons.assignment_rounded,
-                            color: Color(0xffF97316), size: 16),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        model.nomorOrder ?? '-',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                            color: Color(0xff100629)),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xffF5F6FA),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                  Expanded(
                     child: Row(
                       children: [
-                        const Icon(Icons.calendar_today_rounded,
-                            size: 10, color: Color(0xff8A93A3)),
-                        const SizedBox(width: 4),
-                        Text(
-                          model.tglTtdSuratPesanan ?? '-',
-                          style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xff8A93A3)),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xffF97316).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.assignment_rounded,
+                              color: Color(0xffF97316), size: 16),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                model.nomorOrder ?? '-',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                    color: Color(0xff100629)),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                model.tglTtdSuratPesanan ?? '-',
+                                style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xff8A93A3)),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -307,8 +306,8 @@ class _OrderCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: _buildInfoIcon(Icons.info_outline_rounded,
-                            Colors.purple, 'Status', (model.status ?? '-').replaceAll('_', ' ')),
+                        child: _buildInfoIcon(Icons.person_pin_rounded,
+                            Colors.purple, 'Penerima', model.PenerimaName ?? '-'),
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -337,6 +336,76 @@ class _OrderCard extends StatelessWidget {
                 ],
               ),
             ),
+            const Divider(height: 1, color: Color(0xffF0F0F0)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Constant.statusColor(model.status ?? 'PESANAN_BARU').withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: Constant.statusColor(model.status ?? 'PESANAN_BARU'),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          TransactionStatus.fromString(model.status ?? 'PESANAN_BARU')
+                              .statusName()
+                              .split(' ')
+                              .map((str) => str.isNotEmpty
+                                  ? '${str[0].toUpperCase()}${str.substring(1).toLowerCase()}'
+                                  : '')
+                              .join(' '),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Constant.statusColor(model.status ?? 'PESANAN_BARU'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xffEA580C).withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Lihat Detail',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xffEA580C),
+                          ),
+                        ),
+                        SizedBox(width: 4),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 10,
+                          color: Color(0xffEA580C),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -352,7 +421,7 @@ class _OrderCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.08),
+              color: iconColor.withOpacity(0.08),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: iconColor, size: 14),

@@ -20,6 +20,7 @@ import 'package:mspeed/core/network/api_client.dart';
 import '../model/kategori_model.dart';
 
 class AdminHomeProvider extends BaseController with ChangeNotifier {
+  bool filterActiveOnly = true;
   String isSubAgent = "agen";
   Duration duration = const Duration(seconds: 2);
   int _currentIndex = 0;
@@ -126,9 +127,8 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
         // Rebuild graph dari purchase_statistics
         graphList.clear();
         biggestGraphVal = 0;
-        final totalOrders = homeAdminModel.purchaseStatistics.totalOrders;
-        graphList.add(FlSpot(0, totalOrders.toDouble()));
-        biggestGraphVal = totalOrders;
+        // API saat ini tidak mengirimkan array data grafik bulanan (monthly_purchase_qty)
+        // Jangan membuat fake data point (FlSpot). Biarkan graphList kosong agar UI menampilkan empty state.
 
         notifyListeners();
         if (withLoading) loading(false);
@@ -333,29 +333,8 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     try {
-      // GET /api/users?role=seller
-      final response = await ApiClient().dio.get('/users', queryParameters: {'role': 'seller'});
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        userData.clear();
-        sellerAdminModel = SellerAdminModel.fromJson(response.data);
-        sellerAdminModel.data?.forEach((v) {
-          userData.add(UserData(
-              name1: v?.nama,
-              name2: v?.namaPemilik,
-              email: v?.email,
-              id: v?.ID,
-              alamat: v?.alamat,
-              status: v?.status));
-        });
-
-        notifyListeners();
-        if (withLoading) loading(false);
-      }
-    } on DioException catch (e) {
-      final message = e.response?.data['message'] ?? 'Terjadi kesalahan';
-      loading(false);
-      throw Exception(message);
+      // GET /api/users?role=seller (API TIDAK TERSEDIA DI LARAVEL)
+      throw Exception('BACKEND API NOT AVAILABLE');
     } catch (e) {
       loading(false);
       throw Exception(e.toString());

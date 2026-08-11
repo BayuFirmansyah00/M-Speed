@@ -7,6 +7,17 @@ import 'package:mspeed/src/keuangan/notifikasi/model/notifikasi_keuangan_model.d
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NotifikasiKeuanganProvider extends BaseController with ChangeNotifier {
+  bool _showOneWeek = true;
+  bool get showOneWeek => _showOneWeek;
+  set showOneWeek(bool val) {
+    _showOneWeek = val;
+    notifyListeners();
+  }
+
+  // Dummy implementation to satisfy UI until API pagination is added
+  List get notificationsToDisplay => [];
+  bool get hasMoreNotifications => false;
+
   NotifikasiKeuanganModel _notifikasiModel = NotifikasiKeuanganModel();
   NotifikasiKeuanganModel get notifikasiModel => this._notifikasiModel;
   set notifikasiModel(NotifikasiKeuanganModel value) => this._notifikasiModel = value;

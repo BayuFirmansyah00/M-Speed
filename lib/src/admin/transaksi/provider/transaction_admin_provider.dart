@@ -18,19 +18,12 @@ class TransactionAdminProvider extends BaseController with ChangeNotifier {
       String search = ''}) async {
     if (withLoading) loading(true);
 
-    // GET /api/admin/dpp
-    final response = await get(Constant.BASE_API_FULL + '/admin/dpp',
-        body: search.isNotEmpty ? {"search": search} : {});
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      dpp = DppAdminModel.fromJson(jsonDecode(response.body));
-      notifyListeners();
-      if (withLoading) loading(false);
-    } else {
-      final decoded = jsonDecode(response.body);
-      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
+    try {
+      // API endpoint /admin/dpp TIDAK TERSEDIA DI LARAVEL
+      throw Exception('BACKEND API NOT AVAILABLE');
+    } catch (e) {
       loading(false);
-      throw Exception(message);
+      throw Exception(e.toString());
     }
   }
 
@@ -42,19 +35,12 @@ class TransactionAdminProvider extends BaseController with ChangeNotifier {
       String search = ''}) async {
     if (withLoading) loading(true);
 
-    // GET /api/admin/orders
-    final response = await get(Constant.BASE_API_FULL + '/admin/orders',
-        body: search.isNotEmpty ? {"search": search} : {});
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      order = OrderAdminModel.fromJson(jsonDecode(response.body));
-      notifyListeners();
-      if (withLoading) loading(false);
-    } else {
-      final decoded = jsonDecode(response.body);
-      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
+    try {
+      // API endpoint /admin/orders TIDAK TERSEDIA DI LARAVEL
+      throw Exception('BACKEND API NOT AVAILABLE');
+    } catch (e) {
       loading(false);
-      throw Exception(message);
+      throw Exception(e.toString());
     }
   }
 }

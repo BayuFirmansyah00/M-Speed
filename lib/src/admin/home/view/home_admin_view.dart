@@ -77,9 +77,9 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
     final p = context.watch<AdminHomeProvider>();
     final model = context.watch<AdminHomeProvider>().homeAdminModel;
     // final tableMostBuy =
-    //     context.watch<AdminHomeProvider>().homeAdminModel.data?.pembelian;
+    //     context.watch<AdminHomeProvider>().homeAdminModel?.pembelian;
     // final tableTransaksi =
-    //     context.watch<AdminHomeProvider>().homeAdminModel.data?.transaksi;
+    //     context.watch<AdminHomeProvider>().homeAdminModel?.transaksi;
     PreferredSizeWidget appBar() {
       final nameToShow = (p.name != null && p.name!.trim().isNotEmpty) ? p.name! : 'Admin M-Speed';
       final emailToShow = (p.email != null && p.email!.trim().isNotEmpty) ? p.email! : 'administrator@mspeed.id';
@@ -103,14 +103,14 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Constant.primaryColor, Constant.primaryColor.withValues(alpha: 0.8)],
+                colors: [Constant.primaryColor, Constant.primaryColor.withOpacity(0.8)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Constant.primaryColor.withValues(alpha: 0.24),
+                  color: Constant.primaryColor.withOpacity(0.24),
                   blurRadius: 8,
                   offset: const Offset(0, 3),
                 ),
@@ -149,18 +149,16 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
             padding: const EdgeInsets.only(right: 16),
             child: IconButton(
               style: IconButton.styleFrom(
-                backgroundColor: const Color(0xffED1C24).withValues(alpha: 0.08),
+                backgroundColor: const Color(0xffED1C24).withOpacity(0.08),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               onPressed: () {
                 handleTap(() async {
-                  Utils.showYesNoDialog(
+                  Utils.showLogoutDialog(
                     context: context,
-                    title: "Konfirmasi",
-                    desc: "Apakah Anda Yakin ingin Keluar?",
-                    yesCallback: () async {
+                    onConfirm: () async {
                       handleTap(() async {
                         await context.read<AuthProvider>().logout();
                         Navigator.pushAndRemoveUntil(
@@ -169,9 +167,6 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                           (Route<dynamic> route) => false,
                         );
                       });
-                    },
-                    noCallback: () {
-                      Navigator.pop(context);
                     },
                   );
                 });
@@ -258,65 +253,68 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
     //   );
     // }
 
-    Widget headerInfoItem2({
-      required String icon,
+    Widget headerInfoItemCompact({
+      required IconData icon,
       required String title,
       required String subtitle,
-      required List<Color> gradientColors,
-      required Color iconBg,
-      required Color countColor,
     }) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: gradientColors,
-          ),
-          borderRadius: BorderRadius.circular(20),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xffF0F0F0)),
           boxShadow: [
             BoxShadow(
-              color: gradientColors.last.withValues(alpha: 0.22),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: iconBg,
+                color: Constant.primaryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Image.asset(
+              child: Icon(
                 icon,
-                width: 18,
-                height: 18,
+                color: Constant.primaryColor,
+                size: 20,
               ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              textAlign: TextAlign.left,
-              style: TextStyle(
-                color: countColor,
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              subtitle,
-              textAlign: TextAlign.left,
-              style: const TextStyle(
-                color: Color(0xff6D7588),
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    textAlign: TextAlign.left,
+                    style: const TextStyle(
+                      color: Color(0xff100629),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    textAlign: TextAlign.left,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0xff8A93A3),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -339,7 +337,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                     gradient: const LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [Color(0xffBF83FF), Color(0xff6C47FF)],
+                      colors: [Color(0xffDC2626), Color(0xffB91C1C)],
                     ),
                     borderRadius: BorderRadius.circular(4),
                   ),
@@ -354,58 +352,89 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                   ),
                 ),
                 const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xffF3E8FF),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '${model.userStatistics.totalActive + model.userStatistics.totalInactive} total',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xffBF83FF),
+                GestureDetector(
+                  onTap: () {
+                    p.filterActiveOnly = !p.filterActiveOnly;
+                    p.fetchHome(withLoading: true);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: p.filterActiveOnly ? const Color(0xff16A34A) : Colors.white,
+                      border: Border.all(color: p.filterActiveOnly ? const Color(0xff16A34A) : const Color(0xffE2E8F0)),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: p.filterActiveOnly ? [BoxShadow(color: const Color(0xff16A34A).withOpacity(0.2), blurRadius: 4, offset: const Offset(0, 2))] : null,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          p.filterActiveOnly ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                          size: 14,
+                          color: p.filterActiveOnly ? Colors.white : const Color(0xff64748B),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Hanya Akun Aktif',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: p.filterActiveOnly ? Colors.white : const Color(0xff64748B),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 14),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 2.5,
               children: [
-                Expanded(
-                  child: headerInfoItem2(
-                    icon: Assets.iconsIcAdminTotalUser,
-                    title: '${model.userStatistics.totalActive + model.userStatistics.totalInactive}',
-                    gradientColors: const [Color(0xffFAF0FF), Color(0xffF0E2FF)],
-                    iconBg: Colors.white.withValues(alpha: 0.75),
-                    countColor: Color(0xffBF83FF),
-                    subtitle: 'Total User',
-                  ),
+                headerInfoItemCompact(
+                  icon: Icons.people_alt_rounded,
+                  title: model?.totalUser?.toString() ?? '0',
+                  subtitle: 'Semua User',
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: headerInfoItem2(
-                    icon: Assets.iconsIcAdminSeller,
-                    title: '${model.userStatistics.activeUsers.seller + model.userStatistics.inactiveUsers.seller}',
-                    subtitle: 'Seller',
-                    gradientColors: const [Color(0xffF0FFF7), Color(0xffDCFCE7)],
-                    iconBg: Colors.white.withValues(alpha: 0.75),
-                    countColor: Color(0xff1ABC62),
-                  ),
+                headerInfoItemCompact(
+                  icon: Icons.storefront_rounded,
+                  title: model?.totalSeller?.toString() ?? '0',
+                  subtitle: 'Data Seller',
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: headerInfoItem2(
-                    icon: Assets.iconsIcAdminBuyer,
-                    title: '${model.userStatistics.activeUsers.buyer + model.userStatistics.inactiveUsers.buyer}',
-                    subtitle: 'Buyer',
-                    gradientColors: const [Color(0xffFFFBF0), Color(0xffFFF4DE)],
-                    iconBg: Colors.white.withValues(alpha: 0.75),
-                    countColor: Color(0xffFF947A),
-                  ),
+                headerInfoItemCompact(
+                  icon: Icons.shopping_bag_rounded,
+                  title: model?.totalBuyer?.toString() ?? '0',
+                  subtitle: 'Data Buyer',
+                ),
+                headerInfoItemCompact(
+                  icon: Icons.account_balance_rounded,
+                  title: model?.totalFinance?.toString() ?? '0',
+                  subtitle: 'Data Finance',
+                ),
+                headerInfoItemCompact(
+                  icon: Icons.person_pin_rounded,
+                  title: model?.totalPenerima?.toString() ?? '0',
+                  subtitle: 'Data Penerima',
+                ),
+                headerInfoItemCompact(
+                  icon: Icons.manage_accounts_rounded,
+                  title: model?.totalManager?.toString() ?? '0',
+                  subtitle: 'Data Manager',
+                ),
+                headerInfoItemCompact(
+                  icon: Icons.fact_check_rounded,
+                  title: model?.totalAudit?.toString() ?? '0',
+                  subtitle: 'Data Audit',
+                ),
+                headerInfoItemCompact(
+                  icon: Icons.work_outline_rounded,
+                  title: model?.totalDireksi?.toString() ?? '0',
+                  subtitle: 'Data Direksi',
                 ),
               ],
             ),
@@ -506,7 +535,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
         isScrollControlled: true,
         isDismissible: true,
         enableDrag: true,
-        barrierColor: Colors.black.withValues(alpha: 0.5),
+        barrierColor: Colors.black.withOpacity(0.5),
         backgroundColor: Colors.transparent,
         builder: (_) => DraggableScrollableSheet(
           initialChildSize: 0.6,
@@ -526,7 +555,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
                     children: [
-                      Container(width: 36, height: 36, decoration: BoxDecoration(color: Constant.primaryColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)), child: Icon(Icons.people_alt_rounded, color: Constant.primaryColor, size: 18)),
+                      Container(width: 36, height: 36, decoration: BoxDecoration(color: Constant.primaryColor.withOpacity(0.12), borderRadius: BorderRadius.circular(10)), child: Icon(Icons.people_alt_rounded, color: Constant.primaryColor, size: 18)),
                       const SizedBox(width: 10),
                       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         const Text('Transaksi Buyer', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xff100629))),
@@ -545,21 +574,21 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                     separatorBuilder: (_, __) => const Divider(height: 1, indent: 60, endIndent: 16, color: Color(0xffF0F0F0)),
                     itemBuilder: (_, i) {
                       final item = items[i];
-                      final initial = (item?.email ?? '-').isNotEmpty ? (item?.email ?? '-')[0].toUpperCase() : '?';
+                      final initial = (item.buyerName ?? '-').isNotEmpty ? (item.buyerName ?? '-')[0].toUpperCase() : '?';
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         child: Row(
                           children: [
-                            Container(width: 34, height: 34, decoration: BoxDecoration(color: Constant.primaryColor.withValues(alpha: 0.12), shape: BoxShape.circle), alignment: Alignment.center,
+                            Container(width: 34, height: 34, decoration: BoxDecoration(color: Constant.primaryColor.withOpacity(0.12), shape: BoxShape.circle), alignment: Alignment.center,
                               child: Text(initial, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Constant.primaryColor))),
                             const SizedBox(width: 12),
                             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Text(item?.email ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xff100629))),
+                              Text(item.buyerName ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xff100629))),
                               const SizedBox(height: 2),
-                              Text('\${item?.qty} transaksi', style: const TextStyle(fontSize: 11, color: Color(0xff8A93A3))),
+                              Text('\${item.totalTransactions} transaksi', style: const TextStyle(fontSize: 11, color: Color(0xff8A93A3))),
                             ])),
                             const SizedBox(width: 8),
-                            Text(Utils.thousandSeparator(int.parse(item?.harga ?? '0')), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Constant.primaryColor)),
+                            Text(Utils.thousandSeparator(double.parse(item.totalSpent?.toString() ?? '0').toInt()), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Constant.primaryColor)),
                           ],
                         ),
                       );
@@ -574,14 +603,14 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
     }
 
     Widget buyerTransaction() {
-      final items = model.topRankings.buyers;
+      final List<dynamic> items = model?.tbuyer ?? [];
       final preview = items.take(3).toList();
       return Container(
         margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 18, offset: const Offset(0, 6))],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 18, offset: const Offset(0, 6))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -590,13 +619,13 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
               decoration: BoxDecoration(
                 gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  colors: [Constant.primaryColor.withValues(alpha: 0.07), Constant.primaryColor.withValues(alpha: 0.13)]),
+                  colors: [Constant.primaryColor.withOpacity(0.07), Constant.primaryColor.withOpacity(0.13)]),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
               ),
               child: Row(
                 children: [
                   Container(width: 38, height: 38,
-                    decoration: BoxDecoration(color: Constant.primaryColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(color: Constant.primaryColor.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
                     child: Icon(Icons.people_alt_rounded, color: Constant.primaryColor, size: 20)),
                   const SizedBox(width: 12),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -606,7 +635,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                   ])),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                    decoration: BoxDecoration(color: Constant.primaryColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
+                    decoration: BoxDecoration(color: Constant.primaryColor.withOpacity(0.12), borderRadius: BorderRadius.circular(20)),
                     child: Text('${items.length} buyer', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Constant.primaryColor)),
                   ),
                 ],
@@ -622,7 +651,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
               ...List.generate(preview.length, (i) {
                 final item = preview[i];
                 final isLast = i == preview.length - 1 && items.length <= 3;
-                final initial = (item.buyerName).isNotEmpty ? item.buyerName[0].toUpperCase() : '?';
+                final initial = (item.buyerName ?? '-').isNotEmpty ? (item.buyerName ?? '-')[0].toUpperCase() : '?';
                 return Column(
                   children: [
                     Padding(
@@ -630,17 +659,17 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                       child: Row(
                         children: [
                           Container(width: 34, height: 34,
-                            decoration: BoxDecoration(color: Constant.primaryColor.withValues(alpha: 0.12), shape: BoxShape.circle),
+                            decoration: BoxDecoration(color: Constant.primaryColor.withOpacity(0.12), shape: BoxShape.circle),
                             alignment: Alignment.center,
                             child: Text(initial, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Constant.primaryColor))),
                           const SizedBox(width: 12),
                           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text(item.buyerName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xff100629))),
+                            Text(item.buyerName ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xff100629))),
                             const SizedBox(height: 2),
                             Text('${item.totalTransactions} transaksi', style: const TextStyle(fontSize: 11, color: Color(0xff8A93A3))),
                           ])),
                           const SizedBox(width: 8),
-                          Text(Utils.thousandSeparator(item.totalSpent.toInt()), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Constant.primaryColor)),
+                          Text(Utils.thousandSeparator(double.parse(item.totalSpent?.toString() ?? '0').toInt()), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Constant.primaryColor)),
                         ],
                       ),
                     ),
@@ -655,9 +684,9 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                   margin: const EdgeInsets.fromLTRB(16, 4, 16, 14),
                   padding: const EdgeInsets.symmetric(vertical: 11),
                   decoration: BoxDecoration(
-                    color: Constant.primaryColor.withValues(alpha: 0.08),
+                    color: Constant.primaryColor.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Constant.primaryColor.withValues(alpha: 0.2)),
+                    border: Border.all(color: Constant.primaryColor.withOpacity(0.2)),
                   ),
                   child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                     Text('Lihat Selengkapnya', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Constant.primaryColor)),
@@ -681,7 +710,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
+              color: Colors.black.withOpacity(0.06),
               blurRadius: 18,
               offset: const Offset(0, 6),
             ),
@@ -697,7 +726,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xffFFF8EF), Color(0xffFFF3E4)],
+                  colors: [Color(0xffEFF6FF), Color(0xffDBEAFE)],
                 ),
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
@@ -708,12 +737,12 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      color: const Color(0xffFF9900).withValues(alpha: 0.15),
+                      color: const Color(0xff3B82F6).withOpacity(0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
                       Icons.shopping_bag_rounded,
-                      color: Color(0xffF58B2B),
+                      color: Color(0xff3B82F6),
                       size: 20,
                     ),
                   ),
@@ -752,7 +781,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xffF58B2B),
+                          color: Color(0xff3B82F6),
                         ),
                       ),
                     ],
@@ -782,7 +811,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
+              color: Colors.black.withOpacity(0.06),
               blurRadius: 18,
               offset: const Offset(0, 6),
             ),
@@ -798,7 +827,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xffF0FFF9), Color(0xffDCFCE7)],
+                  colors: [Color(0xffF0FDF4), Color(0xffDCFCE7)],
                 ),
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
@@ -808,12 +837,12 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                     width: 38,
                     height: 38,
                     decoration: BoxDecoration(
-                      color: const Color(0xff1ABC62).withValues(alpha: 0.15),
+                      color: const Color(0xff16A34A).withOpacity(0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
                       Icons.receipt_long_rounded,
-                      color: Color(0xff1ABC62),
+                      color: Color(0xff16A34A),
                       size: 20,
                     ),
                   ),
@@ -844,7 +873,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xff1ABC62).withValues(alpha: 0.12),
+                      color: const Color(0xff16A34A).withOpacity(0.12),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Text(
@@ -852,7 +881,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xff1ABC62),
+                        color: Color(0xff16A34A),
                       ),
                     ),
                   ),
@@ -879,7 +908,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
         isScrollControlled: true,
         isDismissible: true,
         enableDrag: true,
-        barrierColor: Colors.black.withValues(alpha: 0.5),
+        barrierColor: Colors.black.withOpacity(0.5),
         backgroundColor: Colors.transparent,
         builder: (_) => DraggableScrollableSheet(
           initialChildSize: 0.6,
@@ -899,11 +928,11 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
                     children: [
-                      Container(width: 36, height: 36, decoration: BoxDecoration(color: const Color(0xffFFF4DE), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.star_rounded, color: Color(0xffFF947A), size: 18)),
+                      Container(width: 36, height: 36, decoration: BoxDecoration(color: const Color(0xffD97706).withOpacity(0.1), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.star_rounded, color: Color(0xffD97706), size: 18)),
                       const SizedBox(width: 10),
                       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         const Text('Produk Terfavorit', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xff100629))),
-                        Text('${items.length} produk', style: const TextStyle(fontSize: 12, color: Color(0xffFF947A))),
+                        Text('${items.length} produk', style: const TextStyle(fontSize: 12, color: Color(0xffD97706))),
                       ]),
                     ],
                   ),
@@ -924,15 +953,15 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         child: Row(
                           children: [
-                            Container(width: 30, height: 30, decoration: BoxDecoration(color: rankColor.withValues(alpha: 0.15), shape: BoxShape.circle), alignment: Alignment.center,
+                            Container(width: 30, height: 30, decoration: BoxDecoration(color: rankColor.withOpacity(0.15), shape: BoxShape.circle), alignment: Alignment.center,
                               child: Text('#${i+1}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: rankColor))),
                             const SizedBox(width: 12),
-                            Expanded(child: Text(item?.nama ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xff100629)))),
+                            Expanded(child: Text(item.productName ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xff100629)))),
                             const SizedBox(width: 8),
                             Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: const Color(0xffF5F6FA), borderRadius: BorderRadius.circular(8)),
-                              child: Text('${item?.qty} pcs', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xff6D7588)))),
+                              child: Text('${item.totalSold} pcs', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xff6D7588)))),
                             const SizedBox(width: 8),
-                            Text(Utils.thousandSeparator(int.parse(item?.harga ?? '0')), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xffFF947A))),
+                            Text(Utils.thousandSeparator(double.parse(item.totalRevenue?.toString() ?? '0').toInt()), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xffD97706))),
                           ],
                         ),
                       );
@@ -947,14 +976,14 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
     }
 
     Widget favouriteProduct() {
-      final items = model.topRankings.products;
+      final List<dynamic> items = model?.tproduk ?? [];
       final preview = items.take(3).toList();
       return Container(
         margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 18, offset: const Offset(0, 6))],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 18, offset: const Offset(0, 6))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -963,13 +992,13 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  colors: [Color(0xffFFFBF5), Color(0xffFFF4DE)]),
+                  colors: [Color(0xffFFFBEB), Color(0xffFEF3C7)]),
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
               child: Row(
                 children: [
-                  Container(width: 38, height: 38, decoration: BoxDecoration(color: const Color(0xffFF947A).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
-                    child: const Icon(Icons.star_rounded, color: Color(0xffFF947A), size: 20)),
+                  Container(width: 38, height: 38, decoration: BoxDecoration(color: const Color(0xffD97706).withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
+                    child: const Icon(Icons.star_rounded, color: Color(0xffD97706), size: 20)),
                   const SizedBox(width: 12),
                   const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text('Produk Terfavorit', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xff100629))),
@@ -978,8 +1007,8 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                   ])),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                    decoration: BoxDecoration(color: const Color(0xffFF947A).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
-                    child: Text('${items.length} produk', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xffFF947A))),
+                    decoration: BoxDecoration(color: const Color(0xffD97706).withOpacity(0.12), borderRadius: BorderRadius.circular(20)),
+                    child: Text('${items.length} produk', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xffD97706))),
                   ),
                 ],
               ),
@@ -1002,15 +1031,15 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       child: Row(
                         children: [
-                          Container(width: 30, height: 30, decoration: BoxDecoration(color: rankColor.withValues(alpha: 0.15), shape: BoxShape.circle), alignment: Alignment.center,
+                          Container(width: 30, height: 30, decoration: BoxDecoration(color: rankColor.withOpacity(0.15), shape: BoxShape.circle), alignment: Alignment.center,
                             child: Text('#${i+1}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: rankColor))),
                           const SizedBox(width: 12),
-                          Expanded(child: Text(item.productName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xff100629)))),
+                          Expanded(child: Text(item.productName ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xff100629)))),
                           const SizedBox(width: 8),
                           Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: const Color(0xffF5F6FA), borderRadius: BorderRadius.circular(8)),
                             child: Text('${item.totalSold} pcs', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xff6D7588)))),
                           const SizedBox(width: 8),
-                          Text(Utils.thousandSeparator(item.totalRevenue.toInt()), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xffFF947A))),
+                          Text(Utils.thousandSeparator(double.parse(item.totalRevenue?.toString() ?? '0').toInt()), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xffD97706))),
                         ],
                       ),
                     ),
@@ -1025,14 +1054,14 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                   margin: const EdgeInsets.fromLTRB(16, 4, 16, 14),
                   padding: const EdgeInsets.symmetric(vertical: 11),
                   decoration: BoxDecoration(
-                    color: const Color(0xffFF947A).withValues(alpha: 0.08),
+                    color: const Color(0xffD97706).withOpacity(0.08),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xffFF947A).withValues(alpha: 0.2)),
+                    border: Border.all(color: const Color(0xffD97706).withOpacity(0.2)),
                   ),
                   child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Text('Lihat Selengkapnya', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xffFF947A))),
+                    Text('Lihat Selengkapnya', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xffD97706))),
                     SizedBox(width: 4),
-                    Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xffFF947A)),
+                    Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xffD97706)),
                   ]),
                 ),
               )
@@ -1050,7 +1079,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
         isScrollControlled: true,
         isDismissible: true,
         enableDrag: true,
-        barrierColor: Colors.black.withValues(alpha: 0.5),
+        barrierColor: Colors.black.withOpacity(0.5),
         backgroundColor: Colors.transparent,
         builder: (_) => DraggableScrollableSheet(
           initialChildSize: 0.6,
@@ -1070,11 +1099,11 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
                     children: [
-                      Container(width: 36, height: 36, decoration: BoxDecoration(color: const Color(0xffF3E8FF), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.storefront_rounded, color: Color(0xff9B59B6), size: 18)),
+                      Container(width: 36, height: 36, decoration: BoxDecoration(color: const Color(0xff9333EA).withOpacity(0.1), borderRadius: BorderRadius.circular(10)), child: const Icon(Icons.storefront_rounded, color: Color(0xff9333EA), size: 18)),
                       const SizedBox(width: 10),
                       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                         const Text('Penjualan Seller', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xff100629))),
-                        Text('${items.length} seller', style: const TextStyle(fontSize: 12, color: Color(0xff9B59B6))),
+                        Text('${items.length} seller', style: const TextStyle(fontSize: 12, color: Color(0xff9333EA))),
                       ]),
                     ],
                   ),
@@ -1089,21 +1118,21 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                     separatorBuilder: (_, __) => const Divider(height: 1, indent: 60, endIndent: 16, color: Color(0xffF0F0F0)),
                     itemBuilder: (_, i) {
                       final item = items[i];
-                      final initial = (item?.email ?? '-').isNotEmpty ? (item?.email ?? '-')[0].toUpperCase() : '?';
+                      final initial = (item.sellerName ?? '-').isNotEmpty ? (item.sellerName ?? '-')[0].toUpperCase() : '?';
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         child: Row(
                           children: [
-                            Container(width: 34, height: 34, decoration: const BoxDecoration(color: Color(0xffF3E8FF), shape: BoxShape.circle), alignment: Alignment.center,
-                              child: Text(initial, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xff9B59B6)))),
+                            Container(width: 34, height: 34, decoration: BoxDecoration(color: const Color(0xff9333EA).withOpacity(0.1), shape: BoxShape.circle), alignment: Alignment.center,
+                              child: Text(initial, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xff9333EA)))),
                             const SizedBox(width: 12),
                             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                              Text(item?.email ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xff100629))),
+                              Text(item.sellerName ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xff100629))),
                               const SizedBox(height: 2),
-                              Text('${item?.qty} penjualan', style: const TextStyle(fontSize: 11, color: Color(0xff8A93A3))),
+                              Text('${item.totalSalesOrders} penjualan', style: const TextStyle(fontSize: 11, color: Color(0xff8A93A3))),
                             ])),
                             const SizedBox(width: 8),
-                            Text(Utils.thousandSeparator(int.parse(item?.harga ?? '0')), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xff9B59B6))),
+                            Text(Utils.thousandSeparator(double.parse(item.totalRevenue?.toString() ?? '0').toInt()), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xffDC2626))),
                           ],
                         ),
                       );
@@ -1118,14 +1147,14 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
     }
 
     Widget sellerTransaction() {
-      final items = model.topRankings.sellers;
+      final List<dynamic> items = model?.tseller ?? [];
       final preview = items.take(3).toList();
       return Container(
         margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 18, offset: const Offset(0, 6))],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 18, offset: const Offset(0, 6))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1134,13 +1163,13 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
-                  colors: [Color(0xffFDF5FF), Color(0xffF3E8FF)]),
+                  colors: [Color(0xffFAF5FF), Color(0xffF3E8FF)]),
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
               child: Row(
                 children: [
-                  Container(width: 38, height: 38, decoration: BoxDecoration(color: const Color(0xff9B59B6).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
-                    child: const Icon(Icons.storefront_rounded, color: Color(0xff9B59B6), size: 20)),
+                  Container(width: 38, height: 38, decoration: BoxDecoration(color: const Color(0xff9333EA).withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
+                    child: const Icon(Icons.storefront_rounded, color: Color(0xff9333EA), size: 20)),
                   const SizedBox(width: 12),
                   const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text('Penjualan Seller', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xff100629))),
@@ -1149,8 +1178,8 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                   ])),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                    decoration: BoxDecoration(color: const Color(0xff9B59B6).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(20)),
-                    child: Text('${items.length} seller', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xff9B59B6))),
+                    decoration: BoxDecoration(color: const Color(0xff9333EA).withOpacity(0.12), borderRadius: BorderRadius.circular(20)),
+                    child: Text('${items.length} seller', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xff9333EA))),
                   ),
                 ],
               ),
@@ -1165,23 +1194,25 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
               ...List.generate(preview.length, (i) {
                 final item = preview[i];
                 final isLast = i == preview.length - 1 && items.length <= 3;
-                final initial = item.sellerName.isNotEmpty ? item.sellerName[0].toUpperCase() : '?';
+                final initial = (item.sellerName ?? '-').isNotEmpty ? (item.sellerName ?? '-')[0].toUpperCase() : '?';
                 return Column(
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       child: Row(
                         children: [
-                          Container(width: 34, height: 34, decoration: const BoxDecoration(color: Color(0xffF3E8FF), shape: BoxShape.circle), alignment: Alignment.center,
-                            child: Text(initial, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xff9B59B6)))),
+                          Container(width: 34, height: 34,
+                            decoration: BoxDecoration(color: const Color(0xffD97706).withOpacity(0.12), shape: BoxShape.circle),
+                            alignment: Alignment.center,
+                            child: Text(initial, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xffD97706)))),
                           const SizedBox(width: 12),
                           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text(item.sellerCompanyName.isNotEmpty ? item.sellerCompanyName : item.sellerName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xff100629))),
+                            Text(item.sellerName ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xff100629))),
                             const SizedBox(height: 2),
                             Text('${item.totalSalesOrders} penjualan', style: const TextStyle(fontSize: 11, color: Color(0xff8A93A3))),
                           ])),
                           const SizedBox(width: 8),
-                          Text(Utils.thousandSeparator(item.totalRevenue.toInt()), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xff9B59B6))),
+                          Text(Utils.thousandSeparator(double.parse(item.totalRevenue?.toString() ?? '0').toInt()), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xffD97706))),
                         ],
                       ),
                     ),
@@ -1196,14 +1227,14 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                   margin: const EdgeInsets.fromLTRB(16, 4, 16, 14),
                   padding: const EdgeInsets.symmetric(vertical: 11),
                   decoration: BoxDecoration(
-                    color: const Color(0xff9B59B6).withValues(alpha: 0.08),
+                    color: const Color(0xff9333EA).withOpacity(0.08),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xff9B59B6).withValues(alpha: 0.2)),
+                    border: Border.all(color: const Color(0xff9333EA).withOpacity(0.2)),
                   ),
                   child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Text('Lihat Selengkapnya', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xff9B59B6))),
+                    Text('Lihat Selengkapnya', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xff9333EA))),
                     SizedBox(width: 4),
-                    Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xff9B59B6)),
+                    Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xff9333EA)),
                   ]),
                 ),
               )
@@ -1226,7 +1257,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
               children: [
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  color: Constant.grayColor.withValues(alpha: 0.5),
+                  color: Constant.grayColor.withOpacity(0.5),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -1292,7 +1323,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
               children: [
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  color: Constant.grayColor.withValues(alpha: 0.5),
+                  color: Constant.grayColor.withOpacity(0.5),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -1363,7 +1394,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
               children: [
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  color: Constant.grayColor.withValues(alpha: 0.5),
+                  color: Constant.grayColor.withOpacity(0.5),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -1457,7 +1488,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: Colors.black.withOpacity(0.05),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -1502,7 +1533,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                                     horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
                                   color:
-                                      Constant.primaryColor.withValues(alpha: 0.10),
+                                      Constant.primaryColor.withOpacity(0.10),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
@@ -1668,7 +1699,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                                               ? [
                                                   BoxShadow(
                                                     color: Colors.black
-                                                        .withValues(alpha: 0.08),
+                                                        .withOpacity(0.08),
                                                     blurRadius: 8,
                                                     offset:
                                                         const Offset(0, 2),
@@ -1731,7 +1762,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                                               ? [
                                                   BoxShadow(
                                                     color: Colors.black
-                                                        .withValues(alpha: 0.08),
+                                                        .withOpacity(0.08),
                                                     blurRadius: 8,
                                                     offset:
                                                         const Offset(0, 2),
@@ -1842,7 +1873,7 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                                     boxShadow: [
                                       BoxShadow(
                                         color: Constant.primaryColor
-                                            .withValues(alpha: 0.28),
+                                            .withOpacity(0.28),
                                         blurRadius: 12,
                                         offset: const Offset(0, 4),
                                       ),

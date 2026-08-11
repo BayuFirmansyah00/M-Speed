@@ -979,6 +979,76 @@ class Utils {
     if (s.length <= 1) return s;
     return s[0].toUpperCase() + s.substring(1);
   }
+
+  static Future showLogoutDialog({
+    required BuildContext context,
+    required VoidCallback onConfirm,
+  }) {
+    return showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: Color(0xffFEF2F2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.logout_rounded, color: Color(0xffDC2626), size: 32),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Konfirmasi Keluar',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xff100629)),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Apakah Anda yakin ingin keluar dari sesi ini? Anda perlu masuk kembali untuk mengakses akun Anda.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: Color(0xff8A93A3), height: 1.4),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: const BorderSide(color: Color(0xffE4E6EF)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: const Text('Batal', style: TextStyle(color: Color(0xff6D7588), fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: onConfirm,
+                      style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        backgroundColor: const Color(0xffDC2626),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: const Text('Ya, Keluar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class CurrencyInputFormatter extends TextInputFormatter {

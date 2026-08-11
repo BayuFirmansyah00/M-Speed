@@ -8,7 +8,7 @@ import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/core/network/api_client.dart';
 import 'package:dio/dio.dart';
 import 'package:mspeed/common/helper/constant.dart';
-import 'package:mspeed/src/admin/home/model/seller_admin_model.dart';
+import 'package:mspeed/src/admin/user/model/seller_admin_model.dart';
 import 'package:mspeed/src/admin/master/model/subdit_admin_model.dart';
 import 'package:mspeed/src/admin/user/view/user_data_admin_view.dart';
 import 'package:flutter/material.dart';
@@ -128,31 +128,8 @@ class AdminFormSellerProvider extends BaseController with ChangeNotifier {
     }
 
     try {
-      final isEdit = sellerId != null;
-      final url = isEdit
-          ? '/audit/v1/admin/direksi/$sellerId'
-          : '/audit/v1/admin/direksi';
-
-      final response = isEdit
-          ? await ApiClient().dio.put(url, data: param)
-          : await ApiClient().dio.post(url, data: param);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        notifyListeners();
-        await Utils.showSuccess(msg: 'Data direksi berhasil disimpan!');
-        await Future.delayed(Duration(seconds: 2), () {});
-        CusNav.nPushReplace(
-          context,
-          UserDataAdminView(userType: UserDataType.SELLER),
-        );
-      }
-    } on DioException catch (e) {
-      var decoded = e.response?.data;
-      String errorMessage = 'Terjadi kesalahan saat menyimpan data.';
-      if (decoded != null && decoded['message'] != null) {
-        errorMessage = decoded['message'];
-      }
-      Utils.showFailed(msg: errorMessage);
+      // API endpoint CRUD Seller untuk Admin TIDAK TERSEDIA DI LARAVEL
+      throw Exception('BACKEND API NOT AVAILABLE');
     } catch (e) {
       Utils.showFailed(msg: e.toString());
     } finally {
@@ -169,19 +146,8 @@ class AdminFormSellerProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     try {
-      final response = await ApiClient().dio.delete(
-        '/audit/v1/admin/direksi/$sellerId',
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        notifyListeners();
-        await Utils.showSuccess(msg: 'Data direksi berhasil dihapus!');
-        await Future.delayed(Duration(seconds: 2), () {});
-        CusNav.nPushReplace(
-          context,
-          UserDataAdminView(userType: UserDataType.SELLER),
-        );
-      }
+      // API endpoint CRUD Seller untuk Admin TIDAK TERSEDIA DI LARAVEL
+      throw Exception('BACKEND API NOT AVAILABLE');
     } catch (e) {
       Utils.showFailed(msg: e.toString());
     } finally {

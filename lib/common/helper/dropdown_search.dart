@@ -14,10 +14,15 @@ class CustomDropdownSearch {
     Color? borderColor,
     Color? hintColor,
     required Function(String?)? onChanged,
+    bool enabled = true,
+    Key? dropdownKey,
   }) {
     return Theme(
       data: ThemeData(scaffoldBackgroundColor: Colors.white),
-      child: DropdownSearch<String>(
+      child: IgnorePointer(
+        ignoring: !enabled,
+        child: DropdownSearch<String>(
+          key: dropdownKey,
         popupProps: PopupProps.dialog(
           showSearchBox: true,
           showSelectedItems: true,
@@ -75,22 +80,28 @@ class CustomDropdownSearch {
               ),
         ),
         onSelected: onChanged,
+        ),
       ),
     );
   }
 
   Widget dropdownSearchMapType(
-      {String? label,
+      {Key? dropdownKey,
+      String? label,
       required String hint,
       required List<Map<String, String>> list,
       bool required = false,
+      bool enabled = true,
       Map<String, String>? selectedItem,
       InputDecoration? inputDecoration,
       Widget? icon,
       required Function(Map<String, String>?)? onChanged}) {
     return Theme(
       data: ThemeData(scaffoldBackgroundColor: Colors.white),
-      child: DropdownSearch<Map<String, String>>(
+      child: IgnorePointer(
+        ignoring: !enabled,
+        child: DropdownSearch<Map<String, String>>(
+          key: dropdownKey,
         popupProps: PopupProps.dialog(
           showSearchBox: true,
           showSelectedItems: true,
@@ -144,6 +155,7 @@ class CustomDropdownSearch {
               ),
         ),
         onSelected: onChanged,
+        ),
       ),
     );
   }

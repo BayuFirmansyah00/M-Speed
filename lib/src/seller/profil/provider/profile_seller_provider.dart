@@ -454,4 +454,14 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
       throw Exception(message);
     }
   }
+
+  Future<String?> fetchTemplateNonPKPSeller({bool withLoading = false}) async {
+    Utils.showFailed(msg: 'Fitur belum tersedia (BACKEND API NOT AVAILABLE)');
+    return null;
+  }
+
+  Future<bool> addTtdNonPkpSeller({bool withLoading = false}) async {
+    Utils.showFailed(msg: 'Fitur belum tersedia (BACKEND API NOT AVAILABLE)');
+    return false;
+  }
 }

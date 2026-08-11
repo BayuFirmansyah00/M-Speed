@@ -88,7 +88,7 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
               p.stokC.clear();
               p.selectedKategori = null;
               p.deskripsiC.clear();
-              await CusNav.nPush(context, const ProdukAddSellerView());
+              await CusNav.nPush(context, ProdukAddSellerView());
               refresh();
             },
             child: Container(

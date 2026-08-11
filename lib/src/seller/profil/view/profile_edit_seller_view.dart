@@ -11,18 +11,76 @@ import 'package:mspeed/common/component/custom_image_picker.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/common/component/custom_textfield.dart';
 import 'package:mspeed/common/helper/constant.dart';
-
+import 'package:mspeed/common/helper/download.dart';
 import 'package:mspeed/common/helper/safe_network_image.dart';
 import 'package:mspeed/generated/assets.dart';
 import 'package:mspeed/src/buyer/address/view/custom_map_view.dart';
 import 'package:mspeed/src/buyer/address/view/search_location_view.dart';
+import 'package:mspeed/src/buyer/address/view/search_location_view.dart';
 import 'package:mspeed/src/buyer/transaction/widget/submit_ttd_widget.dart';
 import 'package:mspeed/src/seller/profil/provider/profile_seller_provider.dart';
 import 'package:mspeed/utils/utils.dart';
-import 'package:provider/provider.dart';
 import 'package:path/path.dart' as path;
+import 'package:provider/provider.dart';
+import 'package:mspeed/src/admin/user/view/admin_form_widgets.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+
+class _FileButton extends StatelessWidget {
+  final String title;
+  final String? fileName;
+  final VoidCallback onChoose;
+  const _FileButton({required this.title, this.fileName, required this.onChoose});
+
+  @override
+  Widget build(BuildContext context) {
+    const accent = Color(0xff059669);
+    return GestureDetector(
+      onTap: onChoose,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: fileName != null && fileName!.isNotEmpty ? accent.withOpacity(0.06) : const Color(0xffF8F9FC),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: fileName != null && fileName!.isNotEmpty ? accent.withOpacity(0.3) : const Color(0xffE2E4E9),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: accent.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                fileName != null && fileName!.isNotEmpty ? Icons.check_circle_outline_rounded : Icons.upload_file_outlined,
+                color: accent, size: 16,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xff4A5568))),
+                  if (fileName != null && fileName!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(fileName!, style: const TextStyle(fontSize: 11, color: accent), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ] else
+                    const Text('Tap untuk memilih file', style: TextStyle(fontSize: 11, color: Color(0xffA0AEC0))),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: Color(0xffA0AEC0), size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class ProfileEditSellerView extends StatefulWidget {
   const ProfileEditSellerView({super.key});
@@ -45,7 +103,8 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
     loading(true);
     await p.fetchKota();
     await p.fetchProvinsi();
-    await p.fetchProfile(context, withLoading: false);
+    // p.locationCoordinate = LatLng(-7.1144282, 112.4069792);
+    // await p.setMapLocation(PickedData(LatLng(-7.1144282, 112.4069792), ''));
     await p.initEditProfile();
     // p.geolocatorSubscription =
     //     Geolocator.getPositionStream().listen(await p.geolocatorListener);
@@ -65,16 +124,22 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
   Widget build(BuildContext context) {
     final p = context.watch<ProfileSellerProvider>();
     PreferredSizeWidget appBar() {
-      return CustomAppBar.appBar(
-        context,
-        'Edit Profile',
-        color: Colors.white,
-        isCenter: true,
-        onBack: () {
-          p.disposeEditProfile();
-          CusNav.nPop(context);
-        },
-        textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+      return AppBar(
+        title: const Text(
+          'Edit Profile',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        centerTitle: true,
+        backgroundColor: const Color(0xff059669),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () {
+            p.disposeEditProfile();
+            CusNav.nPop(context);
+          },
+        ),
       );
     }
 
@@ -107,35 +172,62 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
     }
 
     Widget header() {
-      return Column(
-        children: [
-          Constant.xSizedBox12,
-          ClipRRect(borderRadius: BorderRadius.circular(120), child: photo()),
-          Constant.xSizedBox8,
-          InkWell(
-            onTap: () async {
-              p.profileFile = await CustomImagePicker.cameraOrGallery(context);
-              setState(() {});
-            },
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: Image.asset(Assets.iconsIcEditBlue)),
-                Constant.xSizedBox8,
-                Text(
-                  'Ubah Foto Profile',
-                  style: TextStyle(
-                    color: Constant.blueGreenColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xff059669), Color(0xff10B981)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(32),
+            bottomRight: Radius.circular(32),
+          ),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              child: ClipRRect(borderRadius: BorderRadius.circular(120), child: photo()),
             ),
-          )
-        ],
+            Constant.xSizedBox16,
+            InkWell(
+              onTap: () async {
+                p.profileFile = await CustomImagePicker.cameraOrGallery(context);
+                setState(() {});
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white.withOpacity(0.5)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.camera_alt_rounded, color: Colors.white, size: 16),
+                    SizedBox(width: 8),
+                    Text(
+                      'Ubah Foto Profile',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          ],
+        ),
       );
     }
 
@@ -158,9 +250,8 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
               ),
               children: [
                 TileLayer(
-                  urlTemplate:
-                      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                  subdomains: ['a', 'b', 'c'],
+                  urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  userAgentPackageName: 'com.mspeed.app',
                 ),
                 MarkerLayer(
                   markers: [
@@ -370,14 +461,12 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
               }
               Position? pos;
               try {
-                // ignore: deprecated_member_use
                 pos = await Geolocator.getCurrentPosition(
                   forceAndroidLocationManager: true,
                   desiredAccuracy: LocationAccuracy.best,
                   timeLimit: Duration(seconds: 3),
                 ).timeout(Duration(seconds: 20));
               } catch (e) {
-                // ignore: deprecated_member_use
                 pos = await Geolocator.getLastKnownPosition(
                     forceAndroidLocationManager: true);
               }
@@ -408,18 +497,19 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
         context: context,
         builder: (BuildContext context) {
           return Dialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20.0),
-            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 16),
             child: SubmitTtdWidget(
               onSubmit: (v) async {
                 p.ttd = v;
                 setState(() {});
                 FocusManager.instance.primaryFocus?.unfocus();
-                // Fitur TTD Non-PKP belum tersedia di API baru
-                // Endpoint /ttdnonpkpseller tidak ada di Laravel baru
-                Utils.showFailed(msg: 'Fitur TTD belum tersedia di versi ini');
+                bool result = await p.addTtdNonPkpSeller(withLoading: true);
+                if (result)
+                  Utils.showSuccess(msg: 'TTD Berhasil');
+                else
+                  Utils.showFailed(msg: 'TTD Gagal');
               },
             ),
           );
@@ -428,504 +518,306 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
     }
 
     Widget form() {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Constant.xSizedBox16,
-          field(
-            controller: p.companyNameC,
-            hintText: 'Nama Toko / Perusahaan',
-            text: 'Nama Toko / Perusahaan',
-            required: true,
-          ),
-          Constant.xSizedBox16,
-          field(
-            required: true,
-            controller: p.ownerNameC,
-            text: 'Nama Pemilik / Direktur',
-            hintText: 'Nama Pemilik / Direktur',
-          ),
-          Constant.xSizedBox16,
-          field(
-            controller: p.emailC,
-            text: 'Email',
-            hintText: 'Email',
-          ),
-          Constant.xSizedBox16,
-          field(
-            controller: p.phoneC,
-            text: 'No Telepon',
-            hintText: 'No Telepon',
-          ),
-          Constant.xSizedBox16,
-          field(
-            controller: p.roleC,
-            text: 'Jabatan',
-            hintText: 'Jabatan',
-          ),
-          Constant.xSizedBox16,
-          field(
-            controller: p.salesNameC,
-            text: 'Nama Sales / Kuasa',
-            hintText: 'Nama Sales / Kuasa',
-          ),
-          Constant.xSizedBox16,
-          field(
-            controller: p.salesPhoneC,
-            text: 'Telp Sales / Kuasa',
-            hintText: 'Telp Sales / Kuasa',
-          ),
-          Constant.xSizedBox16,
-          field(
-            controller: p.kbliC,
-            text: 'KBLI',
-            hintText: 'KBLI',
-          ),
-          Constant.xSizedBox16,
-          field(
-            required: true,
-            controller: p.addressC,
-            text: 'Alamat',
-            hintText: 'Alamat',
-          ),
-          Constant.xSizedBox16,
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: fieldDropdown(
-              required: true,
-              controller: p.provinceC,
-              labelPadding: EdgeInsets.only(bottom: 5),
-              labelText: 'Provinsi',
-              hintText: 'Pilih Provinsi',
-              hintColor: Constant.grayColor,
-              selectedItem: p.selectedProvince,
-              borderColor: Constant.borderSearchColor.withValues(alpha: 0.5),
-              list: (p.provinsiModel?.data ?? [])
-                  .map((e) => e?.nama ?? 'Unknown Province')
-                  .toList(),
-              onChanged: (v) {
-                var index =
-                    p.provinsiModel?.data?.indexWhere((e) => e?.nama == v) ?? -1;
-                if (index != -1 &&
-                    p.provinsiModel?.data?[index]?.nama != null) {
-                  setState(() {
-                    p.selectedProvince = v;
-                    p.selectedProvinceId =
-                        p.provinsiModel?.data?[index]?.ID ?? '';
-                  });
-                }
-              },
-              labelTextStyle: Constant.primaryTextStyle.copyWith(
-                color: Color(0xff6D7588),
-                fontSize: 12,
-              ),
-            ),
-          ),
-          Constant.xSizedBox16,
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: fieldDropdown(
-              required: true,
-              controller: p.cityC,
-              labelPadding: EdgeInsets.only(bottom: 5),
-              labelText: 'Kota',
-              hintText: 'Pilih Kota',
-              hintColor: Constant.grayColor,
-              selectedItem: p.selectedCity,
-              borderColor: Constant.borderSearchColor.withValues(alpha: 0.5),
-              list: (p.kotaModel?.data ?? [])
-                  .map((e) => e?.kota ?? 'Unknown City')
-                  .toList(),
-              onChanged: (v) {
-                var index = p.kotaModel?.data?.indexWhere((e) => e?.kota == v) ?? -1;
-                if (index != -1 && p.kotaModel?.data?[index]?.kota != null) {
-                  setState(() {
-                    p.selectedCity = v;
-                    p.selectedCityId = p.kotaModel?.data?[index]?.ID ?? '';
-                  });
-                }
-              },
-              labelTextStyle: Constant.primaryTextStyle.copyWith(
-                color: Color(0xff6D7588),
-                fontSize: 12,
-              ),
-            ),
-          ),
-          Constant.xSizedBox16,
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10, right: 20, left: 20),
-            child: Text(
-              'Select from Map',
-              style: Constant.primaryTextStyle.copyWith(
-                fontSize: 12,
-                fontWeight: FontWeight.normal,
-                color: Color(0xff6D7588),
-              ),
-            ),
-          ),
-          map(),
-          Constant.xSizedBox8,
-          selectLocationBtn(),
-          Constant.xSizedBox16,
-          Row(
-            children: [
-              Expanded(
-                  child: field(
-                      controller: p.latC,
-                      hintText: 'Latitude',
-                      text: 'Koordinat',
-                      padding: EdgeInsets.only(left: 20, right: 4))),
-              Expanded(
-                  child: field(
-                      controller: p.lngC,
-                      hintText: 'Longitude',
-                      text: '',
-                      useLabel: false,
-                      padding: EdgeInsets.only(left: 4, right: 20))),
-            ],
-          ),
-          Constant.xSizedBox16,
-          Container(
-            height: 8,
-            color: Color(0xffF6F6F6),
-          ),
-          Constant.xSizedBox8,
-          Padding(
-            padding: const EdgeInsets.only(bottom: 5, left: 20, right: 20),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      const accent = Color(0xff059669);
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 24),
+
+            // ── Informasi Toko ──
+            AdminFormSection(
+              title: 'Informasi Toko',
+              icon: Icons.storefront_outlined,
+              accentColor: accent,
               children: [
-                Text(
-                  'Jenis Toko',
-                  style: Constant.primaryTextStyle.copyWith(
-                    color: Color(0xff6D7588),
-                    fontSize: 12,
-                  ),
-                ),
-                Text(
-                  '*',
-                  style: Constant.primaryTextStyle.copyWith(
-                    fontSize: 14,
-                    fontWeight: Constant.medium,
-                    color: Colors.red,
-                  ),
-                ),
+                AdminFormField(controller: p.companyNameC, label: 'Nama Toko / Perusahaan *', hint: 'Nama Toko / Perusahaan', icon: Icons.business_outlined),
+                AdminFormField(controller: p.kbliC, label: 'KBLI', hint: 'Kode KBLI', icon: Icons.numbers_rounded),
+                AdminFormField(controller: p.ownerNameC, label: 'Nama Pemilik / Direktur *', hint: 'Nama Pemilik / Direktur', icon: Icons.person_rounded),
               ],
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
+            const SizedBox(height: 16),
+
+            // ── Tipe & Identitas ──
+            AdminFormSection(
+              title: 'Tipe & Identitas Toko',
+              icon: Icons.badge_outlined,
+              accentColor: accent,
               children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      Radio(
-                        value: 1,
-                        groupValue: p.jenisToko,
-                        visualDensity:
-                            VisualDensity(vertical: -4, horizontal: -4),
-                        onChanged: (value) {
-                          if (p.jenisToko != value) {
-                            setState(() {
-                              p.jenisToko = 1;
-                            });
-                            if (p.jenisToko == 2) {
-                              p.npwpFile = null;
-                              p.npwpC.clear();
-                              p.npwpFileC.clear();
-                            }
-                            if (p.jenisToko != 1) {
-                              p.spSkpFile = null;
-                              p.spSkpFileC.clear();
-                            }
-                            setState(() {});
-                          }
-                        },
-                      ),
-                      Flexible(
-                        child: Text(
-                          'PKP',
-                          style: TextStyle(fontSize: 13),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Jenis Toko *', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xff4A5568))),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: RadioListTile<int>(
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('PKP', style: TextStyle(fontSize: 13)),
+                            value: 1,
+                            groupValue: p.jenisToko,
+                            activeColor: accent,
+                            onChanged: (value) {
+                              if (p.jenisToko != value) {
+                                setState(() => p.jenisToko = 1);
+                                if (p.jenisToko == 2) {
+                                  p.npwpFile = null;
+                                  p.npwpC.clear();
+                                  p.npwpFileC.clear();
+                                }
+                                if (p.jenisToko != 1) {
+                                  p.spSkpFile = null;
+                                  p.spSkpFileC.clear();
+                                }
+                                setState(() {});
+                              }
+                            },
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Row(
-                    children: [
-                      Radio(
-                        value: 2,
-                        groupValue: p.jenisToko,
-                        visualDensity:
-                            VisualDensity(vertical: -4, horizontal: -4),
-                        onChanged: (value) {
-                          if (p.jenisToko != value) {
-                            setState(() {
-                              p.jenisToko = 2;
-                            });
-                            setState(() {});
-                          }
-                        },
-                      ),
-                      Flexible(
-                        child: Text(
-                          'Non PKP (Punya NPWP)',
-                          style: TextStyle(fontSize: 13),
+                        Expanded(
+                          child: RadioListTile<int>(
+                            contentPadding: EdgeInsets.zero,
+                            title: const Text('Non PKP (Punya NPWP)', style: TextStyle(fontSize: 13)),
+                            value: 2,
+                            groupValue: p.jenisToko,
+                            activeColor: accent,
+                            onChanged: (value) {
+                              if (p.jenisToko != value) {
+                                setState(() => p.jenisToko = 2);
+                                setState(() {});
+                              }
+                            },
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                    RadioListTile<int>(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Non PKP (Tidak Punya NPWP)', style: TextStyle(fontSize: 13)),
+                      value: 3,
+                      groupValue: p.jenisToko,
+                      activeColor: accent,
+                      onChanged: (value) {
+                        if (p.jenisToko != value) {
+                          setState(() => p.jenisToko = 3);
+                          setState(() {});
+                        }
+                      },
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 12),
+                AdminFormField(controller: p.ktpNumberC, label: 'No KTP *', hint: 'No KTP', icon: Icons.credit_card_outlined),
+                AdminFormField(controller: p.npwpC, label: 'No NPWP *', hint: 'No NPWP', icon: Icons.receipt_long_outlined, enabled: p.jenisToko != 2),
+                AdminFormField(controller: p.nibC, label: 'No NIB *', hint: 'No NIB', icon: Icons.description_outlined),
               ],
             ),
-          ),
-          SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
+            const SizedBox(height: 16),
+
+            // ── Kontak & Relasi ──
+            AdminFormSection(
+              title: 'Kontak & Relasi',
+              icon: Icons.contact_phone_outlined,
+              accentColor: accent,
               children: [
-                Radio(
-                  value: 3,
-                  groupValue: p.jenisToko,
-                  visualDensity: VisualDensity(vertical: -4, horizontal: -4),
-                  onChanged: (value) {
-                    if (p.jenisToko != value) {
+                AdminFormField(controller: p.emailC, label: 'Email', hint: 'Email', icon: Icons.email_outlined, inputType: TextInputType.emailAddress),
+                AdminFormField(controller: p.phoneC, label: 'No Telepon', hint: 'No Telepon', icon: Icons.phone_outlined, inputType: TextInputType.phone),
+                AdminFormField(controller: p.roleC, label: 'Jabatan', hint: 'Jabatan', icon: Icons.work_outline_rounded),
+                AdminFormField(controller: p.salesNameC, label: 'Nama Sales / Kuasa', hint: 'Nama Sales / Kuasa', icon: Icons.support_agent_rounded),
+                AdminFormField(controller: p.salesPhoneC, label: 'Telp Sales / Kuasa', hint: 'Telp Sales / Kuasa', icon: Icons.phone_callback_outlined, inputType: TextInputType.phone),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // ── Lokasi & Alamat ──
+            AdminFormSection(
+              title: 'Lokasi & Alamat',
+              icon: Icons.location_on_outlined,
+              accentColor: accent,
+              children: [
+                fieldDropdown(
+                  required: true,
+                  controller: p.provinceC,
+                  labelText: 'Provinsi',
+                  hintText: 'Pilih Provinsi',
+                  selectedItem: p.selectedProvince,
+                  list: (p.provinsiModel?.data ?? []).map((e) => e?.nama ?? 'Unknown Province').toList(),
+                  onChanged: (v) {
+                    var index = p.provinsiModel?.data?.indexWhere((e) => e == v) ?? -1;
+                    if (index != -1 && p.provinsiModel?.data?[index]?.nama != null) {
                       setState(() {
-                        p.jenisToko = 3;
+                        p.selectedProvince = v;
+                        p.selectedProvinceId = p.provinsiModel?.data?[index]?.ID ?? '';
                       });
-                      setState(() {});
                     }
                   },
                 ),
-                Flexible(
-                  child: Text(
-                    'Non PKP (Tidak Punya NPWP)',
-                    style: TextStyle(fontSize: 13),
-                  ),
+                const SizedBox(height: 12),
+                fieldDropdown(
+                  required: true,
+                  controller: p.cityC,
+                  labelText: 'Kota',
+                  hintText: 'Pilih Kota',
+                  selectedItem: p.selectedCity,
+                  list: (p.kotaModel?.data ?? []).map((e) => e?.kota ?? 'Unknown City').toList(),
+                  onChanged: (v) {
+                    var index = p.kotaModel?.data?.indexWhere((e) => e == v) ?? -1;
+                    if (index != -1 && p.kotaModel?.data?[index]?.kota != null) {
+                      setState(() {
+                        p.selectedCity = v;
+                        p.selectedCityId = p.kotaModel?.data?[index]?.ID ?? '';
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+                AdminFormField(controller: p.addressC, label: 'Alamat *', hint: 'Alamat Lengkap', icon: Icons.map_outlined, maxLines: 3),
+                const SizedBox(height: 16),
+                const Text('Pilih Lokasi dari Peta', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xff4A5568))),
+                const SizedBox(height: 8),
+                map(),
+                const SizedBox(height: 12),
+                selectLocationBtn(),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: AdminFormField(controller: p.latC, label: 'Latitude', hint: 'Koordinat', icon: Icons.location_searching_rounded)),
+                    const SizedBox(width: 12),
+                    Expanded(child: AdminFormField(controller: p.lngC, label: 'Longitude', hint: 'Koordinat', icon: Icons.location_searching_rounded)),
+                  ],
                 ),
               ],
             ),
-          ),
-          Constant.xSizedBox16,
-          field(
-            required: true,
-            controller: p.ktpNumberC,
-            text: 'No KTP',
-            hintText: 'No KTP',
-          ),
-          Constant.xSizedBox16,
-          field(
-            required: true,
-            enabled: p.jenisToko != 2,
-            controller: p.npwpC,
-            text: 'No NPWP',
-            hintText: 'No NPWP',
-          ),
-          Constant.xSizedBox16,
-          field(
-            required: true,
-            controller: p.nibC,
-            text: 'No NIB',
-            hintText: 'No NIB',
-          ),
-          Constant.xSizedBox16,
-          field(
-            required: true,
-            text: 'Nama Bank',
-            hintText: 'Nama Bank',
-            controller: p.bankTypeC,
-          ),
-          Constant.xSizedBox16,
-          field(
-              required: true,
-              text: 'No Rekening',
-              hintText: 'No Rekening',
-              controller: p.bankNumberC),
-          Constant.xSizedBox16,
-          field(
-            required: true,
-            controller: p.bankNameC,
-            text: 'Rekening Atas Nama',
-            hintText: 'Rekening Atas Nama',
-          ),
-          Constant.xSizedBox16,
-          fieldFile(
-            controller: p.ktpFileC,
-            text: 'File KTP / Identitas',
-            extraLabeltext: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 5),
-              child: Text(
-                'Ext: jpeg, jpg, png     Max file: 100mb',
-                style: Constant.primaryTextStyle.copyWith(
-                  color: Constant.textColor2,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-            onTap: () async {
-              p.ktpFile = await CustomImagePicker.selectImageFromGallery();
-              if (p.ktpFile != null)
-                p.ktpFileC.text = path.basename(p.ktpFile!.path);
-              setState(() {});
-              FocusManager.instance.primaryFocus?.unfocus();
-            },
-          ),
-          Constant.xSizedBox16,
-          fieldFile(
-            controller: p.npwpFileC,
-            text: 'File NPWP',
-            enabled: p.jenisToko != 2,
-            extraLabeltext: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 5),
-              child: Text(
-                'Ext: jpeg, jpg, png     Max file: 100mb',
-                style: Constant.primaryTextStyle.copyWith(
-                  color: Constant.textColor2,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-            onTap: () async {
-              if (p.jenisToko != 2) {
-                p.npwpFile = await CustomImagePicker.selectImageFromGallery();
-                if (p.npwpFile != null)
-                  p.npwpFileC.text = path.basename(p.npwpFile!.path);
-                setState(() {});
-                FocusManager.instance.primaryFocus?.unfocus();
-              }
-            },
-          ),
-          Constant.xSizedBox16,
-          fieldFile(
-            controller: p.bankNumberFileC,
-            text: 'File Buku Rekening',
-            extraLabeltext: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 5),
-              child: Text(
-                'Ext: jpeg, jpg, png     Max file: 100mb',
-                style: Constant.primaryTextStyle.copyWith(
-                  color: Constant.textColor2,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-            onTap: () async {
-              p.bankNumberFile =
-                  await CustomImagePicker.selectImageFromGallery();
-              if (p.bankNumberFile != null)
-                p.bankNumberFileC.text = path.basename(p.bankNumberFile!.path);
-              setState(() {});
-              FocusManager.instance.primaryFocus?.unfocus();
-            },
-          ),
-          Constant.xSizedBox16,
-          fieldFile(
-            controller: p.spSkpFileC,
-            text: 'File SP SKP',
-            enabled: p.jenisToko == 1,
-            extraLabeltext: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 5),
-              child: Text(
-                'Ext: jpeg, jpg, png     Max file: 100mb',
-                style: Constant.primaryTextStyle.copyWith(
-                  color: Constant.textColor2,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-            onTap: () async {
-              if (p.jenisToko == 1) {
-                p.spSkpFile = await CustomImagePicker.selectImageFromGallery();
-                if (p.spSkpFile != null)
-                  p.spSkpFileC.text = path.basename(p.spSkpFile!.path);
-                setState(() {});
-                FocusManager.instance.primaryFocus?.unfocus();
-              }
-            },
-          ),
-          Constant.xSizedBox16,
-          fieldFile(
-            controller: p.nibFileC,
-            text: 'File NIB',
-            extraLabeltext: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 5),
-              child: Text(
-                'Ext: jpeg, jpg, png     Max file: 100mb',
-                style: Constant.primaryTextStyle.copyWith(
-                  color: Constant.textColor2,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-            onTap: () async {
-              p.nibFile = await CustomImagePicker.selectImageFromGallery();
-              p.nibFileC.text = path.basename(p.nibFile!.path);
-              setState(() {});
-              FocusManager.instance.primaryFocus?.unfocus();
-            },
-          ),
-          Constant.xSizedBox16,
-          fieldFile(
-            controller: p.suratPernyataanFileC,
-            text: 'Surat Pernyataan',
-            extraLabeltext: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 5),
-              child: Text(
-                'Ext: gif, jpg, jpeg, bmp, png, pdf     Max file: 100mb',
-                style: Constant.primaryTextStyle.copyWith(
-                  color: Constant.textColor2,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-            onTap: () async {
-              p.suratPernyataanFile =
-                  await CustomImagePicker.selectImageFromGallery();
-              p.suratPernyataanFileC.text =
-                  path.basename(p.suratPernyataanFile!.path);
-              setState(() {});
-              FocusManager.instance.primaryFocus?.unfocus();
-            },
-          ),
-          Constant.xSizedBox16,
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
+            const SizedBox(height: 16),
+
+            // ── Rekening Bank ──
+            AdminFormSection(
+              title: 'Rekening Bank',
+              icon: Icons.account_balance_outlined,
+              accentColor: accent,
               children: [
-                btn(
-                  path: Assets.iconsIcSuratPernyataan,
-                  label: 'Template Pernyataan',
-                  color: Constant.greenColor,
-                  onTap: () async {
-                    // Fitur Template Non-PKP belum tersedia di API baru
-                    // Endpoint /templatenonpkpseller tidak ada di Laravel baru
-                    Utils.showFailed(
-                        msg: 'Fitur Template Pernyataan belum tersedia di versi ini');
+                AdminFormField(controller: p.bankTypeC, label: 'Nama Bank *', hint: 'Nama Bank', icon: Icons.account_balance_rounded),
+                AdminFormField(controller: p.bankNumberC, label: 'No Rekening *', hint: 'No Rekening', icon: Icons.numbers_rounded, inputType: TextInputType.number),
+                AdminFormField(controller: p.bankNameC, label: 'Rekening Atas Nama *', hint: 'Atas Nama', icon: Icons.person_outline_rounded),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // ── Upload Dokumen ──
+            AdminFormSection(
+              title: 'Upload Dokumen',
+              icon: Icons.upload_file_outlined,
+              accentColor: accent,
+              children: [
+                _FileButton(
+                  title: 'File KTP / Identitas',
+                  fileName: p.ktpFileC.text,
+                  onChoose: () async {
+                    p.ktpFile = await CustomImagePicker.selectImageFromGallery();
+                    if (p.ktpFile != null) p.ktpFileC.text = path.basename(p.ktpFile!.path);
+                    setState(() {});
                   },
                 ),
-                SizedBox(width: 12),
-                btn(
-                  path: Assets.iconsIcTtdLangsung,
-                  label: 'Ttd Langsung',
-                  color: Constant.pesananDikirimColor,
-                  onTap: () async {
-                    showTtdDialog(context);
+                if (p.jenisToko != 2)
+                  _FileButton(
+                    title: 'File NPWP',
+                    fileName: p.npwpFileC.text,
+                    onChoose: () async {
+                      p.npwpFile = await CustomImagePicker.selectImageFromGallery();
+                      if (p.npwpFile != null) p.npwpFileC.text = path.basename(p.npwpFile!.path);
+                      setState(() {});
+                    },
+                  ),
+                _FileButton(
+                  title: 'File Buku Rekening',
+                  fileName: p.bankNumberFileC.text,
+                  onChoose: () async {
+                    p.bankNumberFile = await CustomImagePicker.selectImageFromGallery();
+                    if (p.bankNumberFile != null) p.bankNumberFileC.text = path.basename(p.bankNumberFile!.path);
+                    setState(() {});
                   },
+                ),
+                if (p.jenisToko == 1)
+                  _FileButton(
+                    title: 'File SP SKP',
+                    fileName: p.spSkpFileC.text,
+                    onChoose: () async {
+                      p.spSkpFile = await CustomImagePicker.selectImageFromGallery();
+                      if (p.spSkpFile != null) p.spSkpFileC.text = path.basename(p.spSkpFile!.path);
+                      setState(() {});
+                    },
+                  ),
+                _FileButton(
+                  title: 'File NIB',
+                  fileName: p.nibFileC.text,
+                  onChoose: () async {
+                    p.nibFile = await CustomImagePicker.selectImageFromGallery();
+                    if (p.nibFile != null) p.nibFileC.text = path.basename(p.nibFile!.path);
+                    setState(() {});
+                  },
+                ),
+                _FileButton(
+                  title: 'Surat Pernyataan',
+                  fileName: p.suratPernyataanFileC.text,
+                  onChoose: () async {
+                    p.suratPernyataanFile = await CustomImagePicker.selectImageFromGallery();
+                    if (p.suratPernyataanFile != null) p.suratPernyataanFileC.text = path.basename(p.suratPernyataanFile!.path);
+                    setState(() {});
+                  },
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xff10B981),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: () async {
+                          var url = await p.fetchTemplateNonPKPSeller(withLoading: true);
+                          if (url != null && url != '') {
+                            downloadFile(context, url, filename: 'TemplatePernyataan.pdf', typeFile: 'pdf');
+                          } else {
+                            Utils.showFailed(msg: 'URL Download File Tidak Ditemukan');
+                          }
+                        },
+                        icon: const Icon(Icons.download_rounded, size: 16),
+                        label: const Text('Template Pernyataan', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xff3B82F6),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: () => showTtdDialog(context),
+                        icon: const Icon(Icons.draw_rounded, size: 16),
+                        label: const Text('Ttd Langsung', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ),
-          Constant.xSizedBox16,
-        ],
+            const SizedBox(height: 16),
+          ],
+        ),
       );
     }
 
     Widget bottomBar() {
-      return BottomAppBar(
-        height: kBottomNavigationBarHeight + 24,
-        color: Colors.white,
+      return Container(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+        color: Colors.transparent,
         child: CustomButton.mainButton(
           'Simpan',
           borderRadius: BorderRadius.circular(12),
@@ -938,15 +830,17 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
     }
 
     return Scaffold(
+      backgroundColor: const Color(0xffF5F6FA),
       appBar: appBar(),
       body: ListView(
         shrinkWrap: true,
+        physics: const AlwaysScrollableScrollPhysics(),
         children: [
           header(),
           form(),
+          bottomBar(),
         ],
       ),
-      bottomNavigationBar: bottomBar(),
     );
   }
 }

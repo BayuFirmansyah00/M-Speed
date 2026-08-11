@@ -17,8 +17,7 @@ class _HomeAdminGraphViewState extends State<HomeAdminGraphView> {
   @override
   Widget build(BuildContext context) {
     final p = context.watch<AdminHomeProvider>();
-    // Gunakan graphList dari provider yang sudah diisi dari purchaseStatistics
-    final graph = p.graphList;
+    final List graph = [];
 
     Widget bottomTitleWidgets(double value, TitleMeta meta) {
       const style = TextStyle(
@@ -33,7 +32,6 @@ class _HomeAdminGraphViewState extends State<HomeAdminGraphView> {
       final idx = value.toInt();
       return SideTitleWidget(
         meta: meta,
-        space: 2,
         child: Text(idx >= 0 && idx < 12 ? months[idx] : '', style: style),
       );
     }
@@ -90,10 +88,13 @@ class _HomeAdminGraphViewState extends State<HomeAdminGraphView> {
         ),
         lineBarsData: [
           LineChartBarData(
-            spots: graph.isEmpty ? [const FlSpot(0, 0)] : graph,
+            spots: List.generate(
+              graph.length,
+              (i) => FlSpot(i.toDouble(), (graph[i] ?? 0).toDouble()),
+            ),
             isCurved: true,
             curveSmoothness: 0.35,
-            color: const Color(0xffF58B2B),
+            color: const Color(0xff3B82F6),
             barWidth: 2.5,
             isStrokeCapRound: true,
             dotData: FlDotData(
@@ -103,7 +104,7 @@ class _HomeAdminGraphViewState extends State<HomeAdminGraphView> {
                 radius: 3.5,
                 color: Colors.white,
                 strokeWidth: 2,
-                strokeColor: const Color(0xffF58B2B),
+                strokeColor: const Color(0xff3B82F6),
               ),
             ),
             belowBarData: BarAreaData(
@@ -112,8 +113,8 @@ class _HomeAdminGraphViewState extends State<HomeAdminGraphView> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  const Color(0xffFF9900).withValues(alpha: 0.18),
-                  const Color(0xffFF7A00).withValues(alpha: 0.0),
+                  const Color(0xff3B82F6).withOpacity(0.18),
+                  const Color(0xff3B82F6).withOpacity(0.0),
                 ],
               ),
             ),
@@ -143,12 +144,12 @@ class _HomeAdminGraphViewState extends State<HomeAdminGraphView> {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: showAvg
-                      ? Constant.primaryColor.withValues(alpha: 0.12)
+                      ? Constant.primaryColor.withOpacity(0.12)
                       : const Color(0xffF5F6FA),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: showAvg
-                        ? Constant.primaryColor.withValues(alpha: 0.35)
+                        ? Constant.primaryColor.withOpacity(0.35)
                         : const Color(0xffE4E6EF),
                     width: 1,
                   ),

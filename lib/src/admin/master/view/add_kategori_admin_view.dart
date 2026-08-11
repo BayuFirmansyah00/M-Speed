@@ -35,7 +35,7 @@ class _AddKategoriAdminViewState extends BaseState<AddKategoriAdminView> {
     final p = context.watch<MasterProvider>();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xffF5F6FA),
       appBar: CustomAppBar.appBar(
         context,
         "${widget.kategori == null ? "Buat" : "Edit"} Kategori",
@@ -43,7 +43,7 @@ class _AddKategoriAdminViewState extends BaseState<AddKategoriAdminView> {
         isCenter: true,
         foregroundColor: Colors.black,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -52,49 +52,58 @@ class _AddKategoriAdminViewState extends BaseState<AddKategoriAdminView> {
           return true;
         },
         child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CustomTextField.borderTextField(
-                  controller: p.namaKategoriC,
-                  labelText: "Nama Kategori",
-                  hintText: 'Nama Kategori',
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xffE2E4E9), width: 1),
                 ),
-              ],
-            ),
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CustomTextField.borderTextField(
+                      controller: p.namaKategoriC,
+                      labelText: "Nama Kategori",
+                      hintText: 'Contoh: Elektronik, Pakaian',
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
-      bottomNavigationBar: Container(
+      bottomNavigationBar: BottomAppBar(
         color: Colors.white,
-        padding: const EdgeInsets.all(16),
-        child: SafeArea(
-          child: SizedBox(
-            height: 50,
-            child: CustomButton.mainButton('Simpan', () async {
-              await handleTap(() async {
-                Utils.showYesNoDialog(
-                  context: context,
-                  title: "Konfirmasi",
-                  desc: "Apakah Anda Yakin Ingin Menyimpan Data Ini",
-                  yesCallback: () async {
-                    handleTap(() async {
-                      CusNav.nPop(context);
-                      await context.read<MasterProvider>().sendKategori(
-                        context,
-                        kategoriid: widget.kategori?.ID,
-                      );
-                    });
-                  },
-                  noCallback: () {
-                    Navigator.pop(context);
-                  },
-                );
-              });
-            }, borderRadius: BorderRadius.circular(12)),
-          ),
+        child: CustomButton.mainButton(
+          'Simpan',
+          borderRadius: BorderRadius.circular(12),
+          () async {
+            await handleTap(() async {
+              Utils.showYesNoDialog(
+                context: context,
+                title: "Konfirmasi",
+                desc: "Apakah Anda Yakin Ingin Menyimpan Data Ini?",
+                yesCallback: () async {
+                  handleTap(() async {
+                    CusNav.nPop(context);
+                    await context.read<MasterProvider>().sendKategori(
+                          context,
+                          kategoriid: widget.kategori?.ID,
+                        );
+                  });
+                },
+                noCallback: () {
+                  Navigator.pop(context);
+                },
+              );
+            });
+          },
         ),
       ),
     );

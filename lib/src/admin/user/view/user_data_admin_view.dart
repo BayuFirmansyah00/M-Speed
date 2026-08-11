@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:excel/excel.dart' hide Border;
+import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
@@ -17,12 +18,11 @@ import 'package:mspeed/src/admin/user/view/create_data_penerima_admin_view.dart'
 import 'package:mspeed/src/admin/user/view/create_data_seller_admin_view.dart';
 import 'package:mspeed/src/admin/user/view/create_data_manager_admin_view.dart';
 import 'package:mspeed/src/admin/user/view/create_data_audit_admin_view.dart';
-import 'package:mspeed/src/admin/user/view/create_data_direksi_admin_view.dart';
-import 'package:mspeed/src/admin/user/model/basic_user_admin_model.dart';
-import 'package:mspeed/src/admin/user/model/penerima_admin_model.dart';
-import 'package:mspeed/src/admin/home/model/buyer_admin_model.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
+import 'package:mspeed/src/admin/user/model/basic_user_admin_model.dart';
+import 'package:mspeed/src/admin/user/model/buyer_admin_model.dart';
+import 'package:mspeed/src/admin/user/model/seller_admin_model.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Enum
@@ -42,14 +42,8 @@ enum UserDataType {
 
 class UserData {
   final String? name1, name2, email, alamat, id, status;
-  UserData({
-    this.name1,
-    this.name2,
-    this.email,
-    this.alamat,
-    this.id,
-    this.status,
-  });
+  final dynamic rawModel;
+  UserData({this.name1, this.name2, this.email, this.alamat, this.id, this.status, this.rawModel});
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -66,25 +60,17 @@ class UserDataAdminView extends StatefulWidget {
 class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
   final TextEditingController _searchC = TextEditingController();
   Timer? _debounce;
-  final ScrollController _scrollC = ScrollController();
 
   // Theme per UserDataType
   List<Color> get _gradient {
     switch (widget.userType) {
-      case UserDataType.BUYER:
-        return [const Color(0xff3B82F6), const Color(0xff1D4ED8)];
-      case UserDataType.SELLER:
-        return [const Color(0xff10B981), const Color(0xff059669)];
-      case UserDataType.FINANCE:
-        return [const Color(0xffF59E0B), const Color(0xffD97706)];
-      case UserDataType.PENERIMA:
-        return [const Color(0xff8B5CF6), const Color(0xff7C3AED)];
-      case UserDataType.MANAGER:
-        return [const Color(0xffEC4899), const Color(0xffBE185D)];
-      case UserDataType.AUDIT:
-        return [const Color(0xff14B8A6), const Color(0xff0F766E)];
-      case UserDataType.DIREKSI:
-        return [const Color(0xff6366F1), const Color(0xff4338CA)];
+      case UserDataType.BUYER:    return [const Color(0xffF87171), const Color(0xffEF4444)];
+      case UserDataType.SELLER:   return [const Color(0xffFB7185), const Color(0xffF43F5E)];
+      case UserDataType.FINANCE:  return [const Color(0xffDC2626), const Color(0xffB91C1C)];
+      case UserDataType.PENERIMA: return [const Color(0xff9F1239), const Color(0xff881337)];
+      case UserDataType.MANAGER:  return [const Color(0xff7F1D1D), const Color(0xff450A0A)];
+      case UserDataType.AUDIT:    return [const Color(0xffE11D48), const Color(0xffBE123C)];
+      case UserDataType.DIREKSI:  return [const Color(0xffB91C1C), const Color(0xff991B1B)];
     }
   }
 
@@ -92,27 +78,19 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
 
   IconData get _headerIcon {
     switch (widget.userType) {
-      case UserDataType.BUYER:
-        return Icons.shopping_bag_rounded;
-      case UserDataType.SELLER:
-        return Icons.storefront_rounded;
-      case UserDataType.FINANCE:
-        return Icons.account_balance_rounded;
-      case UserDataType.PENERIMA:
-        return Icons.person_pin_rounded;
-      case UserDataType.MANAGER:
-        return Icons.manage_accounts_rounded;
-      case UserDataType.AUDIT:
-        return Icons.fact_check_rounded;
-      case UserDataType.DIREKSI:
-        return Icons.supervisor_account_rounded;
+      case UserDataType.BUYER:    return Icons.shopping_bag_rounded;
+      case UserDataType.SELLER:   return Icons.storefront_rounded;
+      case UserDataType.FINANCE:  return Icons.account_balance_rounded;
+      case UserDataType.PENERIMA: return Icons.person_pin_rounded;
+      case UserDataType.MANAGER:  return Icons.manage_accounts_rounded;
+      case UserDataType.AUDIT:    return Icons.fact_check_rounded;
+      case UserDataType.DIREKSI:  return Icons.work_outline_rounded;
     }
   }
 
   @override
   void initState() {
     super.initState();
-    _scrollC.addListener(_onScroll);
     getData();
     context.read<AdminUserProvider>().searchC.clear();
     _searchC.addListener(_onSearchChanged);
@@ -122,19 +100,8 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
   void dispose() {
     _searchC.removeListener(_onSearchChanged);
     _searchC.dispose();
-    _scrollC.removeListener(_onScroll);
-    _scrollC.dispose();
     _debounce?.cancel();
     super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollC.position.pixels == _scrollC.position.maxScrollExtent) {
-      final p = context.read<AdminUserProvider>();
-      if (p.hasMore && !p.isLoadingMore) {
-        getData(q: _searchC.text, page: p.currentPage + 1, withLoading: false);
-      }
-    }
   }
 
   void _onSearchChanged() {
@@ -144,105 +111,49 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
     });
   }
 
-  Future<void> getData({
-    String q = '',
-    int page = 1,
-    bool withLoading = true,
-  }) async {
-    if (withLoading) Utils.showLoading();
+  Future<void> getData({String q = ''}) async {
+    Utils.showLoading();
     final p = context.read<AdminUserProvider>();
     if (widget.userType == UserDataType.BUYER) {
-      await p.fetchBuyers(withLoading: false, search: q, page: page);
+      await p.fetchBuyers(withLoading: false, search: q);
     } else if (widget.userType == UserDataType.SELLER) {
-      await p.fetchSellers(withLoading: false, search: q, page: page);
+      await p.fetchSellers(withLoading: false, search: q);
     } else if (widget.userType == UserDataType.FINANCE) {
-      await p.fetchKeuangan(withLoading: false, search: q, page: page);
+      await p.fetchKeuangan(withLoading: false, search: q);
     } else if (widget.userType == UserDataType.PENERIMA) {
-      await p.fetchPenerima(withLoading: false, search: q, page: page);
+      await p.fetchPenerima(withLoading: false, search: q);
     } else if (widget.userType == UserDataType.MANAGER) {
-      await p.fetchManager(withLoading: false, search: q, page: page);
+      await p.fetchManager(withLoading: false, search: q);
     } else if (widget.userType == UserDataType.AUDIT) {
-      await p.fetchAudit(withLoading: false, search: q, page: page);
+      await p.fetchAudit(withLoading: false, search: q);
     } else if (widget.userType == UserDataType.DIREKSI) {
-      await p.fetchDireksi(withLoading: false, search: q, page: page);
+      await p.fetchDireksi(withLoading: false, search: q);
     }
-    if (withLoading) Utils.dismissLoading();
+    Utils.dismissLoading();
   }
 
   // ── Navigate to edit form ──
   void _onEdit(int i) {
     final p = context.read<AdminUserProvider>();
-    final user = p.userData[i];
-
     if (widget.userType == UserDataType.BUYER) {
-      final buyer = BuyerAdminModelData(
-        ID: user.id,
-        email: user.email,
-        fullAddress: user.alamat,
-        userData: UserDataModel(firstName: user.name1, lastName: user.name2),
-      );
-      CusNav.nPush(context, CreateDataBuyerAdminView(buyer: buyer)).then((res) { if(res == true) getData(page: 1); });
+      CusNav.nPush(context, CreateDataBuyerAdminView(buyer: p.userData[i].rawModel as dynamic));
     } else if (widget.userType == UserDataType.SELLER) {
-      // Backend seller belum tersedia, tampilkan pesan
-      Utils.showFailed(msg: 'Fitur edit seller belum tersedia dari backend');
+      CusNav.nPush(context, CreateDataSellerAdminView(seller: p.userData[i].rawModel as dynamic));
     } else if (widget.userType == UserDataType.FINANCE) {
-      final keuangan = BasicUserAdminModelData(
-        id: int.tryParse(user.id ?? ''),
-        email: user.email,
-        userData: BasicUserAdminUserData(
-          firstName: user.name1,
-          lastName: user.name2,
-        ),
-      );
-      CusNav.nPush(context, CreateDataFinanceAdminView(keuangan: keuangan)).then((res) { if(res == true) getData(page: 1); });
+      CusNav.nPush(context, CreateDataFinanceAdminView(keuangan: p.userData[i].rawModel as dynamic));
     } else if (widget.userType == UserDataType.PENERIMA) {
-      final penerima = PenerimaAdminModelData(
-        id: int.tryParse(user.id ?? ''),
-        email: user.email,
-        fullAddress: user.alamat,
-        userData: PenerimaAdminUserData(
-          firstName: user.name1,
-          lastName: user.name2,
-        ),
-      );
-      CusNav.nPush(context, CreateDataPenerimaAdminView(penerima: penerima)).then((res) { if(res == true) getData(page: 1); });
+      CusNav.nPush(context, CreateDataPenerimaAdminView(penerima: p.userData[i].rawModel as dynamic));
     } else if (widget.userType == UserDataType.MANAGER) {
-      final manager = BasicUserAdminModelData(
-        id: int.tryParse(user.id ?? ''),
-        email: user.email,
-        userData: BasicUserAdminUserData(
-          firstName: user.name1,
-          lastName: user.name2,
-        ),
-      );
-      CusNav.nPush(context, CreateDataManagerAdminView(manager: manager)).then((res) { if(res == true) getData(page: 1); });
+      CusNav.nPush(context, CreateDataManagerAdminView(manager: p.userData[i].rawModel as dynamic));
     } else if (widget.userType == UserDataType.AUDIT) {
-      final audit = BasicUserAdminModelData(
-        id: int.tryParse(user.id ?? ''),
-        email: user.email,
-        userData: BasicUserAdminUserData(
-          firstName: user.name1,
-          lastName: user.name2,
-        ),
-      );
-      CusNav.nPush(context, CreateDataAuditAdminView(audit: audit)).then((res) { if(res == true) getData(page: 1); });
-    } else if (widget.userType == UserDataType.DIREKSI) {
-      final direksi = BasicUserAdminModelData(
-        id: int.tryParse(user.id ?? ''),
-        email: user.email,
-        userData: BasicUserAdminUserData(
-          firstName: user.name1,
-          lastName: user.name2,
-        ),
-      );
-      CusNav.nPush(context, CreateDataDireksiAdminView(direksi: direksi)).then((res) { if(res == true) getData(page: 1); });
+      CusNav.nPush(context, CreateDataAuditAdminView(audit: p.userData[i].rawModel as dynamic));
     }
   }
 
   // ── Change session ──
   Future<void> _onChangeSession(int i) async {
     final p = context.read<AdminUserProvider>();
-    String id = p.userData[i].id ?? '';
+    String id = p.userData[i].id.toString();
     await p.changeSession(context, id);
   }
 
@@ -256,23 +167,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       desc: 'Yakin ingin menghapus data "${model[i].name1 ?? ''}"?',
       yesCallback: () async {
         CusNav.nPop(context);
-        if (widget.userType == UserDataType.BUYER) {
-          p.deleteBuyer(buyerId: model[i].id ?? '');
-        } else if (widget.userType == UserDataType.SELLER) {
-          p.deleteSeller(id: model[i].id ?? '');
-        } else if (widget.userType == UserDataType.FINANCE) {
-          p.deleteKeuangan(keuanganId: model[i].id ?? '');
-        } else if (widget.userType == UserDataType.PENERIMA) {
-          p.deletePenerima(penerimaId: model[i].id ?? '');
-        } else if (widget.userType == UserDataType.MANAGER) {
-          p.deleteManager(managerId: model[i].id ?? '');
-        } else if (widget.userType == UserDataType.AUDIT) {
-          p.deleteAudit(auditId: model[i].id ?? '');
-        } else if (widget.userType == UserDataType.DIREKSI) {
-          p.deleteDireksi(direksiId: model[i].id ?? '');
-        } else {
-          Utils.showFailed(msg: 'Hapus data untuk role ini belum didukung');
-        }
+        p.deleteSeller(id: model[i].id ?? '');
       },
       noCallback: () => CusNav.nPop(context),
     );
@@ -281,26 +176,22 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
   // ── Navigate to create ──
   void _onCreate() {
     if (widget.userType == UserDataType.BUYER) {
-      CusNav.nPush(context, CreateDataBuyerAdminView()).then((res) { if(res == true) getData(page: 1); });
+      CusNav.nPush(context, CreateDataBuyerAdminView());
     } else if (widget.userType == UserDataType.SELLER) {
-      CusNav.nPush(context, CreateDataSellerAdminView()).then((res) { if(res == true) getData(page: 1); });
+      CusNav.nPush(context, CreateDataSellerAdminView());
     } else if (widget.userType == UserDataType.FINANCE) {
-      CusNav.nPush(context, CreateDataFinanceAdminView()).then((res) { if(res == true) getData(page: 1); });
+      CusNav.nPush(context, CreateDataFinanceAdminView());
     } else if (widget.userType == UserDataType.PENERIMA) {
-      CusNav.nPush(context, CreateDataPenerimaAdminView()).then((res) { if(res == true) getData(page: 1); });
+      CusNav.nPush(context, CreateDataPenerimaAdminView());
     } else if (widget.userType == UserDataType.MANAGER) {
-      CusNav.nPush(context, CreateDataManagerAdminView()).then((res) { if(res == true) getData(page: 1); });
+      CusNav.nPush(context, CreateDataManagerAdminView());
     } else if (widget.userType == UserDataType.AUDIT) {
-      CusNav.nPush(context, CreateDataAuditAdminView()).then((res) { if(res == true) getData(page: 1); });
-    } else if (widget.userType == UserDataType.DIREKSI) {
-      CusNav.nPush(context, CreateDataDireksiAdminView()).then((res) { if(res == true) getData(page: 1); });
+      CusNav.nPush(context, CreateDataAuditAdminView());
     }
   }
 
   void _showExportBottomSheet() {
-    final title = widget.userType == UserDataType.FINANCE
-        ? 'Data Finance'
-        : 'Data Penerima';
+    final title = widget.userType == UserDataType.FINANCE ? 'Data Finance' : 'Data Penerima';
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -324,7 +215,10 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
               const SizedBox(height: 8),
               Text(
                 'Pilih format file yang ingin Anda unduh:',
-                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                ),
               ),
               const SizedBox(height: 24),
               Row(
@@ -340,17 +234,11 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                         decoration: BoxDecoration(
                           color: Colors.red.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Colors.red.withValues(alpha: 0.3),
-                          ),
+                          border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                         ),
                         child: const Column(
                           children: [
-                            Icon(
-                              Icons.picture_as_pdf_rounded,
-                              color: Colors.red,
-                              size: 32,
-                            ),
+                            Icon(Icons.picture_as_pdf_rounded, color: Colors.red, size: 32),
                             SizedBox(height: 8),
                             Text(
                               'Export PDF',
@@ -376,17 +264,11 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                         decoration: BoxDecoration(
                           color: Colors.green.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Colors.green.withValues(alpha: 0.3),
-                          ),
+                          border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
                         ),
                         child: const Column(
                           children: [
-                            Icon(
-                              Icons.table_view_rounded,
-                              color: Colors.green,
-                              size: 32,
-                            ),
+                            Icon(Icons.table_view_rounded, color: Colors.green, size: 32),
                             SizedBox(height: 8),
                             Text(
                               'Export Excel',
@@ -412,15 +294,15 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
 
   // ── Export ──
   Future<void> _exportToPdf() async {
-    if (widget.userType != UserDataType.PENERIMA &&
-        widget.userType != UserDataType.FINANCE)
-      return;
+    if (widget.userType != UserDataType.PENERIMA && widget.userType != UserDataType.FINANCE) return;
     Utils.showLoading();
     try {
       final p = context.read<AdminUserProvider>();
       final isFinance = widget.userType == UserDataType.FINANCE;
       final String title = isFinance ? 'Data Finance' : 'Data Penerima';
-      final List<UserData> dataList = p.userData;
+      final List<dynamic> dataList = isFinance
+          ? (p.userData)
+          : (p.userData);
 
       final pdfDoc = pw.Document();
 
@@ -429,28 +311,20 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
           build: (context) => [
             pw.Header(
               level: 0,
-              child: pw.Text(
-                title,
-                style: pw.TextStyle(
-                  fontSize: 24,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
+              child: pw.Text(title, style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
             ),
             pw.TableHelper.fromTextArray(
               context: context,
               data: <List<String>>[
                 ['No', 'Nama', 'Email', 'No HP', 'Alamat', 'Kab/Kota'],
-                ...dataList.asMap().entries.map(
-                  (e) => [
-                    '${e.key + 1}',
-                    '${e.value.name1 ?? ''} ${e.value.name2 ?? ''}'.trim(),
-                    e.value.email ?? '',
-                    '-',
-                    e.value.alamat ?? '',
-                    '-',
-                  ],
-                ),
+                ...dataList.asMap().entries.map((e) => [
+                      '${e.key + 1}',
+                      '${e.value?.firstname ?? ''} ${e.value?.lastname ?? ''}',
+                      e.value?.email ?? '',
+                      e.value?.telp ?? '',
+                      e.value?.alamat ?? '',
+                      e.value?.kabkota ?? '',
+                    ])
               ],
             ),
           ],
@@ -458,8 +332,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       );
 
       final directory = await getApplicationDocumentsDirectory();
-      final path =
-          '${directory.path}/${title.replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      final path = '${directory.path}/${title.replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.pdf';
       final file = File(path);
       await file.writeAsBytes(await pdfDoc.save());
 
@@ -472,20 +345,20 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
   }
 
   Future<void> _exportToExcel() async {
-    if (widget.userType != UserDataType.PENERIMA &&
-        widget.userType != UserDataType.FINANCE)
-      return;
+    if (widget.userType != UserDataType.PENERIMA && widget.userType != UserDataType.FINANCE) return;
     Utils.showLoading();
     try {
       final p = context.read<AdminUserProvider>();
       final isFinance = widget.userType == UserDataType.FINANCE;
       final String title = isFinance ? 'Data Finance' : 'Data Penerima';
-      final List<UserData> dataList = p.userData;
-
+      final List<dynamic> dataList = isFinance
+          ? (p.userData)
+          : (p.userData);
+      
       var excel = Excel.createExcel();
       Sheet sheetObject = excel[title];
       excel.setDefaultSheet(title);
-
+      
       // Header
       sheetObject.appendRow([
         TextCellValue('No'),
@@ -501,19 +374,18 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
         final item = dataList[i];
         sheetObject.appendRow([
           IntCellValue(i + 1),
-          TextCellValue('${item.name1 ?? ''} ${item.name2 ?? ''}'.trim()),
-          TextCellValue(item.email ?? ''),
-          TextCellValue('-'),
-          TextCellValue(item.alamat ?? ''),
-          TextCellValue('-'),
+          TextCellValue('${item?.firstname ?? ''} ${item?.lastname ?? ''}'),
+          TextCellValue(item?.email ?? ''),
+          TextCellValue(item?.telp ?? ''),
+          TextCellValue(item?.alamat ?? ''),
+          TextCellValue(item?.kabkota ?? ''),
         ]);
       }
 
       var fileBytes = excel.save();
       if (fileBytes != null) {
         final directory = await getApplicationDocumentsDirectory();
-        final path =
-            '${directory.path}/${title.replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+        final path = '${directory.path}/${title.replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.xlsx';
         File(path)
           ..createSync(recursive: true)
           ..writeAsBytesSync(fileBytes);
@@ -528,8 +400,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.watch<AdminUserProvider>();
-    final model = p.userData;
+    final model = context.watch<AdminUserProvider>().userData;
     final isSeller = widget.userType == UserDataType.SELLER;
 
     return Scaffold(
@@ -548,54 +419,37 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
               icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
             ),
             actions: [
-              if (widget.userType == UserDataType.PENERIMA ||
-                  widget.userType == UserDataType.FINANCE)
+              if (widget.userType == UserDataType.PENERIMA || widget.userType == UserDataType.FINANCE)
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: GestureDetector(
                     onTap: _showExportBottomSheet,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            Icons.download_rounded,
-                            color: Colors.white,
-                            size: 18,
-                          ),
+                          Icon(Icons.download_rounded, color: Colors.white, size: 18),
                           SizedBox(width: 4),
-                          Text(
-                            'Export',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          Text('Export', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
                   ),
                 ),
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: GestureDetector(
-                  onTap: _onCreate,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
+              if (widget.userType != UserDataType.MANAGER && widget.userType != UserDataType.AUDIT && widget.userType != UserDataType.DIREKSI)
+                Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: GestureDetector(
+                    onTap: _onCreate,
+                    child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Row(
@@ -603,14 +457,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                       children: [
                         Icon(Icons.add_rounded, color: Colors.white, size: 18),
                         SizedBox(width: 4),
-                        Text(
-                          'Tambah',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        Text('Tambah', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
@@ -629,54 +476,37 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                 child: Stack(
                   children: [
                     Positioned(
-                      right: -30,
-                      top: -30,
+                      right: -30, top: -30,
                       child: Container(
-                        width: 140,
-                        height: 140,
+                        width: 140, height: 140,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.07),
+                          color: Colors.white.withOpacity(0.07),
                           shape: BoxShape.circle,
                         ),
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 68, 20, 16),
+                      padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 60, 20, 16),
                       child: Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
+                              color: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Icon(
-                              _headerIcon,
-                              color: Colors.white,
-                              size: 22,
-                            ),
+                            child: Icon(_headerIcon, color: Colors.white, size: 22),
                           ),
                           const SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                widget.userType.title,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                ),
-                              ),
+                              Text(widget.userType.title,
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
                               const SizedBox(height: 2),
-                              const Text(
-                                'Kelola dan pantau semua data pengguna',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white70,
-                                ),
-                              ),
+                              const Text('Kelola dan pantau semua data pengguna',
+                                style: TextStyle(fontSize: 12, color: Colors.white70)),
                             ],
                           ),
                         ],
@@ -703,11 +533,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                 child: Row(
                   children: [
                     const SizedBox(width: 12),
-                    Icon(
-                      Icons.search_rounded,
-                      color: Constant.grayColor,
-                      size: 20,
-                    ),
+                    Icon(Icons.search_rounded, color: Constant.grayColor, size: 20),
                     const SizedBox(width: 10),
                     Expanded(
                       child: TextField(
@@ -715,10 +541,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                         style: const TextStyle(fontSize: 13),
                         decoration: InputDecoration(
                           hintText: 'Cari nama, email, atau alamat...',
-                          hintStyle: TextStyle(
-                            color: Constant.grayColor,
-                            fontSize: 13,
-                          ),
+                          hintStyle: TextStyle(color: Constant.grayColor, fontSize: 13),
                           border: InputBorder.none,
                           isDense: true,
                           contentPadding: EdgeInsets.zero,
@@ -735,11 +558,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                         },
                         child: Padding(
                           padding: const EdgeInsets.only(right: 10),
-                          child: Icon(
-                            Icons.close_rounded,
-                            color: Constant.grayColor,
-                            size: 18,
-                          ),
+                          child: Icon(Icons.close_rounded, color: Constant.grayColor, size: 18),
                         ),
                       ),
                   ],
@@ -754,41 +573,20 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               child: Row(
                 children: [
-                  Container(
-                    width: 3,
-                    height: 14,
-                    decoration: BoxDecoration(
-                      color: _accentColor,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
+                  Container(width: 3, height: 14,
+                    decoration: BoxDecoration(color: _accentColor, borderRadius: BorderRadius.circular(4))),
                   const SizedBox(width: 8),
-                  Text(
-                    'Daftar ${widget.userType.title}',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xff100629),
-                    ),
-                  ),
+                  Text('Daftar ${widget.userType.title}',
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xff100629))),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _accentColor.withValues(alpha: 0.1),
+                      color: _accentColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(
-                      '${model.length} data',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: _accentColor,
-                      ),
-                    ),
+                    child: Text('${model.length} data',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _accentColor)),
                   ),
                 ],
               ),
@@ -802,20 +600,10 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.inbox_rounded,
-                          size: 60,
-                          color: Colors.grey.shade300,
-                        ),
+                        Icon(Icons.inbox_rounded, size: 60, color: Colors.grey.shade300),
                         const SizedBox(height: 12),
-                        Text(
-                          'Belum ada data',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade400,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        Text('Belum ada data',
+                          style: TextStyle(fontSize: 14, color: Colors.grey.shade400, fontWeight: FontWeight.w500)),
                       ],
                     ),
                   ),
@@ -824,31 +612,21 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 100),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
-                      (context, i) {
-                        if (i >= model.length) {
-                          return p.isLoadingMore
-                              ? const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 20),
-                                  child: Center(child: CircularProgressIndicator()),
-                                )
-                              : const SizedBox();
-                        }
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: _UserCard(
-                            userType: widget.userType,
-                            item: model[i],
-                            index: i,
-                            isSeller: isSeller,
-                            accentColor: _accentColor,
-                            gradient: _gradient,
-                            onEdit: () => _onEdit(i),
-                            onChangeSession: () => _onChangeSession(i),
-                            onDelete: () => _onDelete(i),
-                          ),
-                        );
-                      },
-                      childCount: model.length + (p.isLoadingMore ? 1 : 0),
+                      (context, i) => Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _UserCard(
+                          userType: widget.userType,
+                          item: model[i],
+                          index: i,
+                          isSeller: isSeller,
+                          accentColor: _accentColor,
+                          gradient: _gradient,
+                          onEdit: () => _onEdit(i),
+                          onChangeSession: () => _onChangeSession(i),
+                          onDelete: () => _onDelete(i),
+                        ),
+                      ),
+                      childCount: model.length,
                     ),
                   ),
                 ),
@@ -892,15 +670,19 @@ class _UserCard extends StatelessWidget {
   });
 
   String get _initials {
-    final parts = (item.name1 ?? '?').trim().split(' ');
-    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    if (parts.isNotEmpty && parts[0].isNotEmpty)
+    final name = (item.name1 == null || item.name1!.trim().isEmpty) ? '?' : item.name1!.trim();
+    final parts = name.split(RegExp(r'\s+'));
+    if (parts.length >= 2 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    if (parts.isNotEmpty && parts[0].isNotEmpty) {
       return parts[0][0].toUpperCase();
+    }
     return '?';
   }
 
-  // bool get _isManagerOrAudit =>
-  //     userType == UserDataType.MANAGER || userType == UserDataType.AUDIT;
+  bool get _isManagerOrAudit =>
+      userType == UserDataType.MANAGER || userType == UserDataType.AUDIT || userType == UserDataType.DIREKSI;
 
   @override
   Widget build(BuildContext context) {
@@ -908,13 +690,7 @@ class _UserCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 14,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 14, offset: const Offset(0, 3))],
       ),
       child: Column(
         children: [
@@ -922,37 +698,25 @@ class _UserCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.fromLTRB(14, 14, 8, 12),
             decoration: BoxDecoration(
-              color: accentColor.withValues(alpha: 0.04),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(18),
-              ),
-              border: const Border(
-                bottom: BorderSide(color: Color(0xffF0F0F0), width: 1),
-              ),
+              color: accentColor.withOpacity(0.04),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+              border: const Border(bottom: BorderSide(color: Color(0xffF0F0F0), width: 1)),
             ),
             child: Row(
               children: [
                 // Avatar
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 44, height: 44,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                      begin: Alignment.topLeft, end: Alignment.bottomRight,
                       colors: gradient,
                     ),
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
-                  child: Text(
-                    _initials,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: Text(_initials,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
                 ),
                 const SizedBox(width: 12),
                 // Name + Email
@@ -960,75 +724,49 @@ class _UserCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        item.name1 ?? '-',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xff100629),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      Text(item.name1 ?? '-',
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xff100629)),
+                        maxLines: 1, overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 2),
-                      Text(
-                        item.email ?? '-',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xff8A93A3),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      Text(item.email ?? '-',
+                        style: const TextStyle(fontSize: 12, color: Color(0xff8A93A3)),
+                        maxLines: 1, overflow: TextOverflow.ellipsis),
                     ],
                   ),
                 ),
                 // Status (seller only)
-                if (isSeller && item.status != null) ...[
+                if ((isSeller || userType == UserDataType.DIREKSI) && item.status != null) ...[
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: item.status == 'Aktif'
-                          ? const Color(0xff28C76F).withValues(alpha: 0.12)
-                          : const Color(0xffED1C24).withValues(alpha: 0.12),
+                          ? const Color(0xff28C76F).withOpacity(0.12)
+                          : const Color(0xffED1C24).withOpacity(0.12),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(
-                      item.status!,
+                    child: Text(item.status!,
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                         color: item.status == 'Aktif'
                             ? const Color(0xff28C76F)
                             : const Color(0xffED1C24),
-                      ),
-                    ),
+                      )),
                   ),
                 ],
                 // ── 3-dots menu ──
-                PopupMenuButton<String>(
-                  icon: const Icon(
-                    Icons.more_vert_rounded,
-                    color: Color(0xff8A93A3),
-                    size: 22,
-                  ),
+                if (!_isManagerOrAudit)
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert_rounded, color: Color(0xff8A93A3), size: 22),
                   color: Colors.white,
                   surfaceTintColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   elevation: 8,
                   onSelected: (value) {
-                    if (value == 'edit')
-                      onEdit();
-                    else if (value == 'session')
-                      onChangeSession();
-                    else if (value == 'delete')
-                      onDelete();
+                    if (value == 'edit') onEdit();
+                    else if (value == 'session') onChangeSession();
+                    else if (value == 'delete') onDelete();
                   },
                   itemBuilder: (_) => [
                     _popupItem(
@@ -1037,8 +775,7 @@ class _UserCard extends StatelessWidget {
                       label: 'Ubah Data',
                       iconColor: const Color(0xff3B82F6),
                     ),
-                    if (userType != UserDataType.AUDIT &&
-                        userType != UserDataType.DIREKSI) ...[
+                    if (!_isManagerOrAudit) ...[
                       _popupItem(
                         value: 'session',
                         icon: Icons.swap_horiz_rounded,
@@ -1046,14 +783,14 @@ class _UserCard extends StatelessWidget {
                         iconColor: const Color(0xffF59E0B),
                       ),
                       const PopupMenuDivider(height: 1),
-                    ],
-                    _popupItem(
-                      value: 'delete',
-                      icon: Icons.delete_outline_rounded,
-                      label: 'Hapus Data',
-                      iconColor: const Color(0xffED1C24),
-                      textColor: const Color(0xffED1C24),
-                    ),
+                      _popupItem(
+                        value: 'delete',
+                        icon: Icons.delete_outline_rounded,
+                        label: 'Hapus Data',
+                        iconColor: const Color(0xffED1C24),
+                        textColor: const Color(0xffED1C24),
+                      ),
+                    ]
                   ],
                 ),
               ],
@@ -1075,34 +812,28 @@ class _UserCard extends StatelessWidget {
                         icon: Icons.person_outline_rounded,
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _InfoChip(
-                        label: 'No. ID',
-                        value: '#${item.id ?? '-'}',
-                        icon: Icons.tag_rounded,
+                    if (userType != UserDataType.DIREKSI) ...[
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _InfoChip(
+                          label: 'No. ID',
+                          value: '#${item.id ?? '-'}',
+                          icon: Icons.tag_rounded,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
-                const SizedBox(height: 8),
-                // Alamat full width
-                _InfoChip(
-                  label:
-                      userType == UserDataType.FINANCE ||
-                          userType == UserDataType.MANAGER ||
-                          userType == UserDataType.AUDIT
-                      ? 'Departemen'
-                      : 'Alamat',
-                  value: item.alamat ?? '-',
-                  icon:
-                      userType == UserDataType.FINANCE ||
-                          userType == UserDataType.MANAGER ||
-                          userType == UserDataType.AUDIT
-                      ? Icons.business_rounded
-                      : Icons.location_on_outlined,
-                  fullWidth: true,
-                ),
+                if (userType != UserDataType.DIREKSI) ...[
+                  const SizedBox(height: 8),
+                  // Alamat full width
+                  _InfoChip(
+                    label: 'Alamat',
+                    value: item.alamat ?? '-',
+                    icon: Icons.location_on_outlined,
+                    fullWidth: true,
+                  ),
+                ],
               ],
             ),
           ),
@@ -1126,20 +857,18 @@ class _UserCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.1),
+              color: iconColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: iconColor, size: 16),
           ),
           const SizedBox(width: 12),
-          Text(
-            label,
+          Text(label,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w500,
               color: textColor ?? const Color(0xff100629),
-            ),
-          ),
+            )),
         ],
       ),
     );
@@ -1181,25 +910,12 @@ class _InfoChip extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: Color(0xff8A93A3),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                Text(label,
+                  style: const TextStyle(fontSize: 10, color: Color(0xff8A93A3), fontWeight: FontWeight.w500)),
                 const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xff100629),
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                Text(value,
+                  style: const TextStyle(fontSize: 12, color: Color(0xff100629), fontWeight: FontWeight.w600),
+                  maxLines: 2, overflow: TextOverflow.ellipsis),
               ],
             ),
           ),

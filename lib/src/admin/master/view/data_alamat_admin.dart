@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
+import 'package:mspeed/common/helper/Constant.dart';
 import 'package:mspeed/generated/assets.dart';
 import 'package:mspeed/src/admin/master/model/alamat_admin_model.dart';
 import 'package:mspeed/src/admin/master/provider/master_provider.dart';
@@ -16,7 +17,7 @@ class DataAlamatAdminView extends StatefulWidget {
 }
 
 class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
-  static const _gradient = [Color(0xff059669), Color(0xff047857)];
+  static const _gradient = [Color(0xffDC2626), Color(0xffB91C1C)];
 
   @override
   void initState() {
@@ -62,7 +63,7 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xff059669).withValues(alpha: 0.1),
+                    color: const Color(0xff059669).withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: SvgPicture.asset(Assets.svgsIcAdminEdit, color: const Color(0xff059669), width: 18, height: 18),
@@ -81,7 +82,7 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xffEF4444).withValues(alpha: 0.1),
+                    color: const Color(0xffEF4444).withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: SvgPicture.asset(Assets.svgsIcAdminDelete, color: const Color(0xffEF4444), width: 18, height: 18),
@@ -117,7 +118,7 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
             // ── Gradient SilverAppBar ──
             SliverAppBar(
               pinned: true,
-              expandedHeight: 120,
+              expandedHeight: 140,
               backgroundColor: _gradient[1],
               surfaceTintColor: Colors.transparent,
               leading: IconButton(
@@ -132,7 +133,7 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
                   icon: Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: Colors.white.withOpacity(0.2),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
@@ -158,19 +159,19 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
                           width: 120,
                           height: 120,
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.08),
+                            color: Colors.white.withOpacity(0.08),
                             shape: BoxShape.circle,
                           ),
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 60, 20, 16),
+                        padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 60, 20, 16),
                         child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.18),
+                                color: Colors.white.withOpacity(0.18),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(Icons.location_on_rounded,
@@ -215,7 +216,7 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
+                        color: Colors.black.withOpacity(0.04),
                         blurRadius: 10,
                         offset: const Offset(0, 3),
                       ),
@@ -277,7 +278,7 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.04),
+                                  color: Colors.black.withOpacity(0.04),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -293,37 +294,22 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
                                       Container(
                                         padding: const EdgeInsets.all(6),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xff059669).withValues(alpha: 0.1),
+                                          color: const Color(0xff059669).withOpacity(0.1),
                                           borderRadius: BorderRadius.circular(8),
                                         ),
-                                        child: const Icon(Icons.person_rounded,
+                                        child: const Icon(Icons.map_rounded,
                                             color: Color(0xff059669), size: 16),
                                       ),
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: Text(
-                                          item.recipientName ?? '-',
+                                          item.prov ?? '-',
                                           style: const TextStyle(
                                               fontWeight: FontWeight.w700,
                                               fontSize: 13,
                                               color: Color(0xff100629)),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: (item.status == 'active' || item.status == '1') ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
-                                          borderRadius: BorderRadius.circular(6),
-                                        ),
-                                        child: Text(
-                                          (item.status == 'active' || item.status == '1') ? 'Aktif' : 'Tidak Aktif',
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w600,
-                                            color: (item.status == 'active' || item.status == '1') ? Colors.green : Colors.red,
-                                          ),
                                         ),
                                       ),
                                       IconButton(
@@ -336,81 +322,51 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
                                 const Divider(height: 1, color: Color(0xffF0F0F0)),
                                 Padding(
                                   padding: const EdgeInsets.all(16),
-                                  child: Column(
+                                  child: Row(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                const Text('No. Telepon', style: TextStyle(fontSize: 11, color: Color(0xff8A93A3))),
-                                                const SizedBox(height: 4),
-                                                Text(item.phone ?? '-', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xff100629))),
-                                              ],
+                                      Expanded(
+                                        flex: 2,
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Kabupaten / Kota',
+                                              style: TextStyle(fontSize: 11, color: Color(0xff8A93A3)),
                                             ),
-                                          ),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                const Text('Provinsi', style: TextStyle(fontSize: 11, color: Color(0xff8A93A3))),
-                                                const SizedBox(height: 4),
-                                                Text(item.prov ?? '-', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xff100629)), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                              ],
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              item.kota ?? '-',
+                                              style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Color(0xff100629)),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
-                                      const SizedBox(height: 12),
-                                      Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            flex: 2,
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                const Text(
-                                                  'Kabupaten / Kota',
-                                                  style: TextStyle(fontSize: 11, color: Color(0xff8A93A3)),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  item.kota ?? '-',
-                                                  style: const TextStyle(
-                                                      fontSize: 13,
-                                                      fontWeight: FontWeight.w600,
-                                                      color: Color(0xff100629)),
-                                                ),
-                                              ],
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Alamat Lengkap',
+                                              style: TextStyle(fontSize: 11, color: Color(0xff8A93A3)),
                                             ),
-                                          ),
-                                          const SizedBox(width: 16),
-                                          Expanded(
-                                            flex: 3,
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                const Text(
-                                                  'Alamat Lengkap',
-                                                  style: TextStyle(fontSize: 11, color: Color(0xff8A93A3)),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  item.nama ?? '-',
-                                                  style: const TextStyle(
-                                                      fontSize: 13,
-                                                      fontWeight: FontWeight.w500,
-                                                      color: Color(0xff4A5568)),
-                                                  maxLines: 2,
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ],
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              item.nama ?? '-',
+                                              style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: Color(0xff4A5568)),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ],
                                   ),

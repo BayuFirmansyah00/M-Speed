@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_dropdown.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
-import 'package:mspeed/src/admin/home/model/buyer_admin_model.dart';
+import 'package:mspeed/src/admin/user/model/buyer_admin_model.dart';
 import 'package:mspeed/src/admin/user/provider/admin_form_buyer_provider.dart';
 import 'package:mspeed/src/admin/user/view/admin_form_widgets.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
-import 'package:mspeed/src/seller/profil/model/provinsi_model.dart';
-import 'package:mspeed/src/seller/profil/model/kota_model.dart';
 
 class CreateDataBuyerAdminView extends StatefulWidget {
   const CreateDataBuyerAdminView({super.key, this.buyer});
@@ -21,7 +19,7 @@ class CreateDataBuyerAdminView extends StatefulWidget {
 
 class _CreateDataBuyerAdminViewState
     extends BaseState<CreateDataBuyerAdminView> {
-  static const _gradient = [Color(0xff3B82F6), Color(0xff1D4ED8)];
+  static const _gradient = [Color(0xffDC2626), Color(0xffB91C1C)];
   static const _accent = Color(0xff3B82F6);
 
   bool get isEdit => widget.buyer != null;
@@ -46,10 +44,9 @@ class _CreateDataBuyerAdminViewState
         yesCallback: () async {
           handleTap(() async {
             CusNav.nPop(context);
-            await context.read<AdminFormBuyerProvider>().sendBuyer(
-              context,
-              buyerId: widget.buyer?.ID,
-            );
+            await context
+                .read<AdminFormBuyerProvider>()
+                .sendBuyer(context, buyerId: widget.buyer?.id?.toString());
           });
         },
         noCallback: () => Navigator.pop(context),
@@ -68,12 +65,13 @@ class _CreateDataBuyerAdminViewState
           // ── Gradient AppBar ──
           SliverAppBar(
             pinned: true,
-            expandedHeight: 120,
+            expandedHeight: 140,
             backgroundColor: _gradient[1],
             surfaceTintColor: Colors.transparent,
             leading: IconButton(
               onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+              icon:
+                  const Icon(Icons.arrow_back_rounded, color: Colors.white),
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: AdminFormHeader(
@@ -99,31 +97,27 @@ class _CreateDataBuyerAdminViewState
                     accentColor: _accent,
                     children: [
                       AdminFormField(
-                        controller: p.firstNameC,
-                        label: 'First Name',
-                        hint: 'Masukkan nama depan',
-                        icon: Icons.badge_outlined,
-                      ),
+                          controller: p.firstNameC,
+                          label: 'First Name',
+                          hint: 'Masukkan nama depan',
+                          icon: Icons.badge_outlined),
                       AdminFormField(
-                        controller: p.lastNameC,
-                        label: 'Last Name',
-                        hint: 'Masukkan nama belakang',
-                        icon: Icons.badge_outlined,
-                      ),
+                          controller: p.lastNameC,
+                          label: 'Last Name',
+                          hint: 'Masukkan nama belakang',
+                          icon: Icons.badge_outlined),
                       AdminFormField(
-                        controller: p.emailC,
-                        label: 'Email',
-                        hint: 'Masukkan alamat email',
-                        icon: Icons.email_outlined,
-                        inputType: TextInputType.emailAddress,
-                      ),
+                          controller: p.emailC,
+                          label: 'Email',
+                          hint: 'Masukkan alamat email',
+                          icon: Icons.email_outlined,
+                          inputType: TextInputType.emailAddress),
                       AdminFormField(
-                        controller: p.phoneNumberC,
-                        label: 'No. Telepon',
-                        hint: 'Masukkan no. HP',
-                        icon: Icons.phone_outlined,
-                        inputType: TextInputType.phone,
-                      ),
+                          controller: p.phoneNumberC,
+                          label: 'No. Telepon',
+                          hint: 'Masukkan no. HP',
+                          icon: Icons.phone_outlined,
+                          inputType: TextInputType.phone),
                     ],
                   ),
                   const SizedBox(height: 14),
@@ -137,61 +131,24 @@ class _CreateDataBuyerAdminViewState
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Subdit',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xff4A5568),
-                            ),
-                          ),
+                          const Text('Subdit',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xff4A5568))),
                           const SizedBox(height: 6),
                           CustomDropdown.normalDropdown(
                             controller: p.subditC,
                             hintText: 'Pilih Subdit',
                             list: (p.subditAdminModel.data ?? [])
-                                .map(
-                                  (e) => DropdownMenuItem(
-                                    value: e?.id ?? '0',
-                                    child: Text(e?.subditName ?? ''),
-                                  ),
-                                )
+                                .map((e) => DropdownMenuItem(
+                                      value: e?.id ?? '0',
+                                      child: Text(e?.subditName ?? ''),
+                                    ))
                                 .toList(),
                             selectedItem: p.selectedSubdit,
                             onChanged: (value) {
                               p.selectedSubdit = value;
-                              setState(() {});
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Departemen',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xff4A5568),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          CustomDropdown.normalDropdown(
-                            controller: p.departmentC,
-                            hintText: 'Pilih Departemen',
-                            list: p.filteredDepartments
-                                .map(
-                                  (e) => DropdownMenuItem(
-                                    value: e['id']?.toString() ?? '0',
-                                    child: Text(e['name'] ?? ''),
-                                  ),
-                                )
-                                .toList(),
-                            selectedItem: p.selectedDepartment,
-                            onChanged: (value) {
-                              p.selectedDepartment = value;
                               setState(() {});
                             },
                           ),
@@ -207,142 +164,34 @@ class _CreateDataBuyerAdminViewState
                     icon: Icons.location_on_outlined,
                     accentColor: _accent,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Provinsi',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xff4A5568),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          CustomDropdown.searchDropdown(
-                            hintText: 'Pilih Provinsi',
-                            list: (p.provinsiModel?.data ?? [])
-                                .map((e) => e?.nama ?? '')
-                                .toList(),
-                            selectedItem: p.selectedProvince,
-                            onChanged: (value) {
-                              var matchedProvince;
-                              for (var e in p.provinsiModel?.data ?? []) {
-                                if (e?.nama == value) {
-                                  matchedProvince = e;
-                                  break;
-                                }
-                              }
-                              p.selectedProvinceId = matchedProvince?.ID;
-                              p.selectedProvince = matchedProvince?.nama;
-                              p.selectedCityId = null;
-                              p.selectedCity = null;
-                              setState(() {});
-                              
-
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Kota',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xff4A5568),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          CustomDropdown.searchDropdown(
-                            hintText: 'Pilih Kota',
-                            list: p.filteredKotaList
-                                .map((e) => e?.kota ?? '')
-                                .toList(),
-                            selectedItem: p.selectedCity,
-                            onChanged: (value) {
-                              var matchedCity;
-                              for (var e in p.kotaModel?.data ?? []) {
-                                if (e?.kota == value) {
-                                  matchedCity = e;
-                                  break;
-                                }
-                              }
-                              p.selectedCityId = matchedCity?.ID;
-                              p.selectedCity = matchedCity?.kota;
-                              setState(() {});
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
                       AdminFormField(
-                        controller: p.alamatC,
-                        label: 'Alamat Lengkap',
-                        hint: 'Masukkan alamat lengkap',
-                        icon: Icons.map_outlined,
-                        maxLines: 3,
-                      ),
+                          controller: p.cityC,
+                          label: 'Kota',
+                          hint: 'Masukkan kota',
+                          icon: Icons.location_city_outlined),
+                      AdminFormField(
+                          controller: p.alamatC,
+                          label: 'Alamat Lengkap',
+                          hint: 'Masukkan alamat lengkap',
+                          icon: Icons.map_outlined,
+                          maxLines: 3),
                     ],
                   ),
                   const SizedBox(height: 14),
 
                   // ── Keamanan ──
                   AdminFormSection(
-                    title: 'Keamanan & Akses',
+                    title: 'Keamanan',
                     icon: Icons.lock_outline_rounded,
                     accentColor: _accent,
                     children: [
                       AdminFormField(
-                        controller: p.accessC,
-                        label: 'Hak Akses',
-                        hint: 'Masukkan hak akses (opsional)',
-                        icon: Icons.admin_panel_settings_outlined,
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xffE2E8F0)),
-                        ),
-                        child: SwitchListTile(
-                          title: const Text(
-                            'Status Aktif',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xff1E293B),
-                            ),
-                          ),
-                          subtitle: Text(
-                            p.isActive ? 'Akun aktif dan dapat login' : 'Akun dinonaktifkan',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: p.isActive ? Colors.green : Colors.red,
-                            ),
-                          ),
-                          value: p.isActive,
-                          onChanged: (val) {
-                            setState(() {
-                              p.isActive = val;
-                            });
-                          },
-                          activeColor: _accent,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      AdminFormField(
-                        controller: p.passwordC,
-                        label: 'Password',
-                        hint: 'Masukkan password',
-                        icon: Icons.lock_outline_rounded,
-                        obscure: true,
-                        inputType: TextInputType.visiblePassword,
-                      ),
+                          controller: p.passwordC,
+                          label: 'Password',
+                          hint: 'Masukkan password',
+                          icon: Icons.lock_outline_rounded,
+                          obscure: true,
+                          inputType: TextInputType.visiblePassword),
                     ],
                   ),
                 ],
@@ -351,11 +200,8 @@ class _CreateDataBuyerAdminViewState
           ),
         ],
       ),
-      bottomNavigationBar: AdminSaveBar(
-        accentColor: _accent,
-        gradient: _gradient,
-        onSave: _save,
-      ),
+      bottomNavigationBar:
+          AdminSaveBar(accentColor: _accent, gradient: _gradient, onSave: _save),
     );
   }
 }

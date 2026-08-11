@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
+import 'package:mspeed/common/helper/Constant.dart';
 import 'package:mspeed/generated/assets.dart';
 import 'package:mspeed/src/admin/master/model/pajak_admin_model.dart';
 import 'package:mspeed/src/admin/master/provider/master_provider.dart';
@@ -62,7 +63,7 @@ class _DataPajakAdminViewState extends BaseState<DataPajakAdminView> {
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xffDC2626).withValues(alpha: 0.1),
+                    color: const Color(0xffDC2626).withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: SvgPicture.asset(Assets.svgsIcAdminEdit, color: const Color(0xffDC2626), width: 18, height: 18),
@@ -101,7 +102,7 @@ class _DataPajakAdminViewState extends BaseState<DataPajakAdminView> {
             // ── Gradient SilverAppBar ──
             SliverAppBar(
               pinned: true,
-              expandedHeight: 120,
+              expandedHeight: 140,
               backgroundColor: _gradient[1],
               surfaceTintColor: Colors.transparent,
               leading: IconButton(
@@ -116,7 +117,7 @@ class _DataPajakAdminViewState extends BaseState<DataPajakAdminView> {
                   icon: Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: Colors.white.withOpacity(0.2),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
@@ -142,19 +143,19 @@ class _DataPajakAdminViewState extends BaseState<DataPajakAdminView> {
                           width: 120,
                           height: 120,
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.08),
+                            color: Colors.white.withOpacity(0.08),
                             shape: BoxShape.circle,
                           ),
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 60, 20, 16),
+                        padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 60, 20, 16),
                         child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.18),
+                                color: Colors.white.withOpacity(0.18),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(Icons.percent_rounded,
@@ -199,7 +200,7 @@ class _DataPajakAdminViewState extends BaseState<DataPajakAdminView> {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
+                        color: Colors.black.withOpacity(0.04),
                         blurRadius: 10,
                         offset: const Offset(0, 3),
                       ),
@@ -261,7 +262,7 @@ class _DataPajakAdminViewState extends BaseState<DataPajakAdminView> {
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.04),
+                                  color: Colors.black.withOpacity(0.04),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -277,7 +278,7 @@ class _DataPajakAdminViewState extends BaseState<DataPajakAdminView> {
                                       Container(
                                         padding: const EdgeInsets.all(6),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xffDC2626).withValues(alpha: 0.1),
+                                          color: const Color(0xffDC2626).withOpacity(0.1),
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: const Icon(Icons.percent_rounded,

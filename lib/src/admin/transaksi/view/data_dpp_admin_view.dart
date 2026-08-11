@@ -20,7 +20,7 @@ class DataDppAdminView extends StatefulWidget {
 }
 
 class _DataDppAdminViewState extends BaseState<DataDppAdminView> {
-  static const _gradient = [Color(0xff06B6D4), Color(0xff0284C7)];
+  static const _gradient = [Color(0xffDC2626), Color(0xffB91C1C)];
 
   @override
   void initState() {
@@ -250,7 +250,7 @@ class _DataDppAdminViewState extends BaseState<DataDppAdminView> {
             // ── Gradient SilverAppBar ──
             SliverAppBar(
               pinned: true,
-              expandedHeight: 120,
+              expandedHeight: 140,
               backgroundColor: _gradient[1],
               surfaceTintColor: Colors.transparent,
               leading: IconButton(
@@ -298,19 +298,19 @@ class _DataDppAdminViewState extends BaseState<DataDppAdminView> {
                           width: 120,
                           height: 120,
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.08),
+                            color: Colors.white.withOpacity(0.08),
                             shape: BoxShape.circle,
                           ),
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 60, 20, 16),
+                        padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 60, 20, 16),
                         child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.18),
+                                color: Colors.white.withOpacity(0.18),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(Icons.receipt_long_rounded,
@@ -508,7 +508,7 @@ class _DppCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Jumlah',
+                        'Sub Jumlah',
                         style:
                             TextStyle(fontSize: 11, color: Color(0xff8A93A3)),
                       ),

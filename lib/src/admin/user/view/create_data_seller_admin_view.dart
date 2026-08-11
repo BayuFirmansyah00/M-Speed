@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:mspeed/src/admin/home/model/seller_admin_model.dart';
+import 'package:mspeed/src/admin/user/model/seller_admin_model.dart';
 import 'package:mspeed/src/admin/user/provider/admin_form_seller_provider.dart';
 import 'package:mspeed/src/admin/user/view/admin_form_widgets.dart';
 import 'package:provider/provider.dart';
@@ -17,7 +17,7 @@ class CreateDataSellerAdminView extends StatefulWidget {
 }
 
 class _CreateDataSellerAdminViewState extends State<CreateDataSellerAdminView> {
-  static const _gradient = [Color(0xff10B981), Color(0xff059669)];
+  static const _gradient = [Color(0xffDC2626), Color(0xffB91C1C)];
   static const _accent = Color(0xff10B981);
 
   bool get isEdit => widget.seller != null;
@@ -58,7 +58,7 @@ class _CreateDataSellerAdminViewState extends State<CreateDataSellerAdminView> {
           // ── Gradient AppBar ──
           SliverAppBar(
             pinned: true,
-            expandedHeight: 120,
+            expandedHeight: 140,
             backgroundColor: _gradient[1],
             surfaceTintColor: Colors.transparent,
             leading: IconButton(
@@ -238,10 +238,10 @@ class _FileButtonState extends State<_FileButton> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: _fileName != null ? widget.accent.withValues(alpha: 0.06) : const Color(0xffF8F9FC),
+          color: _fileName != null ? widget.accent.withOpacity(0.06) : const Color(0xffF8F9FC),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: _fileName != null ? widget.accent.withValues(alpha: 0.3) : const Color(0xffE2E4E9),
+            color: _fileName != null ? widget.accent.withOpacity(0.3) : const Color(0xffE2E4E9),
           ),
         ),
         child: Row(
@@ -249,7 +249,7 @@ class _FileButtonState extends State<_FileButton> {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: widget.accent.withValues(alpha: 0.12),
+                color: widget.accent.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(

@@ -18,9 +18,9 @@ import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
 
 class ProdukAddSellerView extends StatefulWidget {
-  const ProdukAddSellerView({super.key, this.isEdit = false, this.productId});
-  final bool isEdit;
-  final String? productId;
+  ProdukAddSellerView({super.key, this.isEdit = false, this.productId});
+  bool isEdit;
+  String? productId;
   @override
   State<ProdukAddSellerView> createState() => _ProdukAddSellerViewState();
 }
@@ -123,14 +123,14 @@ class _ProdukAddSellerViewState extends State<ProdukAddSellerView> {
                     height: 15,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(6),
-                      color: Colors.pink,
+                      color: const Color(0xffEF4444),
                     ),
                     child: IconButton(
                       padding: EdgeInsets.zero,
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.close_rounded,
-                        color: Colors.yellow,
-                        size: 15,
+                        color: Colors.white,
+                        size: 13,
                       ),
                       onPressed: () async {
                         setState(() {
@@ -184,20 +184,37 @@ class _ProdukAddSellerViewState extends State<ProdukAddSellerView> {
             },
           ),
           Constant.xSizedBox16,
-          CustomDropdown.normalDropdown(
-            selectedItem: p.selectedKategori,
+          CustomDropdown.searchDropdown(
             labelText: 'Kategori',
-            controller: p.kategoriC,
+            hintText: 'Pilih Kategori',
+            labelTextStyle: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Color(0xff100629),
+            ),
+            labelPadding: const EdgeInsets.only(bottom: 10),
+            list: p.kategoriModel?.data?.map((e) => e?.nama ?? '').toList() ?? [],
+            selectedItem: () {
+              var dataList = p.kategoriModel?.data;
+              if (dataList != null) {
+                var index = dataList.indexWhere((e) => e?.ID == p.selectedKategori);
+                if (index != -1) return dataList[index]?.nama;
+              }
+              return null;
+            }(),
             onChanged: (v) {
-              if (v != null) {
-                p.kategoriC.text = v;
-                p.selectedKategori = v;
+              var dataList = p.kategoriModel?.data;
+              if (dataList != null) {
+                var index = dataList.indexWhere((e) => e?.nama == v);
+                if (index != -1) {
+                  p.selectedKategori = dataList[index]?.ID;
+                  p.kategoriC.text = dataList[index]?.nama ?? '';
+                }
               }
               FocusManager.instance.primaryFocus?.unfocus();
               log("KATEGORI : $v");
               setState(() {});
             },
-            list: p.kategori,
           ),
           Constant.xSizedBox16,
           Row(
@@ -268,8 +285,8 @@ class _ProdukAddSellerViewState extends State<ProdukAddSellerView> {
               p.namaC.text.isNotEmpty &&
                       p.hargaC.text.isNotEmpty &&
                       p.stokC.text.isNotEmpty
-                  ? null
-                  : Colors.grey,
+                  ? const Color(0xff1ABC62)
+                  : const Color(0xffCBD5E1),
           borderRadius: BorderRadius.circular(12),
           () async {
             await context

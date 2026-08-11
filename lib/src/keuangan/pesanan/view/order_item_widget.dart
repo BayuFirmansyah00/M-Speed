@@ -24,139 +24,148 @@ class OrderItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final statusColor = Constant.statusColor(status.toString()) == Colors.black 
+        ? const Color(0xff10B981) 
+        : Constant.statusColor(status.toString());
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8),
-      color: bgColor,
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Flexible(
-                flex: 10,
-                child: Container(
-                  width: 200,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'No Order',
-                        style: TextStyle(
-                            color: Constant.grayColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400),
-                      ),
-                      Text(
-                        orderNumber,
-                        style: TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w400),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Flexible(
-                flex: 5,
-                child: Container(
-                  width: 200,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Tanggal',
-                        style: TextStyle(
-                            color: Constant.grayColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400),
-                      ),
-                      Text(
-                        date,
-                        style: TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w400),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Flexible(
-                flex: 5,
-                child: Container(
-                  width: 200,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Nama Seller',
-                        style: TextStyle(
-                            color: Constant.grayColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400),
-                      ),
-                      Text(
-                        sellerName,
-                        style: TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w400),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Flexible(
-                flex: 5,
-                child: Container(
-                  width: 200,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Total',
-                        style: TextStyle(
-                            color: Constant.grayColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400),
+        ],
+        border: Border.all(color: const Color(0xffEBEBF0), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Card (Order Number & Date)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xffF9FAFC),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+              border: const Border(bottom: BorderSide(color: Color(0xffEEF0F5), width: 1)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.receipt_long_rounded, color: Color(0xffF59E0B), size: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      orderNumber,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xff100629),
                       ),
-                      Text(
-                        Utils.thousandSeparator(int.parse(total)),
-                        style: TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w400),
-                      ),
-                    ],
+                    ),
+                  ],
+                ),
+                Text(
+                  date,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xff8A93A3),
                   ),
                 ),
-              ),
-              Flexible(
-                flex: 5,
-                child: Container(
-                  width: 200,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Status',
-                        style: TextStyle(
-                            color: Constant.grayColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400),
+              ],
+            ),
+          ),
+          
+          // Body Card (Seller & Details)
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xffF59E0B).withOpacity(0.08),
+                        shape: BoxShape.circle,
                       ),
-                      Text(status.statusName(),
-                          style: TextStyle(
-                              fontSize: 12,
+                      child: const Icon(Icons.storefront_rounded, color: Color(0xffF59E0B), size: 16),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Seller',
+                            style: TextStyle(fontSize: 10, color: Color(0xff8A93A3), fontWeight: FontWeight.w500),
+                          ),
+                          const SizedBox(height: 1),
+                          Text(
+                            sellerName,
+                            style: const TextStyle(
+                              fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: Constant.statusColor(status.toString()) == Colors.black 
-                                  ? Colors.green 
-                                  : Constant.statusColor(status.toString()))),
-                    ],
-                  ),
+                              color: Color(0xff100629),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 14),
+                const Divider(height: 1, color: Color(0xffF0F1F5)),
+                const SizedBox(height: 14),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Total Pembayaran',
+                          style: TextStyle(fontSize: 10, color: Color(0xff8A93A3), fontWeight: FontWeight.w500),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Rp ${Utils.thousandSeparator(int.parse(total))}',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xffF59E0B),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(color: statusColor.withOpacity(0.2), width: 1),
+                      ),
+                      child: Text(
+                        status.statusName(),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: statusColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),

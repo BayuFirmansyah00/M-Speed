@@ -21,6 +21,8 @@ class AdminFormAuditProvider extends BaseController with ChangeNotifier {
   final TextEditingController emailC = TextEditingController();
   final TextEditingController phoneNumberC = TextEditingController();
   final TextEditingController passwordC = TextEditingController();
+  final TextEditingController cityC = TextEditingController();
+  final TextEditingController alamatC = TextEditingController();
   bool isActive = true;
 
   setData(BasicUserAdminModelData? audit) async {

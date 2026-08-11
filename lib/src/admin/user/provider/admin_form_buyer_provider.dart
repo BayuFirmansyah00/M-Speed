@@ -5,7 +5,7 @@ import 'package:mspeed/common/base/base_controller.dart';
 import 'package:mspeed/common/base/base_response.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/common/helper/constant.dart';
-import 'package:mspeed/src/admin/home/model/buyer_admin_model.dart';
+import 'package:mspeed/src/admin/user/model/buyer_admin_model.dart';
 // import 'package:mspeed/src/admin/home/model/home_admin_model..dart';
 import 'package:mspeed/src/admin/master/model/subdit_admin_model.dart';
 import 'package:mspeed/src/admin/user/view/user_data_admin_view.dart';

@@ -164,12 +164,14 @@ class CustomDropdown {
   }
 
   static Widget searchDropdown({
+    Key? dropdownKey,
     String? labelText,
     String? hintText,
     int line = 1,
     TextInputType type = TextInputType.text,
     bool readOnly = false,
     bool required = false,
+    bool enabled = true,
     String? selectedItem,
     Function(String?)? onChanged,
     required List<String> list,
@@ -210,9 +212,11 @@ class CustomDropdown {
             ),
           ),
         CustomDropdownSearch().dropdownSearch(
+          dropdownKey: dropdownKey,
           label: labelText,
           hint: hintText ?? "",
           list: list,
+          enabled: enabled,
           onChanged: onChanged,
           required: required,
           selectedItem: selectedItem,
@@ -224,12 +228,14 @@ class CustomDropdown {
   }
 
   static Widget searchDropdownMapType({
+    Key? dropdownKey,
     String? labelText,
     String? hintText,
     int line = 1,
     TextInputType type = TextInputType.text,
     bool readOnly = false,
     bool required = false,
+    bool enabled = true,
     Map<String, String>? selectedItem,
     Function(Map<String, String>?)? onChanged,
     required List<Map<String, String>> list,
@@ -248,10 +254,12 @@ class CustomDropdown {
             style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
           ),
         CustomDropdownSearch().dropdownSearchMapType(
+          dropdownKey: dropdownKey,
           label: labelText,
           hint: hintText ?? "",
           selectedItem: selectedItem,
           list: list,
+          enabled: enabled,
           onChanged: onChanged,
           required: required,
         ),

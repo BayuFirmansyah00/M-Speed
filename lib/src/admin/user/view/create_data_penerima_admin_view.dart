@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
-import 'package:mspeed/common/component/custom_dropdown.dart';
 import 'package:mspeed/src/admin/user/model/penerima_admin_model.dart';
 import 'package:mspeed/src/admin/user/provider/admin_form_penerima_provider.dart';
 import 'package:mspeed/src/admin/user/view/admin_form_widgets.dart';
@@ -19,7 +18,7 @@ class CreateDataPenerimaAdminView extends StatefulWidget {
 
 class _CreateDataPenerimaAdminViewState
     extends BaseState<CreateDataPenerimaAdminView> {
-  static const _gradient = [Color(0xff8B5CF6), Color(0xff7C3AED)];
+  static const _gradient = [Color(0xffDC2626), Color(0xffB91C1C)];
   static const _accent = Color(0xff8B5CF6);
 
   bool get isEdit => widget.penerima != null;
@@ -64,7 +63,7 @@ class _CreateDataPenerimaAdminViewState
         slivers: [
           SliverAppBar(
             pinned: true,
-            expandedHeight: 120,
+            expandedHeight: 140,
             backgroundColor: _gradient[1],
             surfaceTintColor: Colors.transparent,
             leading: IconButton(
@@ -116,85 +115,33 @@ class _CreateDataPenerimaAdminViewState
                           hint: 'Masukkan no. HP',
                           icon: Icons.phone_outlined,
                           inputType: TextInputType.phone),
-                      const SizedBox(height: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Manager',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xff4A5568),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          CustomDropdown.normalDropdown(
-                            controller: TextEditingController(), // Not strictly needed
-                            hintText: 'Pilih Manager (Opsional)',
-                            list: p.allManagers
-                                .map(
-                                  (e) => DropdownMenuItem(
-                                    value: e['id']?.toString() ?? '0',
-                                    child: Text(e['name'] ?? ''),
-                                  ),
-                                )
-                                .toList(),
-                            selectedItem: p.selectedManagerId,
-                            onChanged: (value) {
-                              p.selectedManagerId = value;
-                              setState(() {});
-                            },
-                          ),
-                        ],
-                      ),
                     ],
                   ),
                   const SizedBox(height: 14),
                   AdminFormSection(
-                    title: 'Keamanan & Akses',
-                    icon: Icons.lock_outline_rounded,
+                    title: 'Lokasi',
+                    icon: Icons.location_on_outlined,
                     accentColor: _accent,
                     children: [
                       AdminFormField(
-                        controller: p.accessC,
-                        label: 'Hak Akses',
-                        hint: 'Masukkan hak akses (opsional)',
-                        icon: Icons.admin_panel_settings_outlined,
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xffE2E8F0)),
-                        ),
-                        child: SwitchListTile(
-                          title: const Text(
-                            'Status Aktif',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xff1E293B),
-                            ),
-                          ),
-                          subtitle: Text(
-                            p.isActive ? 'Akun aktif dan dapat login' : 'Akun dinonaktifkan',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: p.isActive ? Colors.green : Colors.red,
-                            ),
-                          ),
-                          value: p.isActive,
-                          onChanged: (val) {
-                            setState(() {
-                              p.isActive = val;
-                            });
-                          },
-                          activeColor: _accent,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
+                          controller: p.cityC,
+                          label: 'Kota',
+                          hint: 'Masukkan kota',
+                          icon: Icons.location_city_outlined),
+                      AdminFormField(
+                          controller: p.alamatC,
+                          label: 'Alamat Lengkap',
+                          hint: 'Masukkan alamat lengkap',
+                          icon: Icons.map_outlined,
+                          maxLines: 3),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  AdminFormSection(
+                    title: 'Keamanan',
+                    icon: Icons.lock_outline_rounded,
+                    accentColor: _accent,
+                    children: [
                       AdminFormField(
                           controller: p.passwordC,
                           label: 'Password',

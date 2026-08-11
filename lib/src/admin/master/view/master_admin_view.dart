@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:mspeed/generated/assets.dart';
-import 'package:mspeed/utils/utils.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
-import 'package:mspeed/src/admin/master/view/data_banner_admin_view.dart';
-import 'package:mspeed/src/admin/master/view/data_subdit_admin_view.dart';
+import 'package:mspeed/common/helper/constant.dart';
+import 'package:mspeed/generated/assets.dart';
 import 'package:mspeed/src/admin/master/view/data_alamat_admin.dart';
-import 'package:mspeed/src/admin/master/view/data_pajak_admin.dart';
 import 'package:mspeed/src/admin/master/view/data_kategori_admin.dart';
+import 'package:mspeed/src/admin/master/view/data_pajak_admin.dart';
+import 'package:mspeed/src/admin/master/view/data_subdit_admin_view.dart';
 import 'package:mspeed/src/admin/master/view/data_materai_admin_view.dart';
+import 'package:mspeed/src/admin/master/view/data_banner_admin_view.dart';
 
 class MasterAdminView extends StatefulWidget {
   const MasterAdminView({super.key});
@@ -25,61 +25,43 @@ class _MasterAdminViewState extends State<MasterAdminView> {
         title: 'Subdit',
         subtitle: 'Kelola data subdivisi dan direktorat',
         svgAsset: Assets.svgsIcMasterKategori,
-        gradient: [const Color(0xff7C3AED), const Color(0xff6D28D9)],
-        isComingSoon: false,
-        onTap: () {
-          CusNav.nPush(context, const DataSubditAdminView());
-        },
-      ),
-      _MasterMenu(
-        title: 'Banner',
-        subtitle: 'Kelola data banner promosi aplikasi',
-        svgAsset: Assets.svgsIcMasterKategori, // Placeholder
-        gradient: [const Color(0xff3B82F6), const Color(0xff1D4ED8)],
-        isComingSoon: false,
-        onTap: () {
-          CusNav.nPush(context, const DataBannerAdminView());
-        },
+        gradient: [const Color(0xffE11D48), const Color(0xffBE123C)],
+        onTap: () => CusNav.nPush(context, DataSubditAdminView()),
       ),
       _MasterMenu(
         title: 'Alamat',
         subtitle: 'Kelola data alamat pengiriman',
         svgAsset: Assets.svgsIcMasterAlamat,
-        gradient: [const Color(0xff059669), const Color(0xff047857)],
-        isComingSoon: false,
-        onTap: () {
-          CusNav.nPush(context, const DataAlamatAdminView());
-        },
+        gradient: [const Color(0xffFB7185), const Color(0xffF43F5E)],
+        onTap: () => CusNav.nPush(context, DataAlamatAdminView()),
       ),
       _MasterMenu(
         title: 'Pajak',
         subtitle: 'Konfigurasi tarif dan data pajak',
         svgAsset: Assets.svgsIcMasterPajak,
         gradient: [const Color(0xffDC2626), const Color(0xffB91C1C)],
-        isComingSoon: false,
-        onTap: () {
-          CusNav.nPush(context, const DataPajakAdminView());
-        },
-      ),
-      _MasterMenu(
-        title: 'E-Materai',
-        subtitle: 'Konfigurasi harga e-materai sistem',
-        svgAsset: Assets.svgsIcMasterPajak, // or another appropriate asset
-        gradient: [const Color(0xffDC2626), const Color(0xffB91C1C)], // using red similar to materai badge
-        isComingSoon: false,
-        onTap: () {
-          CusNav.nPush(context, const DataMateraiAdminView());
-        },
+        onTap: () => CusNav.nPush(context, DataPajakAdminView()),
       ),
       _MasterMenu(
         title: 'Kategori',
         subtitle: 'Kelola kategori produk di platform',
         svgAsset: Assets.svgsIcMasterKategori,
-        gradient: [const Color(0xffEA580C), const Color(0xffC2410C)],
-        isComingSoon: false,
-        onTap: () {
-          CusNav.nPush(context, const DataKategoriAdminView());
-        },
+        gradient: [const Color(0xffF87171), const Color(0xffEF4444)],
+        onTap: () => CusNav.nPush(context, DataKategoriAdminView()),
+      ),
+      _MasterMenu(
+        title: 'Materai',
+        subtitle: 'Manajemen e-materai',
+        svgAsset: Assets.svgsIcMasterKategori,
+        gradient: [const Color(0xffFCA5A5), const Color(0xffF87171)],
+        onTap: () => CusNav.nPush(context, const DataMateraiAdminView()),
+      ),
+      _MasterMenu(
+        title: 'Banner',
+        subtitle: 'Atur banner aplikasi',
+        svgAsset: Assets.svgsIcMasterKategori,
+        gradient: [const Color(0xffFECACA), const Color(0xffFCA5A5)],
+        onTap: () => CusNav.nPush(context, const DataBannerAdminView()),
       ),
     ];
 
@@ -93,7 +75,7 @@ class _MasterAdminViewState extends State<MasterAdminView> {
             floating: false,
             pinned: true,
             automaticallyImplyLeading: false,
-            backgroundColor: const Color(0xff7C3AED),
+            backgroundColor: const Color(0xffB91C1C),
             surfaceTintColor: Colors.transparent,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
@@ -101,7 +83,7 @@ class _MasterAdminViewState extends State<MasterAdminView> {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xff8B5CF6), Color(0xff6D28D9)],
+                    colors: [Color(0xffDC2626), Color(0xffB91C1C)],
                   ),
                 ),
                 child: Stack(
@@ -110,18 +92,18 @@ class _MasterAdminViewState extends State<MasterAdminView> {
                       right: -30, top: -30,
                       child: Container(
                         width: 150, height: 150,
-                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.07), shape: BoxShape.circle),
+                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.07), shape: BoxShape.circle),
                       ),
                     ),
                     Positioned(
                       left: -20, bottom: -20,
                       child: Container(
                         width: 100, height: 100,
-                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), shape: BoxShape.circle),
+                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), shape: BoxShape.circle),
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 56, 20, 16),
+                      padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 60, 20, 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.end,
@@ -131,7 +113,7 @@ class _MasterAdminViewState extends State<MasterAdminView> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.15),
+                                  color: Colors.white.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: SvgPicture.asset(
@@ -170,7 +152,7 @@ class _MasterAdminViewState extends State<MasterAdminView> {
                 children: [
                   Container(
                     width: 3, height: 16,
-                    decoration: BoxDecoration(color: const Color(0xff7C3AED), borderRadius: BorderRadius.circular(4)),
+                    decoration: BoxDecoration(color: const Color(0xffDC2626), borderRadius: BorderRadius.circular(4)),
                   ),
                   const SizedBox(width: 8),
                   const Text('Kelola Master Data',
@@ -179,11 +161,11 @@ class _MasterAdminViewState extends State<MasterAdminView> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xff7C3AED).withValues(alpha: 0.1),
+                      color: const Color(0xffDC2626).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Text('6 menu',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xff7C3AED))),
+                    child: Text('${menus.length} menu',
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xffDC2626))),
                   ),
                 ],
               ),
@@ -215,9 +197,8 @@ class _MasterMenu {
   final String subtitle;
   final String svgAsset;
   final List<Color> gradient;
-  final bool isComingSoon;
   final VoidCallback onTap;
-  const _MasterMenu({required this.title, required this.subtitle, required this.svgAsset, required this.gradient, this.isComingSoon = false, required this.onTap});
+  const _MasterMenu({required this.title, required this.subtitle, required this.svgAsset, required this.gradient, required this.onTap});
 }
 
 // ─── Card Widget ──────────────────────────────────────────────────────────────
@@ -257,7 +238,7 @@ class _MasterMenuCardState extends State<_MasterMenuCard> with SingleTickerProvi
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 16, offset: const Offset(0, 4))],
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 16, offset: const Offset(0, 4))],
           ),
           child: Row(
             children: [
@@ -295,30 +276,17 @@ class _MasterMenuCardState extends State<_MasterMenuCard> with SingleTickerProvi
                   ],
                 ),
               ),
-              if (m.isComingSoon)
-                Padding(
-                  padding: const EdgeInsets.only(right: 16),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xffF1F5F9),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text('Segera Hadir', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xff94A3B8))),
+              Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: m.gradient[0].withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.only(right: 16),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: m.gradient[0].withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(Icons.arrow_forward_rounded, color: m.gradient[0], size: 16),
-                  ),
+                  child: Icon(Icons.arrow_forward_rounded, color: m.gradient[0], size: 16),
                 ),
+              ),
             ],
           ),
         ),
