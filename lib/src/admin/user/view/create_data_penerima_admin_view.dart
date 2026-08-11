@@ -121,7 +121,7 @@ class _CreateDataPenerimaAdminViewState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Departemen',
+                            'Manager',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -130,9 +130,9 @@ class _CreateDataPenerimaAdminViewState
                           ),
                           const SizedBox(height: 6),
                           CustomDropdown.normalDropdown(
-                            controller: p.departmentC,
-                            hintText: 'Pilih Departemen',
-                            list: p.allDepartments
+                            controller: TextEditingController(), // Not strictly needed
+                            hintText: 'Pilih Manager (Opsional)',
+                            list: p.allManagers
                                 .map(
                                   (e) => DropdownMenuItem(
                                     value: e['id']?.toString() ?? '0',
@@ -140,101 +140,14 @@ class _CreateDataPenerimaAdminViewState
                                   ),
                                 )
                                 .toList(),
-                            selectedItem: p.selectedDepartmentId,
+                            selectedItem: p.selectedManagerId,
                             onChanged: (value) {
-                              p.selectedDepartmentId = value;
+                              p.selectedManagerId = value;
                               setState(() {});
                             },
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  AdminFormSection(
-                    title: 'Lokasi',
-                    icon: Icons.location_on_outlined,
-                    accentColor: _accent,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Provinsi',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xff4A5568),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          CustomDropdown.searchDropdown(
-                            hintText: 'Pilih Provinsi',
-                            list: (p.provinsiModel?.data ?? [])
-                                .map((e) => e?.nama ?? '')
-                                .toList(),
-                            selectedItem: p.selectedProvince,
-                            onChanged: (value) async {
-                              var matchedProvince;
-                              for (var e in p.provinsiModel?.data ?? []) {
-                                if (e?.nama == value) {
-                                  matchedProvince = e;
-                                  break;
-                                }
-                              }
-                              p.selectedProvinceId = matchedProvince?.ID;
-                              p.selectedProvince = matchedProvince?.nama;
-                              p.selectedCityId = null;
-                              p.selectedCity = null;
-                              setState(() {});
-                              
-                              if (p.kotaModel?.data == null || p.kotaModel!.data!.isEmpty) {
-                                await p.fetchKota(withLoading: true);
-                                setState(() {});
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Kota',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xff4A5568),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          CustomDropdown.searchDropdown(
-                            hintText: 'Pilih Kota',
-                            list: p.filteredKotaList.map((e) => e?.kota ?? '').toList(),
-                            selectedItem: p.selectedCity,
-                            onChanged: (value) {
-                              var matchedCity;
-                              for (var e in p.filteredKotaList) {
-                                if (e?.kota == value) {
-                                  matchedCity = e;
-                                  break;
-                                }
-                              }
-                              p.selectedCityId = matchedCity?.ID;
-                              p.selectedCity = matchedCity?.kota;
-                              setState(() {});
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      AdminFormField(
-                          controller: p.alamatC,
-                          label: 'Alamat Lengkap',
-                          hint: 'Masukkan alamat lengkap',
-                          icon: Icons.map_outlined,
-                          maxLines: 3),
                     ],
                   ),
                   const SizedBox(height: 14),

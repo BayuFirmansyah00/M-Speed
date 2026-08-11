@@ -34,16 +34,18 @@ class RegisterProvider extends BaseController with ChangeNotifier {
 
       // Request body sesuai dengan Laravel RegisterSellerRequest
       Map<String, String> param = {
-        'name': companyNameC.text,
+        'company_name': companyNameC.text,
+        'owner_name': ownerNameC.text,
+        'detail': addressC.text,
         'email': emailC.text,
         'password': passwordC.text,
         'password_confirmation': confirmPasswordC.text,
       };
 
       try {
-        // POST /api/v1/merchant/register
+        // POST /api/v1/register/seller
         final response = await post(
-            Constant.BASE_API_FULL + '/v1/merchant/register',
+            Constant.BASE_API_FULL + '/v1/register/seller',
             body: param);
 
         if (response.statusCode == 201 || response.statusCode == 200) {
@@ -52,8 +54,8 @@ class RegisterProvider extends BaseController with ChangeNotifier {
               RegisterResponseModel.fromJson(jsonDecode(response.body));
 
           final String? token = registerResponse.meta?.accessToken;
-          final RegisterResponseUser? user = registerResponse.data?.user;
-          final int? completeness = registerResponse.data?.completeness;
+          final RegisterResponseData? data = registerResponse.data;
+          final int? completeness = data?.sellerProfile?.completeness;
 
           if (token != null && token.isNotEmpty) {
             // Simpan token Bearer yang diperoleh dari response registrasi
@@ -61,13 +63,13 @@ class RegisterProvider extends BaseController with ChangeNotifier {
             SharedPreferences prefs = await SharedPreferences.getInstance();
             await prefs.setString(Constant.kSetPrefToken, token);
             await prefs.setString(
-                Constant.kSetPrefId, user?.id?.toString() ?? '');
+                Constant.kSetPrefId, data?.id?.toString() ?? '');
             await prefs.setString(
-                Constant.kSetPrefEmail, user?.email ?? emailC.text);
+                Constant.kSetPrefEmail, data?.email ?? emailC.text);
             await prefs.setString(
-                Constant.kSetPrefRoles, user?.role ?? 'SELLER');
+                Constant.kSetPrefRoles, data?.role ?? 'SELLER');
             await prefs.setString(Constant.kSetPrefFirstName,
-                registerResponse.data?.name ?? companyNameC.text);
+                data?.sellerProfile?.name ?? companyNameC.text);
             await prefs.setString(Constant.kSetPrefLastName, '');
 
             Utils.showSuccess(
@@ -94,7 +96,20 @@ class RegisterProvider extends BaseController with ChangeNotifier {
           String message = "Gagal mendaftar";
           try {
             final decoded = jsonDecode(response.body);
-            message = decoded["message"] ?? decoded["error"] ?? message;
+            if (decoded["errors"] != null) {
+              final Map<String, dynamic> errors = decoded["errors"];
+              List<String> errorMessages = [];
+              errors.forEach((key, value) {
+                if (value is List) {
+                  errorMessages.add(value.join(", "));
+                } else {
+                  errorMessages.add(value.toString());
+                }
+              });
+              message = errorMessages.join("\n");
+            } else {
+              message = decoded["message"] ?? decoded["error"] ?? message;
+            }
           } catch (e) {}
           Utils.showFailed(msg: message);
         }

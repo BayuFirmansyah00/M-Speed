@@ -5,6 +5,10 @@ class Assets {
   static const String assetsIconsIcServices = 'assets/icons/ic_services.png';
   static const String assetsIconsIcTools = 'assets/icons/ic_tools.png';
   static const String assetsImagesImgSplash = 'assets/images/img_splash.png';
+  static const String logoMSpeed = 'assets/images/ic-mspeed.png';
+  static const String logoMSpeedHorizontal = 'assets/images/img-splash-logo.png';
+  static const String logoMSpeedWhite = 'assets/images/ic-mspeed.png'; // Fallback to main logo
+  static const String logoMSpeedIcon = 'assets/images/ic-mspeed.png'; // Fallback to main logo
   static const String fontsOFL = 'assets/fonts/OFL.txt';
   static const String fontsSourceSansProBlack = 'assets/fonts/SourceSansPro-Black.ttf';
   static const String fontsSourceSansProBlackItalic = 'assets/fonts/SourceSansPro-BlackItalic.ttf';

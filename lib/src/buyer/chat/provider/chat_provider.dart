@@ -43,62 +43,17 @@ class ChatProvider extends BaseController with ChangeNotifier {
   Future<void> fetchListChat(BuildContext context,
       {bool withLoading = true, required String idBuyer}) async {
     if (withLoading) loading(true);
-
-    final response = await get(Constant.BASE_API_FULL + '/getchatbuyer',
-        body: {'user_id': idBuyer});
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      chatBuyerModel = ChatBuyerModel.fromJson(jsonDecode(response.body));
-      chatBuyerModel.data?.seller?.forEach((element) {
-        element?.createdAt = formatDate(element.createdAt ?? "");
-      });
-
-      notifyListeners();
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      if (message.toString().contains("Unauthorized")) {
-        Utils.showFailed(msg: "Unauthorized");
-        Future.delayed(Duration(seconds: 1)).then((value) {
-          Navigator.pushReplacementNamed(context, '/login');
-        });
-      }
-      throw Exception(message);
-    }
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
+    if (withLoading) loading(false);
   }
 
   Future<void> fetchDetailChat(BuildContext context,
       {bool withLoading = true,
       required String idSeller,
       required String idUser}) async {
-    detailChatBuyerModel = DetailChatBuyerModel();
-
     if (withLoading) loading(true);
-
-    final response = await get(Constant.BASE_API_FULL + '/getdetailchatbuyer',
-        body: {'user_id': idUser, 'seller_id': idSeller});
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      detailChatBuyerModel =
-          DetailChatBuyerModel.fromJson(jsonDecode(response.body));
-      // detailChatBuyerModel.data?.seller?.forEach((element) {
-      //   element?.Buat = formatDate(element.Buat ?? "");
-      // });
-
-      notifyListeners();
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      if (message.toString().contains("Unauthorized")) {
-        Utils.showFailed(msg: "Unauthorized");
-        Future.delayed(Duration(seconds: 1)).then((value) {
-          Navigator.pushReplacementNamed(context, '/login');
-        });
-      }
-      throw Exception(message);
-    }
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
+    if (withLoading) loading(false);
   }
 
   Future<void> sendChat(BuildContext context,
@@ -107,29 +62,7 @@ class ChatProvider extends BaseController with ChangeNotifier {
       required String idPengirim,
       required String message}) async {
     if (withLoading) loading(true);
-
-    final response = await post(Constant.BASE_API_FULL + '/sendmessagebuyer',
-        body: {
-          'penerima_id': idPenerima,
-          'pengirim_id': idPengirim,
-          'pesan': message
-        });
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      // notifyListeners();
-      fetchDetailChat(context,
-          withLoading: true, idSeller: idPenerima, idUser: idPengirim);
-      // if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      if (message.toString().contains("Unauthorized")) {
-        Utils.showFailed(msg: "Unauthorized");
-        Future.delayed(Duration(seconds: 1)).then((value) {
-          Navigator.pushReplacementNamed(context, '/login');
-        });
-      }
-      throw Exception(message);
-    }
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
+    if (withLoading) loading(false);
   }
 }

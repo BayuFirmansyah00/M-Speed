@@ -31,23 +31,7 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
     
     try {
-      // Ambil seller_id dari sesi login (bukan hardcode)
-      final sellerId = await SessionHelper.getSellerId();
-
-      // TODO: Remove per_page=${Constant.maxPaginationPerPage} when infinite scroll is fully implemented in UI
-      final parsed = await getRest(
-        Constant.BASE_API_FULL + '${Constant.epParentOrders}?seller_id=$sellerId&page=$currentPage&per_page=${Constant.maxPaginationPerPage}',
-      );
-      
-      final responseModel = PesananSellerModel.fromJson(parsed);
-      if (isLoadMore) {
-        pesananSellerModel.data?.addAll(responseModel.data ?? []);
-        pesananSellerModel.meta = responseModel.meta;
-      } else {
-        pesananSellerModel = responseModel;
-      }
-
-      notifyListeners();
+      throw Exception('Fitur ini belum tersedia pada API backend.');
     } catch (e) {
       if (isLoadMore) currentPage--;
       Utils.showFailed(msg: e.toString());
@@ -72,17 +56,9 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     try {
-      // Ambil seller_id dari sesi login (bukan hardcode)
-      final sellerId = await SessionHelper.getSellerId();
-
-      final parsed = await getRest(
-        Constant.BASE_API_FULL + '${Constant.epParentOrders}/$parent_id?seller_id=$sellerId',
-      );
-      
-      detailPesananSellerModel = DetailPesananSellerModel.fromJson(parsed);
-      notifyListeners();
+      throw Exception('Fitur ini belum tersedia pada API backend.');
     } catch (e) {
-      throw Exception(e);
+      // throw Exception(e);
     } finally {
       if (withLoading) loading(false);
     }
@@ -96,26 +72,9 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
     required bool terima,
   }) async {
     if (withLoading) loading(true);
-
-    // PUT /api/parent-orders/{id} — update status pesanan
-    var body = {"status": terima ? "accepted" : "rejected"};
-    if (!terima && rejectOrderReason != null && rejectOrderReason?.trim() != '')
-      body.addAll({'reject_reason': rejectOrderReason!});
-      
-    final response = await put(Constant.BASE_API_FULL + '/parent-orders/$parent_id', body: body);
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      fetchDetailPesanan(parent_id: parent_id, withLoading: true);
-      notifyListeners();
-      if (withLoading) loading(false);
-      return true;
-    } else {
-      final decoded = jsonDecode(response.body);
-      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
-      Utils.showFailed(msg: message);
-      loading(false);
-      return false;
-    }
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
+    if (withLoading) loading(false);
+    return false;
   }
 
   Future<bool> kirimBarang({
@@ -123,25 +82,9 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
     required String parent_id,
   }) async {
     if (withLoading) loading(true);
-    
-    // PUT /api/parent-orders/{id} — update status pengiriman
-    final response = await put(
-      Constant.BASE_API_FULL + '/parent-orders/$parent_id',
-      body: {"status": "shipped"},
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      fetchDetailPesanan(parent_id: parent_id, withLoading: true);
-      notifyListeners();
-      if (withLoading) loading(false);
-      return true;
-    } else {
-      final decoded = jsonDecode(response.body);
-      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
-      Utils.showFailed(msg: message);
-      loading(false);
-      return false;
-    }
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
+    if (withLoading) loading(false);
+    return false;
   }
 
   bool? _isTtdSuccess = null;
@@ -160,36 +103,10 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
     required File image,
   }) async {
     if (withLoading) loading(true);
-    final file = await http.MultipartFile.fromPath(
-      'file',
-      image.path,
-      filename: basename(image.path), 
-    );
-
-    // POST /api/order-documents — upload dokumen pesanan
-    final response = await post(
-      Constant.BASE_API_FULL + '/order-documents',
-      body: {
-        "parent_order_id": transaction_id, 
-        "nomor_order": nomor_order,
-        "document_type_id": suratType == SuratType.SURAT_PESANAN ? "2" : "3" // TTD Seller
-      },
-      files: [file],
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      if (withLoading) loading(false);
-      if (jsonDecode(response.body)["status"] == "success") {
-        isTtdSuccess = true;
-        return true;
-      } else {
-        isTtdSuccess = false;
-        return false;
-      }
-    } else {
-      isTtdSuccess = false;
-      return false;
-    }
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
+    if (withLoading) loading(false);
+    isTtdSuccess = false;
+    return false;
   }
 
   Future<bool> uploadLampiran({
@@ -200,53 +117,9 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
     required List<OtherFile> lainnya,
   }) async {
     if (withLoading) loading(true);
-
-    final mFaktur = await getMultipart('faktur', faktur);
-    // http.MultipartFile.fromPath(
-    //   'faktur',
-    //   faktur.path,
-    //   filename: basename(faktur.path), // Use the file name of the image
-    // );
-
-    final mNota = await getMultipart('enofa', eNota);
-    // await http.MultipartFile.fromPath(
-    //   'enofa',
-    //   eNota.path,
-    //   filename: basename(eNota.path), // Use the file name of the image
-    // );
-
-    List<http.MultipartFile> mLainnya = [];
-    for (int i = 0; i < lainnya.length; i++) {
-      if (lainnya[i].file == null) continue;
-      mLainnya.add(
-        await http.MultipartFile.fromPath(
-          'filelain[]',
-          lainnya[i].file!.path,
-          filename: basename(lainnya[i].controller.text),
-        ),
-      );
-    }
-
-    // POST /api/order-documents — upload lampiran seller (faktur, enofa, lainnya)
-    final response = await post(
-      Constant.BASE_API_FULL + '/order-documents',
-      body: {"parent_order_id": transaction_id, "document_type_id": "4"}, // ID untuk lampiran
-      files: [mFaktur, mNota, ...mLainnya],
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      if (withLoading) loading(false);
-      if (jsonDecode(response.body)["status"] == "success") {
-        // isTtdSuccess = true;
-        return true;
-      } else {
-        // isTtdSuccess = false;
-        return false;
-      }
-    } else {
-      // isTtdSuccess = false;
-      return false;
-    }
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
+    if (withLoading) loading(false);
+    return false;
   }
 
   Future<bool> buatSuratJalan({
@@ -256,36 +129,9 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
     required String catatan,
   }) async {
     if (withLoading) loading(true);
-
-    final body = {"parent_order_id": transaction_id, "catatan": catatan};
-    for (int i = 0; i < productCatatan.length; i++) {
-      print(productCatatan[i].ket);
-      body["produk_id[$i]"] = productCatatan[i].id;
-      body["keterangan[$i]"] = productCatatan[i].ket ?? '';
-    }
-
-    // POST /api/parent-orders/{id}/surat-jalan
-    final response = await post(
-      Constant.BASE_API_FULL + '/parent-orders/$transaction_id/surat-jalan',
-      body: body,
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      if (withLoading) loading(false);
-      if (jsonDecode(response.body)["status"] == "success") {
-        return true;
-      } else {
-        return false;
-      }
-      // notifyListeners();
-
-      // return model;
-    } else {
-      final message = jsonDecode(response.body)["messages"]?["error"] ?? 'Terjadi kesalahan';
-      Utils.showFailed(msg: message);
-      loading(false);
-      return false;
-    }
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
+    if (withLoading) loading(false);
+    return false;
   }
 
   Future<String?> getPdf({
@@ -294,25 +140,9 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
     required String transaction_id,
   }) async {
     if (withLoading) loading(true);
-    final response = await get(
-      Constant.BASE_API_FULL + '/${pdf.pdf}',
-      body: {"parent_order_id": transaction_id},
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      if (withLoading) loading(false);
-
-      if (jsonDecode(response.body)["result"] == "success") {
-        return jsonDecode(response.body)["data"];
-      } else {
-        return null;
-      }
-    } else {
-      final message = jsonDecode(response.body)["messages"]?["error"] ?? 'Terjadi kesalahan';
-      Utils.showFailed(msg: message);
-      loading(false);
-      return null;
-    }
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
+    if (withLoading) loading(false);
+    return null;
   }
 }
 

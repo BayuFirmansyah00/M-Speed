@@ -68,29 +68,18 @@ class AlamatAdminModelData {
 }
 
 class AlamatAdminModel {
-/*
-{
-  "result": "success",
-  "data": [
-    {
-      "id": "3",
-      "prov_id": "15",
-      "kota_id": "240",
-      "nama": "Jalan Probolinggo No 12",
-      "prov": "Jawa Timur",
-      "kota": "Kabupaten Probolinggo"
-    }
-  ]
-}
-*/
-
   String? result;
   List<AlamatAdminModelData?>? data;
+  dynamic meta;
+  dynamic links;
 
   AlamatAdminModel({
     this.result,
     this.data,
+    this.meta,
+    this.links,
   });
+
   AlamatAdminModel.fromJson(Map<String, dynamic> json) {
     result = json['result']?.toString();
     if (json['data'] != null) {
@@ -101,7 +90,10 @@ class AlamatAdminModel {
       });
       this.data = arr0;
     }
+    meta = json['meta'];
+    links = json['links'];
   }
+
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
     data['result'] = result;
@@ -113,6 +105,8 @@ class AlamatAdminModel {
       });
       data['data'] = arr0;
     }
+    data['meta'] = meta;
+    data['links'] = links;
     return data;
   }
 }

@@ -29,43 +29,20 @@ class AdminFormPenerimaProvider extends BaseController with ChangeNotifier {
   final TextEditingController accessC = TextEditingController();
   bool isActive = true;
 
-  String? selectedDepartmentId;
-  List<Map<String, dynamic>> allDepartments = [];
-
-  ProvinsiModel? provinsiModel;
-  String? selectedProvince;
-  String? selectedProvinceId;
-
-  KotaModel? kotaModel;
-  String? selectedCity;
-  String? selectedCityId;
-  String? selectedAddressId;
-
-  List<KotaModelData?> get filteredKotaList {
-    if (kotaModel?.data == null) return [];
-    if (selectedProvinceId == null) return [];
-    return kotaModel!.data!
-        .where((e) => e?.provinceId?.toString() == selectedProvinceId?.toString())
-        .toList();
-  }
+  String? selectedManagerId;
+  List<Map<String, dynamic>> allManagers = [];
 
   PenerimaAdminModel penerimaAdminModel = PenerimaAdminModel();
 
   setData(PenerimaAdminModelData? penerima) async {
     clearData();
     await fetchMasterData();
-    await fetchProvinsi();
-    await fetchKota();
     if (penerima != null) {
       firstNameC.text = penerima.firstname ?? '';
       lastNameC.text = penerima.lastname ?? '';
       emailC.text = penerima.email ?? '';
       phoneNumberC.text = penerima.telp ?? '';
-      alamatC.text = penerima.alamat ?? '';
-      selectedDepartmentId = penerima.subditId;
-      String? cityName = penerima.kabkota;
 
-      // Fetch detail for complete data (active, access)
       if (penerima.ID != null) {
         try {
           final res = await ApiClient().dio.get('/audit/v1/admin/receivers/${penerima.ID}');
@@ -74,37 +51,10 @@ class AdminFormPenerimaProvider extends BaseController with ChangeNotifier {
             final Map<String, dynamic> uData = data['user_data'] ?? {};
             isActive = data['status'] == 'active' ? true : false;
             accessC.text = uData['access']?.toString() ?? '';
-            selectedDepartmentId = (uData['department'] as Map<String, dynamic>?)?['id']?.toString();
-            if (data['addresses'] != null && (data['addresses'] as List).isNotEmpty) {
-              var addr = data['addresses'][0];
-              selectedAddressId = addr['id']?.toString();
-              alamatC.text = addr['detail']?.toString() ?? '';
-              cityName = addr['city']?.toString();
-            }
+            selectedManagerId = (uData['manager'] as Map<String, dynamic>?)?['id']?.toString();
           }
         } catch (e) {
           debugPrint("Failed to fetch detail: $e");
-        }
-      }
-
-      // Set City
-      if (cityName != null && kotaModel?.data != null) {
-        var matchedCity = kotaModel!.data!.firstWhere(
-          (e) => e?.kota?.toLowerCase() == cityName!.toLowerCase(),
-          orElse: () => null,
-        );
-        if (matchedCity != null) {
-          selectedCityId = matchedCity.ID;
-          selectedProvinceId = matchedCity.provinceId;
-
-          // Find Province name
-          if (provinsiModel?.data != null) {
-            var matchedProv = provinsiModel!.data!.firstWhere(
-              (e) => e?.ID == selectedProvinceId,
-              orElse: () => null,
-            );
-            selectedProvince = matchedProv?.nama;
-          }
         }
       }
     }
@@ -116,41 +66,40 @@ class AdminFormPenerimaProvider extends BaseController with ChangeNotifier {
     emailC.clear();
     phoneNumberC.clear();
     passwordC.clear();
-    alamatC.clear();
-    cityC.clear();
-    departmentC.clear();
     accessC.clear();
     isActive = true;
-    allDepartments.clear();
-    selectedDepartmentId = null;
-    selectedProvince = null;
-    selectedProvinceId = null;
-    selectedCity = null;
-    selectedCityId = null;
-    selectedAddressId = null;
+    allManagers.clear();
+    selectedManagerId = null;
   }
 
   Future<void> sendPenerima(BuildContext context,
       {bool withLoading = false, String? penerimaId}) async {
+    if (emailC.text.trim().isEmpty) {
+      return Utils.showFailed(msg: 'Email wajib diisi');
+    }
+    if (penerimaId == null && passwordC.text.isEmpty) {
+      return Utils.showFailed(msg: 'Password wajib diisi untuk user baru');
+    }
+    if (firstNameC.text.trim().isEmpty) {
+      return Utils.showFailed(msg: 'First Name wajib diisi');
+    }
+
     if (withLoading) loading(true);
     var param = {
       'email': emailC.text,
       'first_name': firstNameC.text,
       'last_name': lastNameC.text,
       'phone': phoneNumberC.text,
-      'department_id': selectedDepartmentId ?? '1',
       'access': accessC.text,
-      'active': isActive ? '1' : '0',
-      'address_name': 'Utama',
-      'address_phone': phoneNumberC.text,
-      'city_id': selectedCityId ?? '1',
-      'detail': alamatC.text,
+      'active': isActive,
     };
+    
+    if (selectedManagerId != null) {
+      param['manager_id'] = selectedManagerId!;
+    }
+    
     if (passwordC.text.isNotEmpty) {
       param['password'] = passwordC.text;
-    }
-    if (penerimaId != null && selectedAddressId != null) {
-      param['address_id'] = selectedAddressId!;
     }
 
     try {
@@ -165,14 +114,19 @@ class AdminFormPenerimaProvider extends BaseController with ChangeNotifier {
         notifyListeners();
         await Utils.showSuccess(msg: 'Data penerima berhasil disimpan!');
         await Future.delayed(Duration(seconds: 2), () {});
-        CusNav.nPushReplace(
-            context, UserDataAdminView(userType: UserDataType.PENERIMA));
+        CusNav.nPop(context, true);
       }
     } on DioException catch (e) {
       var decoded = e.response?.data;
       String errorMessage = 'Terjadi kesalahan saat menyimpan data.';
       if (decoded != null && decoded['message'] != null) {
         errorMessage = decoded['message'];
+      }
+      if (decoded != null && decoded['errors'] != null) {
+        final errors = decoded['errors'] as Map<String, dynamic>;
+        if (errors.isNotEmpty) {
+          errorMessage = errors.values.first[0].toString();
+        }
       }
       Utils.showFailed(msg: errorMessage);
     } catch (e) {
@@ -187,41 +141,13 @@ class AdminFormPenerimaProvider extends BaseController with ChangeNotifier {
       final response = await ApiClient().dio.get('/audit/v1/admin/receivers/create');
       if (response.data['status'] == 'success') {
         final data = response.data['data'];
-        allDepartments = List<Map<String, dynamic>>.from(data['departments'] ?? []);
+        allManagers = List<Map<String, dynamic>>.from(data['managers'] ?? []);
         notifyListeners();
       }
     } catch (e) {
       debugPrint("Failed to fetch receiver master data: $e");
       Utils.showFailed(msg: "Maaf, data master belum bisa dimuat (Endpoint Backend belum siap).");
     }
-  }
-
-  Future<void> fetchProvinsi({bool withLoading = false}) async {
-    if (withLoading) loading(true);
-    try {
-      final response = await ApiClient().dio.get('/provinces');
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        provinsiModel = ProvinsiModel.fromJson(response.data);
-      }
-    } catch (e) {
-      debugPrint("Error Load Provinsi: $e");
-    }
-    notifyListeners();
-    if (withLoading) loading(false);
-  }
-
-  Future<void> fetchKota({bool withLoading = false}) async {
-    if (withLoading) loading(true);
-    try {
-      final response = await ApiClient().dio.get('/cities?per_page=-1');
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        kotaModel = KotaModel.fromJson(response.data);
-      }
-    } catch (e) {
-      debugPrint("Error Load Kota: $e");
-    }
-    notifyListeners();
-    if (withLoading) loading(false);
   }
 
   Future<void> deletePenerima(BuildContext context,
@@ -236,8 +162,7 @@ class AdminFormPenerimaProvider extends BaseController with ChangeNotifier {
         notifyListeners();
         await Utils.showSuccess(msg: 'Data penerima berhasil dihapus!');
         await Future.delayed(Duration(seconds: 2), () {});
-        CusNav.nPushReplace(
-            context, UserDataAdminView(userType: UserDataType.PENERIMA));
+        CusNav.nPop(context, true);
       }
     } catch (e) {
       Utils.showFailed(msg: e.toString());

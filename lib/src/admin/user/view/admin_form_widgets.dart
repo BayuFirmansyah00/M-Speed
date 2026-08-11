@@ -203,6 +203,7 @@ class _AdminFormFieldState extends State<AdminFormField> {
         ),
         const SizedBox(height: 6),
         TextFormField(
+          key: widget.key,
           controller: widget.controller,
           keyboardType: widget.inputType,
           obscureText: widget.obscure && !_showPass,

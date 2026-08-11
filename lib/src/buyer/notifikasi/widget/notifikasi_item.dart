@@ -2,17 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:mspeed/generated/assets.dart';
 
-// ─── Palet Warna ─────────────────────────────────────────────
-class _C {
-  static const primary   = Color(0xFFE50012);
-  static const secondary = Color(0xFF0B4177);
-  static const bg        = Color(0xFFF5F5F7);
-  static const card      = Color(0xFFFFFFFF);
-  static const txt1      = Color(0xFF111827);
-  static const txt2      = Color(0xFF6B7280);
-  static const txt3      = Color(0xFF9CA3AF);
-  static const border    = Color(0xFFEEEEEE);
-}
+import 'package:mspeed/common/helper/constant.dart';
 
 class NotifikasiItem extends StatelessWidget {
   final String image;
@@ -39,22 +29,18 @@ class NotifikasiItem extends StatelessWidget {
     return GestureDetector(
       onTap: !read ? onClick : null,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        margin: const EdgeInsets.symmetric(horizontal: Constant.space16, vertical: 4),
         decoration: BoxDecoration(
-          color: read ? _C.card : _C.secondary.withValues(alpha: 0.04),
-          borderRadius: BorderRadius.circular(16),
+          color: read ? Constant.dsSurface : Constant.dsPrimary.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(Constant.radiusLg),
           border: Border.all(
             color: read
-                ? _C.border
-                : _C.secondary.withValues(alpha: 0.25),
-            width: read ? 1 : 1.2,
+                ? Constant.dsBorder
+                : Constant.dsPrimary.withValues(alpha: 0.25),
+            width: 1,
           ),
           boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: read ? 0.02 : 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
+            Constant.shadowSmall,
           ],
         ),
         child: Padding(
@@ -82,12 +68,12 @@ class NotifikasiItem extends StatelessWidget {
                         width: 56,
                         height: 56,
                         decoration: BoxDecoration(
-                          color: _C.bg,
-                          borderRadius: BorderRadius.circular(12),
+                          color: Constant.dsBackground,
+                          borderRadius: BorderRadius.circular(Constant.radiusMd),
                         ),
                         child: const Icon(
                           Icons.image_not_supported_rounded,
-                          color: _C.txt3,
+                          color: Constant.dsTextSecondary,
                           size: 22,
                         ),
                       ),
@@ -102,9 +88,9 @@ class NotifikasiItem extends StatelessWidget {
                         width: 10,
                         height: 10,
                         decoration: BoxDecoration(
-                          color: _C.primary,
+                          color: Constant.dsPrimary,
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 1.5),
+                          border: Border.all(color: Constant.dsSurface, width: 1.5),
                         ),
                       ),
                     ),
@@ -124,9 +110,10 @@ class NotifikasiItem extends StatelessWidget {
                           child: Text(
                             title,
                             style: TextStyle(
+                              fontFamily: Constant.primaryTextStyle.fontFamily,
                               color: read
-                                  ? _C.txt1.withValues(alpha: 0.8)
-                                  : _C.txt1,
+                                  ? Constant.dsTextPrimary.withValues(alpha: 0.8)
+                                  : Constant.dsTextPrimary,
                               fontSize: 14,
                               fontWeight:
                                   read ? FontWeight.w500 : FontWeight.w700,
@@ -140,13 +127,14 @@ class NotifikasiItem extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: _C.primary.withValues(alpha: 0.1),
+                              color: Constant.dsPrimary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Text(
                               'Baru',
                               style: TextStyle(
-                                color: _C.primary,
+                                fontFamily: 'Poppins',
+                                color: Constant.dsPrimary,
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -162,9 +150,10 @@ class NotifikasiItem extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
+                        fontFamily: Constant.primaryTextStyle.fontFamily,
                         color: read
-                            ? _C.txt2
-                            : _C.txt1.withValues(alpha: 0.75),
+                            ? Constant.dsTextSecondary
+                            : Constant.dsTextPrimary.withValues(alpha: 0.75),
                         fontSize: 13,
                         height: 1.4,
                       ),
@@ -173,16 +162,17 @@ class NotifikasiItem extends StatelessWidget {
                     // Waktu
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.access_time_rounded,
                           size: 12,
-                          color: _C.txt3,
+                          color: Constant.dsTextSecondary,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           datetime,
-                          style: const TextStyle(
-                            color: _C.txt3,
+                          style: TextStyle(
+                            fontFamily: Constant.primaryTextStyle.fontFamily,
+                            color: Constant.dsTextSecondary,
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                           ),

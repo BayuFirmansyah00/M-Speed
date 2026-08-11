@@ -85,57 +85,10 @@ class AdminBannerProvider extends BaseController with ChangeNotifier {
   }
 
   Future<void> saveBanner(BuildContext context, {String? id}) async {
-    loading(true);
-    await Future.delayed(const Duration(seconds: 1)); // Simulasi API request
-
-    if (judulC.text.isEmpty || deskripsiC.text.isEmpty) {
-      loading(false);
-      Utils.showFailed(msg: 'Judul dan Deskripsi tidak boleh kosong.');
-      return;
-    }
-
-    if (id == null && selectedImage == null) {
-      loading(false);
-      Utils.showFailed(msg: 'Silakan pilih gambar terlebih dahulu.');
-      return;
-    }
-
-    if (id == null) {
-      // Create
-      bannerList.add(BannerAdminModelData(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        judul: judulC.text,
-        deskripsi: deskripsiC.text,
-        imageUrl: selectedImage?.path ?? 'https://via.placeholder.com/600x300.png?text=New+Banner',
-      ));
-      Utils.showSuccess(msg: 'Banner berhasil ditambahkan (Simulasi).');
-    } else {
-      // Update
-      final index = bannerList.indexWhere((e) => e.id == id);
-      if (index != -1) {
-        bannerList[index].judul = judulC.text;
-        bannerList[index].deskripsi = deskripsiC.text;
-        if (selectedImage != null) {
-          bannerList[index].imageUrl = selectedImage!.path;
-        } else if (existingImageUrl == null) {
-           bannerList[index].imageUrl = 'https://via.placeholder.com/600x300.png?text=Updated+Banner';
-        }
-      }
-      Utils.showSuccess(msg: 'Banner berhasil diperbarui (Simulasi).');
-    }
-
-    notifyListeners();
-    loading(false);
-    await Future.delayed(const Duration(seconds: 1));
-    CusNav.nPushReplace(context, const DataBannerAdminView());
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
   }
 
   Future<void> deleteBanner(String id) async {
-    loading(true);
-    await Future.delayed(const Duration(seconds: 1)); // Simulasi API request
-    bannerList.removeWhere((e) => e.id == id);
-    notifyListeners();
-    loading(false);
-    Utils.showSuccess(msg: 'Banner berhasil dihapus (Simulasi).');
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
   }
 }

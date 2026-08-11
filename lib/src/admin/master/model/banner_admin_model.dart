@@ -31,10 +31,14 @@ class BannerAdminModelData {
 class BannerAdminModel {
   String? result;
   List<BannerAdminModelData?>? data;
+  dynamic meta;
+  dynamic links;
 
   BannerAdminModel({
     this.result,
     this.data,
+    this.meta,
+    this.links,
   });
 
   BannerAdminModel.fromJson(Map<String, dynamic> json) {
@@ -47,6 +51,8 @@ class BannerAdminModel {
       });
       this.data = arr0;
     }
+    meta = json['meta'];
+    links = json['links'];
   }
 
   Map<String, dynamic> toJson() {
@@ -60,6 +66,8 @@ class BannerAdminModel {
       });
       data['data'] = arr0;
     }
+    data['meta'] = meta;
+    data['links'] = links;
     return data;
   }
 }

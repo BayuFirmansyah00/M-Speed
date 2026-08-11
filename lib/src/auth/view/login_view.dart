@@ -114,6 +114,7 @@ class _LoginViewState extends BaseState<LoginView> {
               ),
               SizedBox(height: 32),
               CustomTextField.borderTextField(
+                key: ValueKey('login.email'),
                 controller: auth.usernameC,
                 fillColor: Color(0xffF5F6FA),
                 hintColor: Constant.grayColor,
@@ -136,6 +137,7 @@ class _LoginViewState extends BaseState<LoginView> {
               ),
               SizedBox(height: 16),
               CustomTextField.borderTextField(
+                key: ValueKey('login.password'),
                 controller: auth.passC,
                 fillColor: Color(0xffF5F6FA),
                 hintColor: Constant.grayColor,
@@ -193,6 +195,7 @@ class _LoginViewState extends BaseState<LoginView> {
                 () async {
                   await context.read<AuthProvider>().login(context);
                 },
+                key: ValueKey('login.submit'),
                 textStyle: TextStyle(
                     fontSize: 15,
                     color: Colors.white,

@@ -7,6 +7,7 @@ class CustomButton {
   static Widget mainButton(
     String text,
     VoidCallback onClick, {
+    Key? key,
     Color? color,
     EdgeInsetsGeometry? margin,
     bool stretched = true,
@@ -20,6 +21,7 @@ class CustomButton {
     return Padding(
       padding: margin ?? EdgeInsets.all(0),
       child: ElevatedButton(
+        key: key,
         style: ButtonStyle(
           padding: WidgetStatePropertyAll(padding ?? padding),
           backgroundColor: WidgetStateProperty.all<Color>(

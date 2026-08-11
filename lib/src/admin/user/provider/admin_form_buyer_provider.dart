@@ -157,28 +157,46 @@ class AdminFormBuyerProvider extends BaseController with ChangeNotifier {
     bool withLoading = false,
     String? buyerId,
   }) async {
+    if (emailC.text.trim().isEmpty) {
+      return Utils.showFailed(msg: 'Email wajib diisi');
+    }
+    if (buyerId == null && passwordC.text.isEmpty) {
+      return Utils.showFailed(msg: 'Password wajib diisi untuk user baru');
+    }
+    if (firstNameC.text.trim().isEmpty) {
+      return Utils.showFailed(msg: 'First Name wajib diisi');
+    }
+    if (selectedDepartment == null) {
+      return Utils.showFailed(msg: 'Departemen wajib dipilih');
+    }
+    if (selectedCityId == null && cityC.text.isEmpty) {
+      return Utils.showFailed(msg: 'Kota wajib dipilih');
+    }
+    if (alamatC.text.trim().isEmpty) {
+      return Utils.showFailed(msg: 'Alamat detail wajib diisi');
+    }
+
     if (withLoading) loading(true);
 
-    // cityC.text should ideally be a mapped city_id from a dropdown.
-    // Fallback to '1' if it's empty or cannot be parsed.
-    String cityId =
-        selectedCityId ?? (cityC.text.isNotEmpty ? cityC.text : '1');
+    String cityId = selectedCityId ?? (cityC.text.isNotEmpty ? cityC.text : '1');
 
     var param = {
       'email': emailC.text,
-      'password': passwordC.text,
       'first_name': firstNameC.text,
       'last_name': lastNameC.text,
       'phone': phoneNumberC.text,
-      'active': isActive ? '1' : '0',
+      'active': isActive,
       'access': accessC.text,
-      'department_id': selectedDepartment ?? '',
+      'department_id': selectedDepartment,
       'address_name': 'Utama',
       'address_phone': phoneNumberC.text,
-      'province_id': selectedProvinceId ?? '',
       'city_id': cityId,
       'detail': alamatC.text,
     };
+
+    if (passwordC.text.isNotEmpty) {
+      param['password'] = passwordC.text;
+    }
 
     if (buyerId != null && selectedAddressId != null) {
       param['address_id'] = selectedAddressId!;

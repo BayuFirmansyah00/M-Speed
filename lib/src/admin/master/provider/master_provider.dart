@@ -276,39 +276,7 @@ class MasterProvider extends BaseController with ChangeNotifier {
     bool withLoading = false,
     String? kategoriid,
   }) async {
-    if (withLoading) loading(true);
-    var param = {'name': namaKategoriC.text};
-
-    try {
-      dynamic response;
-      if (kategoriid != null) {
-        response = await ApiClient().dio.put(
-          '/audit/v1/admin/categories/$kategoriid',
-          data: param,
-        );
-      } else {
-        response = await ApiClient().dio.post(
-          '/audit/v1/admin/categories',
-          data: param,
-        );
-      }
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        final message = response.data['message'] ?? 'Berhasil';
-        notifyListeners();
-        await Utils.showSuccess(msg: message);
-        await Future.delayed(Duration(seconds: 2), () {});
-        CusNav.nPushReplace(context, DataKategoriAdminView());
-        if (withLoading) loading(false);
-      }
-    } on DioException catch (e) {
-      final message = e.response?.data["messages"]?["error"] ?? e.message;
-      loading(false);
-      throw Exception(message);
-    } catch (e) {
-      loading(false);
-      throw Exception(e.toString());
-    }
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
   }
 
   TextEditingController provinsiSearchC = TextEditingController();
@@ -374,76 +342,14 @@ class MasterProvider extends BaseController with ChangeNotifier {
     bool withLoading = false,
     String? alamatId,
   }) async {
-    if (withLoading) loading(true);
-    var param = {
-      'name': namaC.text,
-      'phone': nomorTeleponC.text,
-      'detail': alamatC.text,
-      'status': statusValue.toString(),
-      'city_id': selectedCity ?? '1',
-      'user_data_id': '1', // required for store/update, dummy
-    };
-
-    try {
-      dynamic response;
-      if (alamatId != null) {
-        response = await ApiClient().dio.put(
-          '/audit/v1/admin/addresses/$alamatId',
-          data: param,
-        );
-      } else {
-        response = await ApiClient().dio.post(
-          '/audit/v1/admin/addresses',
-          data: param,
-        );
-      }
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        final message = response.data['message'] ?? 'Berhasil';
-        notifyListeners();
-        await Utils.showSuccess(msg: message);
-        await Future.delayed(Duration(seconds: 2), () {});
-        CusNav.nPushReplace(context, const DataAlamatAdminView());
-        if (withLoading) loading(false);
-      }
-    } on DioException catch (e) {
-      final message = e.response?.data["messages"]?["error"] ?? e.message;
-      loading(false);
-      throw Exception(message);
-    } catch (e) {
-      loading(false);
-      throw Exception(e.toString());
-    }
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
   }
 
   Future<void> deleteAlamat({
     bool withLoading = false,
     String? alamatId,
   }) async {
-    if (withLoading) loading(true);
-
-    try {
-      final response = await ApiClient().dio.post(
-        '/hapusalamatadmin',
-        data: {'alamat_id': alamatId},
-      );
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        final message = response.data['message'] ?? 'Berhasil';
-        notifyListeners();
-        await Utils.showSuccess(msg: message);
-        await Future.delayed(Duration(seconds: 2), () {});
-        if (withLoading) loading(false);
-        fetchAlamatAdmin(withLoading: true);
-      }
-    } on DioException catch (e) {
-      final message = e.response?.data["messages"]?["error"] ?? e.message;
-      loading(false);
-      throw Exception(message);
-    } catch (e) {
-      loading(false);
-      throw Exception(e.toString());
-    }
+    Utils.showFailed(msg: 'Fitur hapus ini belum tersedia pada API backend.');
   }
 
   Future<void> sendPajak(
@@ -451,45 +357,7 @@ class MasterProvider extends BaseController with ChangeNotifier {
     bool withLoading = false,
     String? pajakId,
   }) async {
-    if (withLoading) loading(true);
-    var param = {
-      'name': pajakC.text,
-      'percentage': prosentaseC.text,
-      'type': typePajakC.text.isNotEmpty
-          ? typePajakC.text
-          : '1', // default type
-    };
-
-    try {
-      dynamic response;
-      if (pajakId != null) {
-        response = await ApiClient().dio.put(
-          '/audit/v1/admin/taxes/$pajakId',
-          data: param,
-        );
-      } else {
-        response = await ApiClient().dio.post(
-          '/audit/v1/admin/taxes',
-          data: param,
-        );
-      }
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        final message = response.data['message'] ?? 'Berhasil';
-        notifyListeners();
-        await Utils.showSuccess(msg: message);
-        await Future.delayed(Duration(seconds: 2), () {});
-        CusNav.nPushReplace(context, const DataPajakAdminView());
-        if (withLoading) loading(false);
-      }
-    } on DioException catch (e) {
-      final message = e.response?.data["messages"]?["error"] ?? e.message;
-      loading(false);
-      throw Exception(message);
-    } catch (e) {
-      loading(false);
-      throw Exception(e.toString());
-    }
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
   }
 
   fetchMateraiAdmin({bool withLoading = true, String search = ""}) async {
@@ -523,46 +391,7 @@ class MasterProvider extends BaseController with ChangeNotifier {
     bool withLoading = false,
     String? materaiId,
   }) async {
-    if (withLoading) loading(true);
-    var param = {
-      'type': typeMateraiC.text,
-      'nominal': nominalMateraiC.text,
-      'path': pathMateraiC.text.isNotEmpty ? pathMateraiC.text : 'dummy.pdf',
-      'order_document_id': orderDocumentIdMateraiC.text.isNotEmpty
-          ? orderDocumentIdMateraiC.text
-          : '1',
-    };
-
-    try {
-      dynamic response;
-      if (materaiId != null) {
-        response = await ApiClient().dio.put(
-          '/audit/v1/admin/materais/$materaiId',
-          data: param,
-        );
-      } else {
-        response = await ApiClient().dio.post(
-          '/audit/v1/admin/materais',
-          data: param,
-        );
-      }
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        final message = response.data['message'] ?? 'Berhasil';
-        notifyListeners();
-        await Utils.showSuccess(msg: message);
-        await Future.delayed(Duration(seconds: 2), () {});
-        CusNav.nPushReplace(context, const DataMateraiAdminView());
-        if (withLoading) loading(false);
-      }
-    } on DioException catch (e) {
-      final message = e.response?.data["messages"]?["error"] ?? e.message;
-      loading(false);
-      throw Exception(message);
-    } catch (e) {
-      loading(false);
-      throw Exception(e.toString());
-    }
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
   }
 
   Future<void> sendSubdit(
@@ -599,9 +428,19 @@ class MasterProvider extends BaseController with ChangeNotifier {
         if (withLoading) loading(false);
       }
     } on DioException catch (e) {
-      final message = e.response?.data["messages"]?["error"] ?? e.message;
+      var decoded = e.response?.data;
+      String errorMessage = 'Terjadi kesalahan saat menyimpan data.';
+      if (decoded != null && decoded['message'] != null) {
+        errorMessage = decoded['message'];
+      }
+      if (decoded != null && decoded['errors'] != null) {
+        final errors = decoded['errors'] as Map<String, dynamic>;
+        if (errors.isNotEmpty) {
+          errorMessage = errors.values.first[0].toString();
+        }
+      }
       loading(false);
-      throw Exception(message);
+      throw Exception(errorMessage);
     } catch (e) {
       loading(false);
       throw Exception(e.toString());

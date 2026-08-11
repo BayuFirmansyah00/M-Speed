@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mspeed/common/component/custom_appbar.dart';
 import 'package:mspeed/common/component/custom_button.dart';
 import 'package:mspeed/common/component/custom_dialog.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
@@ -14,6 +13,19 @@ import 'package:mspeed/src/seller/nego/provider/nego_seller_provider.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
 
+// ═══════════════════════════════════════════════════════════════════
+// M-SPEED Brand Color Palette — Solid Colors Only
+// ═══════════════════════════════════════════════════════════════════
+const Color _kPrimaryBlue = Color(0xFF1565C0);
+const Color _kSuccess = Color(0xFF16A765);
+const Color _kDanger = Color(0xFFE53935);
+const Color _kWarning = Color(0xFFF9A825);
+const Color _kBackground = Color(0xFFF7F8FA);
+const Color _kSurface = Color(0xFFFFFFFF);
+const Color _kTextPrimary = Color(0xFF1F2937);
+const Color _kTextSecondary = Color(0xFF6B7280);
+const Color _kBorder = Color(0xFFE5E7EB);
+
 class NegoSellerView extends StatefulWidget {
   const NegoSellerView({super.key});
 
@@ -22,14 +34,14 @@ class NegoSellerView extends StatefulWidget {
 }
 
 class _NegoSellerViewState extends State<NegoSellerView> {
+  List<NegoSellerModelData?> negoData = [];
+  final searchController = TextEditingController();
+
   @override
   void initState() {
     refresh();
     super.initState();
   }
-
-  List<NegoSellerModelData?> negoData = [];
-  final searchController = TextEditingController();
 
   @override
   void dispose() {
@@ -37,11 +49,379 @@ class _NegoSellerViewState extends State<NegoSellerView> {
     super.dispose();
   }
 
-  refresh() async {
+  Future<void> refresh() async {
     final p = context.read<NegoSellerProvider>();
     await p.fetchNego(withLoading: true);
     negoData = p.negoSellerModel.data ?? [];
     setState(() {});
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      surfaceTintColor: _kSurface,
+      backgroundColor: _kSurface,
+      foregroundColor: _kTextPrimary,
+      elevation: 0,
+      centerTitle: true,
+      title: const Text(
+        'Permintaan Nego',
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: _kTextPrimary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBar(NegoSellerProvider p) {
+    return Container(
+      color: _kSurface,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Container(
+        height: 48,
+        decoration: BoxDecoration(
+          color: _kBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _kBorder, width: 1),
+        ),
+        child: Row(
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: Icon(Icons.search_rounded, color: _kTextSecondary, size: 20),
+            ),
+            Expanded(
+              child: TextField(
+                controller: searchController,
+                style: const TextStyle(fontSize: 14, color: _kTextPrimary),
+                decoration: const InputDecoration(
+                  hintText: 'Cari Produk Nego',
+                  hintStyle: TextStyle(fontSize: 14, color: _kTextSecondary),
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                onChanged: (val) {
+                  setState(() {
+                    negoData = p.negoSellerModel.data
+                            ?.where((element) =>
+                                element?.nama?.toLowerCase().contains(
+                                      val.toLowerCase(),
+                                    ) ??
+                                false)
+                            .toList() ??
+                        [];
+                  });
+                },
+              ),
+            ),
+            if (searchController.text.isNotEmpty || p.searchNegoC.text.isNotEmpty)
+              IconButton(
+                icon: const Icon(Icons.close_rounded, color: _kTextSecondary, size: 18),
+                onPressed: () {
+                  searchController.clear();
+                  p.searchNegoC.clear();
+                  FocusScope.of(context).unfocus();
+                  p.fetchNego(withLoading: true);
+                  setState(() {});
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showNegoDialog(BuildContext context, String negoId, int hargaAkhir, NegoSellerProvider p) {
+    CustomDialog.mainDialog(
+      context: context,
+      title: "",
+      content: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Align(
+                alignment: Alignment.topLeft,
+                child: IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Colors.black, size: 24),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+              const Text(
+                'Ajukan Harga Nego',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _kTextPrimary),
+              ),
+              const SizedBox(height: 16),
+              CustomTextField.borderTextField(
+                controller: p.negoHargaC,
+                required: false,
+                labelText: "Harga Nego",
+                hintText: "Masukkan Harga Baru",
+                textInputType: TextInputType.number,
+                textCapitalization: TextCapitalization.words,
+                focusNode: p.negoHargaN,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  ThousandsSeparatorInputFormatter(),
+                ],
+              ),
+              const SizedBox(height: 24),
+              CustomButton.mainButton(
+                "Ajukan Nego",
+                borderRadius: BorderRadius.circular(10),
+                () async {
+                  final text = p.negoHargaC.text.replaceAll('.', '');
+                  if (text.isEmpty) return;
+                  final price = int.parse(text);
+                  if (price > hargaAkhir) {
+                    await Utils.showFailed(msg: 'Harga nego tidak boleh melebihi harga produk');
+                  } else {
+                    setState(() {
+                      p.requestNegoUlang(negoId: negoId);
+                    });
+                    CusNav.nPop(context);
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.handshake_outlined, size: 48, color: _kTextSecondary.withOpacity(0.3)),
+          const SizedBox(height: 16),
+          const Text(
+            'Tidak ada permintaan nego',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: _kTextSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Daftar negosiasi harga akan muncul di sini',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              color: _kTextSecondary.withOpacity(0.8),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNegoItem(NegoSellerModelData data, NegoSellerProvider p) {
+    final hargaAsli = int.tryParse(data.hargaAkhir ?? '0') ?? 0;
+    
+    String hargaNegoAktif = '0';
+    if (data.nego != null && data.nego3 == null) {
+      hargaNegoAktif = data.nego!;
+    } else if (data.nego != null && data.nego3 != null) {
+      hargaNegoAktif = data.nego3!;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: _kSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _kBorder, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Product Image
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: SafeNetworkImage(
+                    width: 72,
+                    height: 72,
+                    url: data.foto ?? '',
+                    errorBuilder: Image.asset(Assets.imagesImgHeadphone, fit: BoxFit.cover),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Product Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        data.nama ?? '-',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: _kTextPrimary,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Harga Asli: Rp ${Utils.thousandSeparator(hargaAsli)}',
+                        style: const TextStyle(fontSize: 12, color: _kTextSecondary),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Jumlah: ${data.qty ?? '0'} pcs',
+                        style: const TextStyle(fontSize: 12, color: _kTextSecondary),
+                      ),
+                      const SizedBox(height: 8),
+                      // Harga Nego Highlight
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _kWarning.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: _kWarning.withOpacity(0.2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Harga Pengajuan Nego',
+                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _kWarning),
+                            ),
+                            Text(
+                              'Rp ${Utils.thousandSeparator(int.parse(hargaNegoAktif))}',
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _kWarning),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1, color: _kBorder.withOpacity(0.6)),
+          // Action Buttons
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildActionButton(
+                    label: 'Tolak',
+                    icon: Icons.close_rounded,
+                    color: _kDanger,
+                    onTap: () async {
+                      await Utils.showYesNoDialog(
+                        context: context,
+                        title: 'Tolak Nego',
+                        desc: 'Apakah Anda yakin ingin menolak nego ini?',
+                        yesCallback: () async {
+                          CusNav.nPop(context);
+                          await p.acceptOrRejectNego(negoId: data.ID ?? '0', isAccept: false);
+                          p.fetchNego(withLoading: true);
+                        },
+                        noCallback: () => CusNav.nPop(context),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildActionButton(
+                    label: 'Nego Ulang',
+                    icon: Icons.sync_rounded,
+                    color: data.nego2 == null ? _kWarning : _kTextSecondary.withOpacity(0.3),
+                    onTap: () async {
+                      if (data.nego2 == null) {
+                        _showNegoDialog(context, data.ID ?? '0', hargaAsli, p);
+                        p.fetchNego(withLoading: true);
+                      }
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildActionButton(
+                    label: 'Terima',
+                    icon: Icons.check_rounded,
+                    color: _kSuccess,
+                    onTap: () async {
+                      await Utils.showYesNoDialog(
+                        context: context,
+                        title: 'Terima Nego',
+                        desc: 'Apakah Anda yakin ingin menerima nego ini?',
+                        yesCallback: () async {
+                          CusNav.nPop(context);
+                          await p.acceptOrRejectNego(negoId: data.ID ?? '0');
+                          p.fetchNego(withLoading: true);
+                        },
+                        noCallback: () => CusNav.nPop(context),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -51,397 +431,37 @@ class _NegoSellerViewState extends State<NegoSellerView> {
       negoData = p.negoSellerModel.data ?? [];
     }
 
-    // final negoData =
-    //     context.watch<NegoSellerProvider>().negoSellerModel.data ?? [];
-    Widget search() => Container(
-      color: Colors.white,
-      padding: EdgeInsets.only(top: 8, bottom: 16),
-      child: CustomTextField.borderTextField(
-        controller: searchController,
-        required: false,
-        hintText: "Cari",
-        hintColor: Color(0xff6D7588),
-        borderColor: Color(0xffDBDFE9),
-        prefix: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Image.asset(
-            'assets/icons/ic-search.png',
-            width: 5,
-            height: 5,
-            color: Color(0xff6D7588),
-          ),
-        ),
-        suffixIcon:
-            p.searchNegoC.text.isEmpty
-                ? SizedBox()
-                : InkWell(
-                  onTap: () {
-                    p.searchNegoC.clear();
-                    FocusManager.instance.primaryFocus?.unfocus();
-                    context.read<NegoSellerProvider>().fetchNego(
-                      withLoading: true,
-                    );
-                    setState(() {});
-                  },
-                  child: Icon(Icons.close),
-                ),
-        onChanged: (val) {
-          // if (p.searchOnStoppedTyping != null) {
-          //   p.searchOnStoppedTyping!.cancel();
-          // }
-          // p.searchOnStoppedTyping = Timer(p.duration, () async {
-          //   context.read<NegoSellerProvider>().fetchNego(withLoading: true);
-          // });
-          setState(() {
-            negoData =
-                p.negoSellerModel.data
-                    ?.where(
-                      (element) =>
-                          element?.nama?.toLowerCase().contains(
-                            searchController.text.toLowerCase(),
-                          ) ??
-                          false,
-                    )
-                    .toList() ??
-                [];
-          });
-        },
-      ),
-    );
-    PreferredSizeWidget appBar() {
-      return CustomAppBar.appBar(
-        context,
-        'Permintaan Nego',
-        color: Colors.white,
-        isCenter: true,
-        titleSpacing: 24,
-        textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-        isLeading: false,
-      );
-    }
-
-    negoHarga(BuildContext context, String negoId, int hargaAkhir) {
-      CustomDialog.mainDialog(
-        context: context,
-        title: "",
-        content: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: IconButton(
-                    icon: Icon(Icons.close, color: Colors.black, size: 24),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                ),
-                CustomTextField.borderTextField(
-                  controller: p.negoHargaC,
-                  required: false,
-                  labelText: "Masukan nego Harga",
-                  hintText: "Masukkan Harga",
-                  textInputType: TextInputType.number,
-                  textCapitalization: TextCapitalization.words,
-                  focusNode: p.negoHargaN,
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    ThousandsSeparatorInputFormatter(),
-                  ],
-                ),
-                SizedBox(height: 20),
-                CustomButton.mainButton(
-                  "Nego Harga",
-                  borderRadius: BorderRadius.circular(10),
-                  () async {
-                    final price = int.parse(
-                      (p.negoHargaC.text).replaceAll('.', ''),
-                    );
-                    if (price > hargaAkhir) {
-                      await Utils.showFailed(
-                        msg: 'Tidak boleh melebihi harga produk',
-                      );
-                    } else {
-                      setState(() {
-                        p.requestNegoUlang(negoId: negoId);
-                      });
-                      CusNav.nPop(context);
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    Widget negoItem(NegoSellerModelData data) {
-      return Container(
-        color: Colors.white,
-        padding: EdgeInsets.all(20),
+    return Scaffold(
+      backgroundColor: _kBackground,
+      appBar: _buildAppBar(),
+      body: SafeArea(
         child: Column(
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: SafeNetworkImage(
-                      width: 70,
-                      height: 70,
-                      url: data.foto ?? '',
-                      errorBuilder: Image.asset(Assets.imagesImgHeadphone),
-                    ),
-                  ),
-                ),
-                Constant.xSizedBox16,
-                Expanded(
-                  flex: 6,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Constant.xSizedBox4,
-                      Text(data.nama ?? ''),
-                      Constant.xSizedBox4,
-                      Text(
-                        Utils.thousandSeparator(
-                          int.parse(data.hargaAkhir ?? '0'),
-                        ),
-                        style: TextStyle(color: Constant.textColor2),
-                      ),
-                      Constant.xSizedBox4,
-                      Text(
-                        '${data.qty ?? '0'} pcs',
-                        style: TextStyle(color: Constant.textColor2),
-                      ),
-                    ],
-                  ),
-                ),
-                Constant.xSizedBox8,
-                Expanded(
-                  flex: 3,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Constant.xSizedBox8,
-                      Text('Harga Nego'),
-                      Constant.xSizedBox8,
-                      if (data.nego != null && data.nego3 == null)
-                        Text(
-                          Utils.thousandSeparator(int.parse(data.nego ?? '0')),
-                          style: TextStyle(color: Constant.redColor),
-                        ),
-                      if (data.nego != null && data.nego3 != null)
-                        Text(
-                          Utils.thousandSeparator(int.parse(data.nego3 ?? '0')),
-                          style: TextStyle(color: Constant.redColor),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            Constant.xSizedBox12,
-            Row(
-              children: [
-                Expanded(
-                  child: CustomButton.secondaryButtonWithicon(
-                    Expanded(
-                      flex: 5,
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: Icon(
-                            Icons.close,
-                            weight: 10,
-                            color: Constant.redColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                    'Tolak',
-                    () async {
-                      await Utils.showYesNoDialog(
-                        context: context,
-                        title: 'Konfirmasi Tolak Nego',
-                        desc: 'Apakah Anda yakin ingin tolak nego ini?',
-                        yesCallback: () async {
-                          CusNav.nPop(context);
-                          await context
-                              .read<NegoSellerProvider>()
-                              .acceptOrRejectNego(
-                                negoId: data.ID ?? '0',
-                                isAccept: false,
-                              );
-                          context.read<NegoSellerProvider>().fetchNego(
-                            withLoading: true,
-                          );
+            _buildSearchBar(p),
+            Expanded(
+              child: RefreshIndicator(
+                color: _kPrimaryBlue,
+                onRefresh: refresh,
+                child: negoData.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(height: MediaQuery.of(context).size.height * 0.25),
+                          _buildEmptyState(),
+                        ],
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        itemCount: negoData.length,
+                        itemBuilder: (context, index) {
+                          final item = negoData[index];
+                          if (item == null) return const SizedBox.shrink();
+                          return _buildNegoItem(item, p);
                         },
-                        noCallback: () async {
-                          CusNav.nPop(context);
-                        },
-                      );
-                    },
-                    flexText: 6,
-                    stretched: true,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: 8,
-                      horizontal: 8,
-                    ),
-                    color: Color(0xffED1C24),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                Constant.xSizedBox12,
-                Expanded(
-                  child: CustomButton.secondaryButtonWithicon(
-                    Expanded(
-                      flex: 5,
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: RotatedBox(
-                            quarterTurns: 45,
-                            child: Icon(
-                              Icons.discount_rounded,
-                              weight: 10,
-                              color:
-                                  data.nego2 == null
-                                      ? Color(0xffF47003)
-                                      : Colors.grey,
-                            ),
-                          ),
-                        ),
                       ),
-                    ),
-                    'Nego',
-                    () async {
-                      if (data.nego2 == null) {
-                        await negoHarga(
-                          context,
-                          data.ID ?? '0',
-                          int.parse(
-                            (data.hargaAkhir ?? '0').replaceAll('.', ''),
-                          ),
-                        );
-                        context.read<NegoSellerProvider>().fetchNego(
-                          withLoading: true,
-                        );
-                      }
-                    },
-                    flexText: 6,
-                    stretched: true,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: 8,
-                      horizontal: 8,
-                    ),
-                    color: data.nego2 == null ? Color(0xffF47003) : Colors.grey,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                Constant.xSizedBox12,
-                Expanded(
-                  child: CustomButton.secondaryButtonWithicon(
-                    Expanded(
-                      flex: 4,
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: Icon(
-                            Icons.check,
-                            weight: 10,
-                            color: Constant.greenColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                    'Terima',
-                    () async {
-                      await Utils.showYesNoDialog(
-                        context: context,
-                        title: 'Konfirmasi Terima Nego',
-                        desc: 'Apakah Anda yakin ingin Terima nego ini?',
-                        yesCallback: () async {
-                          CusNav.nPop(context);
-                          await context
-                              .read<NegoSellerProvider>()
-                              .acceptOrRejectNego(negoId: data.ID ?? '0');
-                          context.read<NegoSellerProvider>().fetchNego(
-                            withLoading: true,
-                          );
-                        },
-                        noCallback: () async {
-                          CusNav.nPop(context);
-                        },
-                      );
-                    },
-                    flexText: 7,
-                    stretched: true,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: 8,
-                      horizontal: 5,
-                    ),
-                    color: Color(0xff1ABC62),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ],
+              ),
             ),
           ],
-        ),
-      );
-    }
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: appBar(),
-      body: SafeArea(
-        child: Container(
-          color: Color(0xffF6F6F6),
-          child: Column(
-            children: [
-              Container(
-                color: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: search(),
-              ),
-              Constant.xSizedBox8,
-              Expanded(
-                child: RefreshIndicator(
-                  onRefresh: () async {
-                    refresh();
-                  },
-                  child:
-                      negoData.isEmpty
-                          ? Center(child: Text('Data tidak ditemukan'))
-                          : ListView.separated(
-                            itemCount: negoData.length,
-                            itemBuilder: (c, i) {
-                              if (negoData[i] != null)
-                                return negoItem(negoData[i]!);
-                              return SizedBox();
-                            },
-                            separatorBuilder: (_, __) => Constant.xSizedBox8,
-                          ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

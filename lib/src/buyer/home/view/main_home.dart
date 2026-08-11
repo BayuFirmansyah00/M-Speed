@@ -186,11 +186,7 @@ class _FloatingNavBar extends StatelessWidget {
                           width: indicatorW,
                           height: 52,
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [primary, primary.withOpacity(0.82)],
-                            ),
+                            color: primary,
                             borderRadius: BorderRadius.circular(22),
                             boxShadow: [
                               BoxShadow(

@@ -12,6 +12,9 @@ import 'package:mspeed/core/network/api_client.dart';
 
 class AdminUserProvider extends BaseController with ChangeNotifier {
   List<UserData> userData = [];
+  int currentPage = 1;
+  bool hasMore = true;
+  bool isLoadingMore = false;
   final searchC = TextEditingController();
   String? id;
 
@@ -110,14 +113,18 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
     }
   }
 
-  Future<void> fetchBuyers({
-    bool withLoading = false,
-    String search = '',
-  }) async {
-    if (withLoading) loading(true);
-    userData.clear();
+  Future<void> fetchBuyers({bool withLoading = false, String search = '', int page = 1}) async {
+        if (page == 1) {
+      if (withLoading) loading(true);
+      userData.clear();
+      hasMore = true;
+      currentPage = 1;
+    } else {
+      isLoadingMore = true;
+    }
     notifyListeners();
-    Map<String, String> param = {};
+    Map<String, dynamic> param = {'page': page};
+    
     if (search.isNotEmpty) param.addAll({'search': search});
 
     try {
@@ -127,7 +134,16 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final dataList = response.data['data'] as List<dynamic>? ?? [];
+                final dataList = response.data['data'] as List<dynamic>? ?? [];
+        final _meta = response.data['meta'];
+        if (_meta != null) {
+          currentPage = _meta['current_page'] ?? 1;
+          final lastPage = _meta['last_page'] ?? 1;
+          hasMore = currentPage < lastPage;
+        } else {
+          hasMore = dataList.isNotEmpty;
+        }
+    
         
         for (var item in dataList) {
           final uData = item['user_data'] ?? {};
@@ -151,7 +167,12 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       debugPrint("fetchBuyers Error: $e");
       Utils.showFailed(msg: "Gagal memuat data dari server (500)");
     } finally {
-      if (withLoading) loading(false);
+      if (page == 1) {
+        if (withLoading) loading(false);
+      } else {
+        isLoadingMore = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -183,10 +204,7 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
 
   // NOTE: AdminSellerApiController belum tersedia dari tim backend.
   // Fungsi ini adalah placeholder sementara.
-  Future<void> fetchSellers({
-    bool withLoading = false,
-    String search = '',
-  }) async {
+  Future<void> fetchSellers({bool withLoading = false, String search = '', int page = 1}) async {
     if (withLoading) loading(true);
     userData.clear();
     notifyListeners();
@@ -203,14 +221,18 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
     // TODO: Ganti dengan endpoint DELETE v1/admin/sellers/{id} setelah backend ready
   }
 
-  Future<void> fetchKeuangan({
-    bool withLoading = false,
-    String search = '',
-  }) async {
-    if (withLoading) loading(true);
-    userData.clear();
+  Future<void> fetchKeuangan({bool withLoading = false, String search = '', int page = 1}) async {
+        if (page == 1) {
+      if (withLoading) loading(true);
+      userData.clear();
+      hasMore = true;
+      currentPage = 1;
+    } else {
+      isLoadingMore = true;
+    }
     notifyListeners();
-    Map<String, String> param = {};
+    Map<String, dynamic> param = {'page': page};
+    
     if (search.isNotEmpty) param.addAll({'search': search});
 
     try {
@@ -221,7 +243,16 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         userData.clear();
-        final dataList = response.data['data'] as List<dynamic>? ?? [];
+                final dataList = response.data['data'] as List<dynamic>? ?? [];
+        final _meta = response.data['meta'];
+        if (_meta != null) {
+          currentPage = _meta['current_page'] ?? 1;
+          final lastPage = _meta['last_page'] ?? 1;
+          hasMore = currentPage < lastPage;
+        } else {
+          hasMore = dataList.isNotEmpty;
+        }
+    
         
         for (var item in dataList) {
           final uData = item['user_data'] ?? {};
@@ -251,7 +282,12 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       debugPrint("fetchKeuangan Error: $e");
       Utils.showFailed(msg: "Gagal memuat data dari server (500)");
     } finally {
-      if (withLoading) loading(false);
+      if (page == 1) {
+        if (withLoading) loading(false);
+      } else {
+        isLoadingMore = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -281,14 +317,18 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
     }
   }
 
-  Future<void> fetchPenerima({
-    bool withLoading = false,
-    String search = '',
-  }) async {
-    if (withLoading) loading(true);
-    userData.clear();
+  Future<void> fetchPenerima({bool withLoading = false, String search = '', int page = 1}) async {
+        if (page == 1) {
+      if (withLoading) loading(true);
+      userData.clear();
+      hasMore = true;
+      currentPage = 1;
+    } else {
+      isLoadingMore = true;
+    }
     notifyListeners();
-    Map<String, String> param = {};
+    Map<String, dynamic> param = {'page': page};
+    
     if (search.isNotEmpty) param.addAll({'search': search});
 
     try {
@@ -298,7 +338,16 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final dataList = response.data['data'] as List<dynamic>;
+                final dataList = response.data['data'] as List<dynamic>;
+        final _meta = response.data['meta'];
+        if (_meta != null) {
+          currentPage = _meta['current_page'] ?? 1;
+          final lastPage = _meta['last_page'] ?? 1;
+          hasMore = currentPage < lastPage;
+        } else {
+          hasMore = dataList.isNotEmpty;
+        }
+    
         
         for (var item in dataList) {
           final uData = item['user_data'] ?? {};
@@ -321,7 +370,12 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       debugPrint("fetchPenerima Error: $e");
       Utils.showFailed(msg: "Gagal memuat data dari server (500)");
     } finally {
-      if (withLoading) loading(false);
+      if (page == 1) {
+        if (withLoading) loading(false);
+      } else {
+        isLoadingMore = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -351,14 +405,18 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
     }
   }
 
-  Future<void> fetchManager({
-    bool withLoading = false,
-    String search = '',
-  }) async {
-    if (withLoading) loading(true);
-    userData.clear();
+  Future<void> fetchManager({bool withLoading = false, String search = '', int page = 1}) async {
+        if (page == 1) {
+      if (withLoading) loading(true);
+      userData.clear();
+      hasMore = true;
+      currentPage = 1;
+    } else {
+      isLoadingMore = true;
+    }
     notifyListeners();
-    Map<String, String> param = {};
+    Map<String, dynamic> param = {'page': page};
+    
     if (search.isNotEmpty) param.addAll({'search': search});
 
     try {
@@ -369,7 +427,16 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         userData.clear();
-        final dataList = response.data['data'] as List<dynamic>? ?? [];
+                final dataList = response.data['data'] as List<dynamic>? ?? [];
+        final _meta = response.data['meta'];
+        if (_meta != null) {
+          currentPage = _meta['current_page'] ?? 1;
+          final lastPage = _meta['last_page'] ?? 1;
+          hasMore = currentPage < lastPage;
+        } else {
+          hasMore = dataList.isNotEmpty;
+        }
+    
         
         for (var item in dataList) {
           // Manager menggunakan key 'profile' bukan 'user_data'
@@ -394,7 +461,12 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       debugPrint("fetchManager Error: $e");
       Utils.showFailed(msg: "Gagal memuat data dari server (500)");
     } finally {
-      if (withLoading) loading(false);
+      if (page == 1) {
+        if (withLoading) loading(false);
+      } else {
+        isLoadingMore = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -424,14 +496,18 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
     }
   }
 
-  Future<void> fetchAudit({
-    bool withLoading = false,
-    String search = '',
-  }) async {
-    if (withLoading) loading(true);
-    userData.clear();
+  Future<void> fetchAudit({bool withLoading = false, String search = '', int page = 1}) async {
+        if (page == 1) {
+      if (withLoading) loading(true);
+      userData.clear();
+      hasMore = true;
+      currentPage = 1;
+    } else {
+      isLoadingMore = true;
+    }
     notifyListeners();
-    Map<String, String> param = {};
+    Map<String, dynamic> param = {'page': page};
+    
     if (search.isNotEmpty) param.addAll({'search': search});
 
     try {
@@ -441,7 +517,16 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final dataList = response.data['data'] as List<dynamic>;
+                final dataList = response.data['data'] as List<dynamic>;
+        final _meta = response.data['meta'];
+        if (_meta != null) {
+          currentPage = _meta['current_page'] ?? 1;
+          final lastPage = _meta['last_page'] ?? 1;
+          hasMore = currentPage < lastPage;
+        } else {
+          hasMore = dataList.isNotEmpty;
+        }
+    
         
         for (var item in dataList) {
           final uData = item['user_data'] ?? {};
@@ -494,14 +579,18 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
     }
   }
 
-  Future<void> fetchDireksi({
-    bool withLoading = false,
-    String search = '',
-  }) async {
-    if (withLoading) loading(true);
-    userData.clear();
+  Future<void> fetchDireksi({bool withLoading = false, String search = '', int page = 1}) async {
+        if (page == 1) {
+      if (withLoading) loading(true);
+      userData.clear();
+      hasMore = true;
+      currentPage = 1;
+    } else {
+      isLoadingMore = true;
+    }
     notifyListeners();
-    Map<String, String> param = {};
+    Map<String, dynamic> param = {'page': page};
+    
     if (search.isNotEmpty) param.addAll({'search': search});
 
     try {
@@ -511,7 +600,16 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final dataList = response.data['data'] as List<dynamic>;
+                final dataList = response.data['data'] as List<dynamic>;
+        final _meta = response.data['meta'];
+        if (_meta != null) {
+          currentPage = _meta['current_page'] ?? 1;
+          final lastPage = _meta['last_page'] ?? 1;
+          hasMore = currentPage < lastPage;
+        } else {
+          hasMore = dataList.isNotEmpty;
+        }
+    
         
         for (var item in dataList) {
           final uData = item['user_data'] ?? {};

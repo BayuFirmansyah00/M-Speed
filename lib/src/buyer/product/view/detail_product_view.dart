@@ -11,6 +11,7 @@ import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:mspeed/common/helper/constant.dart';
 import '../../../../common/component/image_carousel.dart';
 import '../provider/product_provider.dart';
 
@@ -103,8 +104,8 @@ class _DetailProductViewState extends State<DetailProductView> {
                           id: data?.SellerID ?? '',
                           sellerName: data?.SellerNama ?? ''));
                 },
-                icon: const Icon(Icons.chat_bubble_outline_rounded,
-                    color: Color(0xFFE50012)),
+                icon: Icon(Icons.chat_bubble_outline_rounded,
+                    color: Constant.primaryColor),
               ),
             ),
             const SizedBox(width: 12),
@@ -119,7 +120,7 @@ class _DetailProductViewState extends State<DetailProductView> {
                     CusNav.nPushReplace(context, ShoppingCartView());
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE50012),
+                    backgroundColor: Constant.primaryColor,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
@@ -174,7 +175,7 @@ class _DetailProductViewState extends State<DetailProductView> {
                     isLabelVisible: true,
                     label: Text('$cartTotal'),
                     offset: const Offset(8, -4),
-                    backgroundColor: const Color(0xFFE50012),
+                    backgroundColor: Constant.primaryColor,
                     child: SvgPicture.asset(Assets.svgsIcCart, width: 24),
                   ),
           ),
@@ -208,10 +209,10 @@ class _DetailProductViewState extends State<DetailProductView> {
                           Expanded(
                             child: Text(
                               'Rp ${Utils.formatCurrency(num.parse(data?.harga ?? '0'))}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFFE50012),
+                                color: Constant.textPriceColor,
                               ),
                             ),
                           ),
@@ -234,7 +235,7 @@ class _DetailProductViewState extends State<DetailProductView> {
                                   ),
                                   child: Icon(
                                     isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                    color: isFav ? const Color(0xFFE50012) : Colors.grey,
+                                    color: isFav ? Constant.primaryColor : Colors.grey,
                                     size: 24,
                                   ),
                                 ),
@@ -316,7 +317,7 @@ class _DetailProductViewState extends State<DetailProductView> {
                           color: Colors.red.shade50,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.storefront_rounded, color: Color(0xFFE50012)),
+                        child: Icon(Icons.storefront_rounded, color: Constant.primaryColor),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -382,7 +383,7 @@ class _DetailProductViewState extends State<DetailProductView> {
                           children: [
                             buildProductDetailRow('Kode Produk', data?.kodeProduk ?? '-'),
                             const Divider(height: 16, color: Color(0xFFEEEEEE)),
-                            buildProductDetailRow('Kategori', data?.NamaKategori ?? '-', textColor: const Color(0xFFE50012)),
+                            buildProductDetailRow('Kategori', data?.NamaKategori ?? '-', textColor: Constant.primaryColor),
                           ],
                         ),
                       ),
@@ -408,14 +409,14 @@ class _DetailProductViewState extends State<DetailProductView> {
                       const SizedBox(height: 16),
                       InkWell(
                         onTap: () {},
-                        child: const Row(
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               'Baca Selengkapnya',
-                              style: TextStyle(color: Color(0xFFE50012), fontWeight: FontWeight.w600, fontSize: 13),
+                              style: TextStyle(color: Constant.primaryColor, fontWeight: FontWeight.w600, fontSize: 13),
                             ),
-                            Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFFE50012), size: 18),
+                            Icon(Icons.keyboard_arrow_down_rounded, color: Constant.primaryColor, size: 18),
                           ],
                         ),
                       ),

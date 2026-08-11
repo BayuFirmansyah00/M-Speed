@@ -433,24 +433,8 @@ class ShoppingCartProvider extends BaseController with ChangeNotifier {
   Future<void> fetchRiwayatNego(BuildContext context,
       {bool withLoading = true, required String productId}) async {
     if (withLoading) loading(true);
-
-    // GET /api/negos?product_id={productId} — endpoint baru Laravel
-    // Filter nego berdasarkan product_id milik user yang sedang login
-    final response = await get(
-      Constant.BASE_API_FULL + '/negos',
-      body: {'product_id': productId},
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      riwayatNegoModel = RiwayatNegoModel.fromJson(jsonDecode(response.body));
-      notifyListeners();
-      if (withLoading) loading(false);
-    } else {
-      final decoded = jsonDecode(response.body);
-      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan';
-      loading(false);
-      throw Exception(message);
-    }
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
+    loading(false);
   }
 
   CheckoutModel _checkoutModel = CheckoutModel();
@@ -466,54 +450,14 @@ class ShoppingCartProvider extends BaseController with ChangeNotifier {
       required int index,
       required int indexx,
       required String productId}) async {
-    // POST /api/negos — StoreNegoRequest Laravel
-    // Fields: product_id, price (harga nego yang diajukan buyer)
-    Map<String, String> param = {
-      "product_id": productId,
-      "price": negoListC[index][indexx].text.replaceAll(".", ""),
-    };
-
-    loading(true);
-    // POST /api/negos sesuai kontrak baru Laravel
-    final response = BaseResponse.from(
-        await post(Constant.BASE_API_FULL + '/negos', body: param));
-    loading(false);
-
-    await Utils.showSuccess(msg: "Berhasil mengajukan nego");
-
-    if (response.success) {
-      return response;
-    } else {
-      final message = response.message;
-      throw Exception(message);
-    }
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
+    throw Exception('Fitur ini belum tersedia pada API backend.');
   }
 
   Future<BaseResponse> setSubditDpp(BuildContext context,
       {bool withLoading = false, required String dppId}) async {
-    final prefs = await SharedPreferences.getInstance();
-    String? userId = await prefs.getString(Constant.kSetPrefId) ?? "";
-    // parameters
-    Map<String, String> param = {
-      "dpp_id": dppId,
-      "buyer_id": userId,
-    };
-    loading(true);
-    // response
-    final response = BaseResponse.from(
-        await post(Constant.BASE_API_FULL + '/setdppbuyer', body: param));
-    loading(false);
-
-    if (response.success) {
-      await Utils.showSuccess(msg: "Berhasil memilih DPP!");
-      Future.delayed(Duration(seconds: 2));
-      return response;
-    } else {
-      final message = response.message;
-      await Utils.showFailed(msg: message);
-      Future.delayed(Duration(seconds: 2));
-      throw Exception(message);
-    }
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
+    throw Exception('Fitur ini belum tersedia pada API backend.');
   }
 
   Future<BaseResponse> sendCatatan(BuildContext context,

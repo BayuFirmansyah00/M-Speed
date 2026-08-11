@@ -60,49 +60,9 @@ class ChatSellerProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     try {
-      // TODO: Remove per_page=${Constant.maxPaginationPerPage} when infinite scroll is fully implemented in UI
-      final parsed = await getRest(
-        Constant.BASE_API_FULL + '${Constant.epChats}?user_id=$idSeller&page=$currentPage&per_page=${Constant.maxPaginationPerPage}'
-      );
-      
-      // Mengubah respon menjadi format yang diharapkan ChatSellerModel
-      // Laravel mengembalikan JSON { data: [...] } (paginasi).
-      // Model Flutter kita (ChatSellerModel) sebelumnya mengharapkan `data: { seller: [...] }`.
-      Map<String, dynamic> formattedJson = {};
-      if (parsed is Map<String, dynamic> && parsed.containsKey('data')) {
-        formattedJson = {
-          'result': 'success',
-          'data': {'seller': parsed['data']},
-          'meta': parsed['meta']
-        };
-      } else {
-        formattedJson = {
-          'result': 'success',
-          'data': {'seller': parsed}
-        };
-      }
-      
-      final responseModel = ChatSellerModel.fromJson(formattedJson);
-
-      if (isLoadMore) {
-        chatSellerModel.data?.seller?.addAll(responseModel.data?.seller ?? []);
-      } else {
-        chatSellerModel = responseModel;
-      }
-
-      chatSellerModel.data?.seller?.forEach((element) {
-        if (element?.createdAt != null)
-          element?.createdAt = formatDate(element.createdAt ?? "");
-      });
-      notifyListeners();
+      throw Exception('Fitur ini belum tersedia pada API backend.');
     } catch (e) {
       if (isLoadMore) currentPage--;
-      if (e.toString().contains("Unauthorized")) {
-        Utils.showFailed(msg: "Unauthorized");
-        Future.delayed(Duration(seconds: 1)).then((value) {
-          Navigator.pushReplacementNamed(context, '/login');
-        });
-      }
       Utils.showFailed(msg: e.toString());
     } finally {
       if (withLoading) loading(false);
@@ -118,31 +78,9 @@ class ChatSellerProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     try {
-      final parsed = await getRest(
-        Constant.BASE_API_FULL + '${Constant.epChats}?user_id=$idBuyer&seller_id=$idSeller'
-      );
-      
-      // Jika parsed adalah List, sesuaikan ke format DetailChatSellerModel
-      Map<String, dynamic> dataMap = {};
-      if (parsed is List) {
-        dataMap = {'result': 'success', 'data': parsed};
-      } else if (parsed is Map<String, dynamic> && parsed.containsKey('data')) {
-        dataMap = {'result': 'success', 'data': parsed['data']};
-      } else {
-        dataMap = {'result': 'success', 'data': parsed};
-      }
-
-      detailChatSellerModel = DetailChatSellerModel.fromJson(dataMap);
-
-      notifyListeners();
+      throw Exception('Fitur ini belum tersedia pada API backend.');
     } catch (e) {
-      if (e.toString().contains("Unauthorized")) {
-        Utils.showFailed(msg: "Unauthorized");
-        Future.delayed(Duration(seconds: 1)).then((value) {
-          Navigator.pushReplacementNamed(context, '/login');
-        });
-      }
-      throw Exception(e);
+      // throw Exception(e);
     } finally {
       if (withLoading) loading(false);
     }
@@ -156,26 +94,9 @@ class ChatSellerProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     try {
-      final parsed = await postRest(
-        Constant.BASE_API_FULL + '${Constant.epChats}',
-        body: {
-          'user_id': idPenerima, // Asumsi buyer
-          'seller_id': idPengirim,
-          'message': message,
-          'is_seller': '1', // menandakan ini dari seller
-        }
-      );
-
-      fetchDetailChat(context,
-          withLoading: true, idSeller: idPengirim, idBuyer: idPenerima);
+      throw Exception('Fitur ini belum tersedia pada API backend.');
     } catch (e) {
-      if (e.toString().contains("Unauthorized")) {
-        Utils.showFailed(msg: "Unauthorized");
-        Future.delayed(Duration(seconds: 1)).then((value) {
-          Navigator.pushReplacementNamed(context, '/login');
-        });
-      }
-      throw Exception(e);
+      Utils.showFailed(msg: e.toString());
     } finally {
       if (withLoading) loading(false);
     }
@@ -187,24 +108,8 @@ class ChatSellerProvider extends BaseController with ChangeNotifier {
   Future<void> fetchRiwayat(
       {bool withLoading = false, required String order_id}) async {
     if (withLoading) loading(true);
-    String userId = await SessionHelper.getSellerId();
-    // userId = "124";
-
-    final response = await get(
-        Constant.BASE_API_FULL + '/getriwayatkomplainseller',
-        body: {"seller_id": userId, "order_id": order_id.toString()});
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      riwayat = RiwayatKomplainSellerModel.fromJson(jsonDecode(response.body));
-      notifyListeners();
-
-      if (withLoading) loading(false);
-      // return model;
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
-    }
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
+    if (withLoading) loading(false);
   }
 
   Future<void> sendComplain(
@@ -214,34 +119,7 @@ class ChatSellerProvider extends BaseController with ChangeNotifier {
       required String nomor_order,
       File? file}) async {
     if (withLoading) loading(true);
-    String userId = await SessionHelper.getSellerId();
-    // userId = "124";
-
-    final http.MultipartFile? _file = (file == null)
-        ? null
-        : await http.MultipartFile.fromPath(
-            'attachment',
-            file.path,
-            filename: basename(file.path),
-          );
-
-    final response = await post(Constant.BASE_API_FULL + '/balaskomplainseller',
-        body: {
-          "order_id": nomor_order,
-          "keterangan": keterangan,
-          "penerima_id": penerima_id,
-          "seller_id": userId
-        },
-        files: _file == null ? null : [_file]);
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      notifyListeners();
-      await fetchRiwayat(order_id: nomor_order, withLoading: true);
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
-    }
+    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
+    if (withLoading) loading(false);
   }
 }

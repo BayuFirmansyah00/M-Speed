@@ -119,25 +119,6 @@ class _CreateDataManagerAdminViewState
                   ),
                   const SizedBox(height: 14),
                   AdminFormSection(
-                    title: 'Lokasi',
-                    icon: Icons.location_on_outlined,
-                    accentColor: _accent,
-                    children: [
-                      AdminFormField(
-                          controller: p.cityC,
-                          label: 'Kota',
-                          hint: 'Masukkan kota',
-                          icon: Icons.location_city_outlined),
-                      AdminFormField(
-                          controller: p.alamatC,
-                          label: 'Alamat Lengkap',
-                          hint: 'Masukkan alamat lengkap',
-                          icon: Icons.map_outlined,
-                          maxLines: 3),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  AdminFormSection(
                     title: 'Keamanan',
                     icon: Icons.lock_outline_rounded,
                     accentColor: _accent,

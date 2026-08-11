@@ -20,8 +20,6 @@ class AdminFormManagerProvider extends BaseController with ChangeNotifier {
   final TextEditingController lastNameC = TextEditingController();
   final TextEditingController emailC = TextEditingController();
   final TextEditingController phoneNumberC = TextEditingController();
-  final TextEditingController alamatC = TextEditingController();
-  final TextEditingController cityC = TextEditingController();
   final TextEditingController passwordC = TextEditingController();
   bool isActive = true;
 
@@ -32,8 +30,6 @@ class AdminFormManagerProvider extends BaseController with ChangeNotifier {
       lastNameC.text = manager.lastname ?? '';
       emailC.text = manager.email ?? '';
       phoneNumberC.text = manager.telp ?? '';
-      alamatC.text = manager.alamat ?? '';
-      cityC.text = manager.kabkota ?? '';
 
       if (manager.ID != null) {
         try {
@@ -55,19 +51,27 @@ class AdminFormManagerProvider extends BaseController with ChangeNotifier {
     phoneNumberC.clear();
     passwordC.clear();
     isActive = true;
-    alamatC.clear();
-    cityC.clear();
   }
 
   Future<void> sendManager(BuildContext context,
       {bool withLoading = false, String? managerId}) async {
+    if (emailC.text.trim().isEmpty) {
+      return Utils.showFailed(msg: 'Email wajib diisi');
+    }
+    if (managerId == null && passwordC.text.isEmpty) {
+      return Utils.showFailed(msg: 'Password wajib diisi untuk user baru');
+    }
+    if (firstNameC.text.trim().isEmpty) {
+      return Utils.showFailed(msg: 'First Name wajib diisi');
+    }
+
     if (withLoading) loading(true);
     var param = {
       'email': emailC.text,
       'first_name': firstNameC.text,
       'last_name': lastNameC.text,
       'phone': phoneNumberC.text,
-      'active': isActive ? '1' : '0',
+      'active': isActive,
     };
     if (passwordC.text.isNotEmpty) {
       param['password'] = passwordC.text;
@@ -85,14 +89,19 @@ class AdminFormManagerProvider extends BaseController with ChangeNotifier {
         notifyListeners();
         await Utils.showSuccess(msg: 'Data manager berhasil disimpan!');
         await Future.delayed(const Duration(seconds: 2), () {});
-        CusNav.nPushReplace(
-            context, const UserDataAdminView(userType: UserDataType.MANAGER));
+        CusNav.nPop(context, true);
       }
     } on DioException catch (e) {
       var decoded = e.response?.data;
       String errorMessage = 'Terjadi kesalahan saat menyimpan data.';
       if (decoded != null && decoded['message'] != null) {
         errorMessage = decoded['message'];
+      }
+      if (decoded != null && decoded['errors'] != null) {
+        final errors = decoded['errors'] as Map<String, dynamic>;
+        if (errors.isNotEmpty) {
+          errorMessage = errors.values.first[0].toString();
+        }
       }
       Utils.showFailed(msg: errorMessage);
     } catch (e) {

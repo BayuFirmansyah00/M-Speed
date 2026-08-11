@@ -1,4 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:mspeed/common/component/buyer_product_card.dart';
+import 'package:mspeed/common/component/custom_searchbar.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:dots_indicator/dots_indicator.dart';
 import 'package:flutter/material.dart';
@@ -220,7 +222,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
             ),
             SliverToBoxAdapter(child: _buildCategories(categories)),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            // Dihapus spasi 8px di sini agar langsung menempel ke judul 'Semua Produk'
 
             // ── Section: Produk ──────────────────────────────
             SliverToBoxAdapter(
@@ -245,7 +247,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
                     crossAxisCount: 2,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 14,
-                    childAspectRatio: 0.52,
+                    childAspectRatio: 0.85, // Disesuaikan dengan kartu yang sangat kecil
                   ),
                 ),
               ),
@@ -259,23 +261,156 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
 
   // ─── HERO HEADER ──────────────────────────────────────────
   Widget _buildHeroHeader(int cartTotal) {
-    return SliverPersistentHeader(
-      pinned: false,
-      delegate: _HeroHeaderDelegate(
-        minHeight: MediaQuery.of(context).padding.top + 72,
-        maxHeight: MediaQuery.of(context).padding.top + 172,
-        userName: _userName,
-        greeting: _greeting,
-        cartTotal: cartTotal,
-        onChat: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ChatListView()),
-        ),
-        onCart: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ShoppingCartView()),
-        ),
-        onSearch: () => CusNav.nPush(context, ProductOrSellerSearchView()),
+    return SliverToBoxAdapter(
+      child: Stack(
+        children: [
+          // 1. Base White Background (Stops behind the search bar)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 34, // 12px bottom padding + 22px (half of 44px search bar)
+            child: Container(color: Colors.white),
+          ),
+          
+          // 2. Image with Dark Blue Overlay inside ClipPath
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 34,
+            child: ClipPath(
+              clipper: _BlueAreaClipper(),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Container(color: const Color(0xFF0F3268)), // Dark Blue Base
+                  Opacity(
+                    opacity: 0.4, // Blend the image with the blue background
+                    child: Image.asset(
+                      Assets.imagesImgTotalAlat,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.center,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // 3. Red Slash Divider
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 34,
+            child: CustomPaint(painter: _HeaderRedSlashPainter()),
+          ),
+
+          // 4. Foreground Content
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: Constant.space16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 2), // Spasi atas paling minimal
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Left: Logo and Subtitles
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            Assets.logoMSpeed,
+                            width: 100, // Diperkecil
+                            fit: BoxFit.contain,
+                          ),
+
+                        ],
+                      ),
+                      const Spacer(),
+                      
+                      // Right: Icons (Notif/Chat & Cart)
+                      _HeaderIconBtn(
+                        icon: Icons.notifications_none_rounded, // Notification
+                        badge: null,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => ChatListView()),
+                        ),
+                      ),
+                      const SizedBox(width: Constant.space8),
+                      _HeaderIconBtn(
+                        icon: Icons.shopping_cart_outlined, // Cart
+                        badge: cartTotal > 0 ? '$cartTotal' : null,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => ShoppingCartView()),
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 10), // Spasi ke Search Bar diperkecil
+                  
+                  // Custom Search Bar (Matches Image)
+                  Container(
+                    height: 44, // Diperkecil (awalnya 52)
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () => CusNav.nPush(context, ProductOrSellerSearchView()),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          child: Row(
+                            children: [
+                              Icon(Icons.search_rounded, color: Colors.grey.shade500, size: 20),
+                              const SizedBox(width: 4), // Super rapat
+                              Expanded(
+                                child: Text(
+                                  'Cari sparepart, tools, APD...',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade500,
+                                    fontSize: 12,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(Icons.qr_code_scanner_rounded, color: Colors.grey.shade700, size: 20),
+                              const SizedBox(width: 4),
+                              Container(width: 1, height: 16, color: Colors.grey.shade300), // Garis dibuat lebih pendek
+                              const SizedBox(width: 4),
+                              Icon(Icons.filter_alt_outlined, color: Colors.grey.shade700, size: 20),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 12), // Spasi bawah diperkecil
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -320,7 +455,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
             );
           },
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12), // Spasi atas titik dikurangi
         DotsIndicator(
           dotsCount: banners.length,
           position: p.currentIndex.toDouble(),
@@ -335,7 +470,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
             ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 6), // GAP RAKSASA SEBELUMNYA 24px DIBUANG JADI 6px
       ],
     );
   }
@@ -347,7 +482,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
     required IconData icon,
   }) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 16, 14),
+      padding: const EdgeInsets.fromLTRB(20, 8, 16, 6), // Padding bottom dipangkas dari 14 jadi 6, top jadi 8
       child: Row(
         children: [
           // Solid color icon container
@@ -417,13 +552,13 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
 
     if (categories.isEmpty) {
       return SizedBox(
-        height: 110,
+        height: 100, // Dikurangi dari 110 agar lebih ringkas
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 20),
           physics: const BouncingScrollPhysics(),
           itemCount: 6,
-          separatorBuilder: (_, __) => const SizedBox(width: 16),
+          separatorBuilder: (_, __) => const SizedBox(width: 12), // Jarak antar icon kategori dipersempit
           itemBuilder: (_, __) => Column(
             children: [
               _shimBox(w: 64, h: 64, r: 16),
@@ -436,13 +571,13 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
     }
 
     return SizedBox(
-      height: 110,
+      height: 100, // Dikurangi dari 110 agar lebih ringkas
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         physics: const BouncingScrollPhysics(),
         itemCount: categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 16),
+        separatorBuilder: (_, __) => const SizedBox(width: 12), // Jarak antar icon kategori dipersempit
         itemBuilder: (ctx, i) {
           final cat = categories[i];
           final icon = i < icons.length ? icons[i] : Assets.iconsIcOther;
@@ -525,211 +660,40 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
   // ─── PRODUCT CARD ─────────────────────────────────────────
   Widget _buildProductCard(List products, int i) {
     final item = products[i];
-    final badge = _getBadge(i, item);
 
-    return GestureDetector(
-      onTap: () => CusNav.nPush(context, DetailProductView(id: item?.ID ?? '')),
-      child: AnimatedBuilder(
-        animation: _entranceAnim,
-        builder: (_, child) {
-          final delay = (0.3 + (i * 0.04)).clamp(0.0, 0.9);
-          final t = CurvedAnimation(
-            parent: _entranceAnim,
-            curve: Interval(
-              delay,
-              (delay + 0.4).clamp(0.0, 1.0),
-              curve: Curves.easeOut,
-            ),
-          );
-          return Transform.translate(
-            offset: Offset(0, 30 * (1 - t.value)),
-            child: Opacity(opacity: t.value.clamp(0.0, 1.0), child: child),
-          );
+    return AnimatedBuilder(
+      animation: _entranceAnim,
+      builder: (_, child) {
+        final delay = (0.3 + (i * 0.04)).clamp(0.0, 0.9);
+        final t = CurvedAnimation(
+          parent: _entranceAnim,
+          curve: Interval(
+            delay,
+            (delay + 0.4).clamp(0.0, 1.0),
+            curve: Curves.easeOut,
+          ),
+        );
+        return Transform.translate(
+          offset: Offset(0, 30 * (1 - t.value)),
+          child: Opacity(opacity: t.value.clamp(0.0, 1.0), child: child),
+        );
+      },
+      child: BuyerProductCard(
+        imageUrl: item?.foto ?? '',
+        title: item?.nama ?? '-',
+        sellerName: item?.SellerNama ?? '-',
+        category: item?.NamaKategori ?? '-',
+        rating: 4.9, // Default for now
+        soldCount: int.tryParse(item?.terjual ?? '0') ?? 0,
+        price: double.tryParse(item?.harga ?? '0') ?? 0,
+        isNew: i < 3, // Just a visual mock for new items
+        onTap: () => CusNav.nPush(context, DetailProductView(id: item?.ID ?? '')),
+        onWishlistTap: () {
+          // wishlist logic
         },
-        child: Container(
-          decoration: BoxDecoration(
-            color: _C.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: _C.divider, width: 1),
-            boxShadow: [_C.cardShadow],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Image + Badge ──────────────────────────────
-              Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(15),
-                    ),
-                    child: AspectRatio(
-                      aspectRatio: 1,
-                      child: CachedNetworkImage(
-                        imageUrl: item?.foto ?? '',
-                        fit: BoxFit.cover,
-                        cacheManager: CacheManager(
-                          Config(
-                            'ms_${item?.ID ?? i}',
-                            stalePeriod: const Duration(days: 7),
-                          ),
-                        ),
-                        placeholder: (_, __) =>
-                            _shimBox(h: double.infinity, r: 0),
-                        errorWidget: (_, __, ___) => Container(
-                          color: _C.surfaceAlt,
-                          child: Center(
-                            child: Icon(
-                              Icons.image_not_supported_rounded,
-                              color: _C.txt3,
-                              size: 32,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (badge != null)
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: badge.bg,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          badge.label,
-                          style: TextStyle(
-                            fontSize: 9,
-                            color: badge.color,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-
-              // ── Product Info ──────────────────────────────
-              Padding(
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Product name
-                    Text(
-                      item?.nama ?? '-',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: _C.txt1,
-                        height: 1.3,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-
-                    // Price
-                    Text(
-                      Utils.thousandSeparatorFromString(item?.harga ?? '0'),
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: _C.secondary,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-
-                    // Category chip
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _C.primaryBg,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        item?.NamaKategori ?? '-',
-                        style: TextStyle(
-                          fontSize: 9,
-                          color: _C.primary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-
-                    // Store name
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.storefront_rounded,
-                          size: 11,
-                          color: _C.txt3,
-                        ),
-                        const SizedBox(width: 3),
-                        Expanded(
-                          child: Text(
-                            item?.SellerNama ?? '-',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: _C.txt2,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-
-                    // Rating & sold
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.star_rounded,
-                          size: 11,
-                          color: _C.accent,
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          '4.9',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: _C.txt2,
-                          ),
-                        ),
-                        Text(
-                          ' · ',
-                          style: TextStyle(fontSize: 10, color: _C.txt3),
-                        ),
-                        Flexible(
-                          child: Text(
-                            '${item?.terjual ?? 0} terjual',
-                            style: TextStyle(fontSize: 10, color: _C.txt2),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+        onAddToCartTap: () {
+          // add to cart logic
+        },
       ),
     );
   }
@@ -798,224 +762,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
   }
 }
 
-// ─── HERO HEADER DELEGATE ─────────────────────────────────────
-class _HeroHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final double minHeight;
-  final double maxHeight;
-  final String userName;
-  final String greeting;
-  final int cartTotal;
-  final VoidCallback onChat;
-  final VoidCallback onCart;
-  final VoidCallback onSearch;
-
-  _HeroHeaderDelegate({
-    required this.minHeight,
-    required this.maxHeight,
-    required this.userName,
-    required this.greeting,
-    required this.cartTotal,
-    required this.onChat,
-    required this.onCart,
-    required this.onSearch,
-  });
-
-  @override
-  double get minExtent => minHeight;
-  @override
-  double get maxExtent => maxHeight;
-
-  String get _initials {
-    if (userName.isEmpty) return 'M';
-    final parts = userName.trim().split(' ');
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    }
-    return userName[0].toUpperCase();
-  }
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    final pct = (shrinkOffset / (maxHeight - minHeight)).clamp(0.0, 1.0);
-
-    return Stack(
-      children: [
-        // ── 1. Solid Header Background ────────────────────
-        Positioned.fill(
-          child: Container(
-            color: Constant.primaryColor, // Solid M-SPEED Blue
-          ),
-        ),
-
-        // ── 2. Rounded Bottom Clipper ─────────────────────
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: Container(
-            height: 24,
-            decoration: BoxDecoration(
-              color: Constant.backgroundColor,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
-              ),
-            ),
-          ),
-        ),
-
-        // ── 3. Greeting + Avatar + Icons ──────────────────
-        Positioned(
-          top: MediaQuery.of(context).padding.top + 14,
-          left: 20,
-          right: 20,
-          child: Opacity(
-            opacity: (1 - pct * 2).clamp(0.0, 1.0),
-            child: Row(
-              children: [
-                // Avatar circle
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.4),
-                      width: 2,
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      _initials,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$greeting,',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Text(
-                        userName.isNotEmpty ? userName : 'Pengguna',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                // Chat Icon
-                _HeaderIconBtn(
-                  icon: Icons.chat_bubble_outline_rounded,
-                  badge: null,
-                  onTap: onChat,
-                ),
-                const SizedBox(width: 10),
-                // Cart Icon
-                _HeaderIconBtn(
-                  icon: Icons.shopping_bag_outlined,
-                  badge: cartTotal > 0 ? '$cartTotal' : null,
-                  onTap: onCart,
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // ── 4. Search Bar ─────────────────────────────────
-        Positioned(
-          bottom: 30,
-          left: 16,
-          right: 16,
-          child: GestureDetector(
-            onTap: onSearch,
-            child: Container(
-              height: 48,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.search_rounded, color: _C.txt3, size: 22),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Cari sparepart, tools, APD...',
-                      style: TextStyle(
-                        color: _C.txt3,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ),
-                  // Solid "Cari" button
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 7,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _C.primary,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      'Cari',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _HeroHeaderDelegate old) =>
-      old.userName != userName ||
-      old.greeting != greeting ||
-      old.cartTotal != cartTotal ||
-      old.minHeight != minHeight ||
-      old.maxHeight != maxHeight;
-}
+// (Delegate removed. Using SliverToBoxAdapter directly in _buildHeroHeader)
 
 // ─── HEADER ICON BUTTON ───────────────────────────────────────
 class _HeaderIconBtn extends StatelessWidget {
@@ -1033,32 +780,35 @@ class _HeaderIconBtn extends StatelessWidget {
         clipBehavior: Clip.none,
         children: [
           Container(
-            width: 42,
-            height: 42,
+            width: 38, // Diperkecil dari 44
+            height: 38,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
+              color: Constant.dsSurface, // White
               shape: BoxShape.circle,
+              boxShadow: [Constant.shadowSmall], // Soft shadow only
             ),
-            child: Icon(icon, color: Colors.white, size: 21),
+            child: Icon(icon, color: Constant.dsTextPrimary, size: 20), // Icon size 20
           ),
-          if (badge != null)
+          if (badge != null && badge != '0')
             Positioned(
-              top: -3,
-              right: -3,
+              top: -4,
+              right: -4,
               child: Container(
-                width: 18,
-                height: 18,
+                padding: const EdgeInsets.all(4),
+                constraints: const BoxConstraints(minWidth: 18, minHeight: 18), // Diperkecil
                 decoration: BoxDecoration(
-                  color: Constant.secondaryColor, // Red badge
+                  color: Constant.dsSecondary, // Red badge
                   shape: BoxShape.circle,
+                  border: Border.all(color: Constant.dsSurface, width: 2), // White border stroke for contrast
                 ),
                 child: Center(
                   child: Text(
                     badge!,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 9, // Diperkecil
+                      fontWeight: FontWeight.bold,
+                      height: 1,
                     ),
                   ),
                 ),
@@ -1068,4 +818,43 @@ class _HeaderIconBtn extends StatelessWidget {
       ),
     );
   }
+}
+
+// ─── CUSTOM BACKGROUND CLIPPER & PAINTER ────────────────────────
+
+class _BlueAreaClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    return Path()
+      ..moveTo(size.width * 0.52, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width, size.height)
+      ..lineTo(size.width * 0.35, size.height)
+      ..close();
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+class _HeaderRedSlashPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Draw Red Slash Divider
+    final redPath = Path()
+      ..moveTo(size.width * 0.49, 0)
+      ..lineTo(size.width * 0.52, 0)
+      ..lineTo(size.width * 0.35, size.height)
+      ..lineTo(size.width * 0.32, size.height)
+      ..close();
+      
+    final redPaint = Paint()
+      ..color = const Color(0xFFD31F26) // M-Speed Red
+      ..style = PaintingStyle.fill;
+      
+    canvas.drawPath(redPath, redPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

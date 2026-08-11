@@ -11,223 +11,177 @@ class HomeSellerGraphView extends StatefulWidget {
 }
 
 class _HomeSellerGraphViewState extends State<HomeSellerGraphView> {
-  bool showAvg = false;
-  List<Color> gradientColors = [
-    Color(0xff05C283),
-    Color(0xff05C283),
-  ];
+  // M-SPEED Brand Colors
+  static const Color _primaryBlue = Color(0xFF1565C0);
+  static const Color _textSecondary = Color(0xFF6B7280);
+  static const Color _border = Color(0xFFE5E7EB);
+
   @override
   Widget build(BuildContext context) {
     final p = context.watch<SellerHomeProvider>();
     final graph = p.homeSellerModel?.data?.chartPenjualan ?? [];
-    Widget bottomTitleWidgets(double value, TitleMeta meta) {
-      const style = TextStyle(fontSize: 12);
-      Widget text;
-      switch (value.toInt()) {
-        case 0:
-          text = const Text('Jan', style: style);
-          break;
-        case 1:
-          text = const Text('Feb', style: style);
-          break;
-        case 2:
-          text = const Text('Mar', style: style);
-          break;
-        case 3:
-          text = const Text('Apr', style: style);
-          break;
-        case 4:
-          text = const Text('Mei', style: style);
-          break;
-        case 5:
-          text = const Text('Jun', style: style);
-          break;
-        case 6:
-          text = const Text('Jul', style: style);
-          break;
-        case 7:
-          text = const Text('Agu', style: style);
-          break;
-        case 8:
-          text = const Text('Sep', style: style);
-          break;
-        case 9:
-          text = const Text('Okt', style: style);
-          break;
-        case 10:
-          text = const Text('Nov', style: style);
-          break;
-        case 11:
-          text = const Text('Des', style: style);
-          break;
-        default:
-          text = const Text('', style: style);
-          break;
-      }
 
-      return SideTitleWidget(
-        meta: meta,
-        child: text,
-      );
+    // Check if data is empty or all zeros
+    final bool hasData = graph.isNotEmpty && graph.any((v) => (v ?? 0) > 0);
+
+    if (!hasData) {
+      return _buildEmptyState();
     }
 
-    Widget leftTitleWidgets(double value, TitleMeta meta) {
-      const style = TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 15,
-      );
-      String text;
-      switch (value.toInt()) {
-        case 1:
-          text = '10K';
-          break;
-        case 3:
-          text = '30k';
-          break;
-        case 5:
-          text = '50k';
-          break;
-        default:
-          return Container();
-      }
+    return SizedBox(
+      height: 220,
+      child: Padding(
+        padding: const EdgeInsets.only(
+          right: 12,
+          left: 4,
+          top: 16,
+          bottom: 8,
+        ),
+        child: LineChart(_buildMainData(p, graph)),
+      ),
+    );
+  }
 
-      return Text(text, style: style, textAlign: TextAlign.left);
-    }
-
-    LineChartData mainData() {
-      return LineChartData(
-        gridData: FlGridData(
-          show: true,
-          drawVerticalLine: true,
-          horizontalInterval: 1,
-          verticalInterval: 1,
-          getDrawingHorizontalLine: (value) {
-            return const FlLine(
-              color: Color(0xffF58B2B),
-              strokeWidth: 0,
-            );
-          },
-          getDrawingVerticalLine: (value) {
-            return const FlLine(
-              color: Color(0xffF58B2B),
-              strokeWidth: 0,
-            );
-          },
-        ),
-        titlesData: FlTitlesData(
-          show: true,
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 30,
-              interval: 1,
-              getTitlesWidget: bottomTitleWidgets,
+  Widget _buildEmptyState() {
+    return SizedBox(
+      height: 160,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.bar_chart_rounded,
+              size: 40,
+              color: _textSecondary.withOpacity(0.4),
             ),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: false,
-              interval: 1,
-              getTitlesWidget: leftTitleWidgets,
-              reservedSize: 0,
-            ),
-          ),
-        ),
-        borderData: FlBorderData(
-          show: false,
-          border: Border.all(color: const Color(0xff37434d)),
-        ),
-        minX: 0,
-        maxX: 11,
-        minY: 0,
-        maxY: p.biggestGraphVal.toDouble(),
-        lineBarsData: [
-          LineChartBarData(
-            spots: List.generate(graph.length,
-                (i) => FlSpot(i.toDouble(), (graph[i] ?? 0).toDouble())),
-            isCurved: true,
-            color: Color(0xffF58B2B),
-            barWidth: 2.5,
-            isStrokeCapRound: true,
-            dotData: FlDotData(show: true),
-            belowBarData: BarAreaData(
-              show: true,
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xffFF99005).withOpacity(0.32),
-                  Color(0xffFF7A000).withOpacity(0.01),
-                ],
+            const SizedBox(height: 8),
+            const Text(
+              'Belum ada data penjualan',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: _textSecondary,
               ),
             ),
-          ),
-          // LineChartBarData(
-          //   spots: const [
-          //     FlSpot(0, 1),
-          //     FlSpot(2.6, 0),
-          //     FlSpot(4.9, 3),
-          //     FlSpot(6.8, 1.1),
-          //     FlSpot(8, 2),
-          //     FlSpot(9.5, 1),
-          //     FlSpot(11, 2),
-          //   ],
-          //   isCurved: true,
-          //   color: Color(0xffF58B2B),
-          //   barWidth: 2.5,
-          //   isStrokeCapRound: true,
-          //   dotData: FlDotData(show: true),
-          //   belowBarData: BarAreaData(
-          //     show: true,
-          //     gradient: LinearGradient(
-          //       begin: Alignment.topCenter,
-          //       end: Alignment.bottomCenter,
-          //       colors: [
-          //         Color(0xffFF99005).withOpacity(0.32),
-          //         Color(0xffFF7A000).withOpacity(0.01),
-          //       ],
-          //     ),
-          //   ),
-          // )
-        ],
-      );
-    }
-
-    return Stack(
-      children: <Widget>[
-        AspectRatio(
-          aspectRatio: 1.70,
-          child: Padding(
-            padding: const EdgeInsets.only(
-              right: 18,
-              left: 12,
-              top: 24,
-              bottom: 12,
-            ),
-            child: LineChart(mainData()),
-          ),
-        ),
-        SizedBox(
-          width: 60,
-          height: 34,
-          child: TextButton(
-            onPressed: () {
-              setState(() {
-                showAvg = !showAvg;
-              });
-            },
-            child: Text(
-              'avg',
+            const SizedBox(height: 4),
+            Text(
+              'Data akan muncul setelah transaksi tersedia',
               style: TextStyle(
                 fontSize: 12,
-                color: showAvg ? Colors.white.withOpacity(0.5) : Colors.white,
+                color: _textSecondary.withOpacity(0.7),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _bottomTitleWidgets(double value, TitleMeta meta) {
+    const style = TextStyle(
+      fontSize: 11,
+      color: _textSecondary,
+      fontWeight: FontWeight.w500,
+    );
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    final idx = value.toInt();
+    final text = (idx >= 0 && idx < months.length) ? months[idx] : '';
+
+    return SideTitleWidget(
+      meta: meta,
+      child: Text(text, style: style),
+    );
+  }
+
+  LineChartData _buildMainData(SellerHomeProvider p, List<int?> graph) {
+    return LineChartData(
+      gridData: FlGridData(
+        show: true,
+        drawVerticalLine: false,
+        drawHorizontalLine: true,
+        horizontalInterval: (p.biggestGraphVal > 0) ? (p.biggestGraphVal / 4).ceilToDouble().clamp(1, double.infinity) : 1,
+        getDrawingHorizontalLine: (value) {
+          return FlLine(
+            color: _border.withOpacity(0.5),
+            strokeWidth: 0.8,
+            dashArray: [4, 4],
+          );
+        },
+      ),
+      titlesData: FlTitlesData(
+        show: true,
+        rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            reservedSize: 28,
+            interval: 1,
+            getTitlesWidget: _bottomTitleWidgets,
+          ),
+        ),
+        leftTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            interval: (p.biggestGraphVal > 0) ? (p.biggestGraphVal / 4).ceilToDouble().clamp(1, double.infinity) : 1,
+            reservedSize: 36,
+            getTitlesWidget: (value, meta) {
+              return Text(
+                value.toInt().toString(),
+                style: const TextStyle(fontSize: 10, color: _textSecondary),
+              );
+            },
+          ),
+        ),
+      ),
+      borderData: FlBorderData(show: false),
+      minX: 0,
+      maxX: (graph.length - 1).toDouble().clamp(0, 11),
+      minY: 0,
+      maxY: p.biggestGraphVal.toDouble().clamp(1, double.infinity),
+      lineBarsData: [
+        LineChartBarData(
+          spots: List.generate(graph.length,
+              (i) => FlSpot(i.toDouble(), (graph[i] ?? 0).toDouble())),
+          isCurved: true,
+          color: _primaryBlue,
+          barWidth: 2.5,
+          isStrokeCapRound: true,
+          dotData: FlDotData(
+            show: true,
+            getDotPainter: (spot, percent, barData, index) {
+              return FlDotCirclePainter(
+                radius: 3,
+                color: Colors.white,
+                strokeWidth: 2,
+                strokeColor: _primaryBlue,
+              );
+            },
+          ),
+          belowBarData: BarAreaData(
+            show: true,
+            color: _primaryBlue.withOpacity(0.08),
           ),
         ),
       ],
+      lineTouchData: LineTouchData(
+        touchTooltipData: LineTouchTooltipData(
+          getTooltipColor: (touchedSpot) => _primaryBlue,
+          tooltipBorderRadius: BorderRadius.circular(8),
+          getTooltipItems: (touchedSpots) {
+            return touchedSpots.map((spot) {
+              return LineTooltipItem(
+                '${spot.y.toInt()}',
+                const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              );
+            }).toList();
+          },
+        ),
+      ),
     );
   }
 }

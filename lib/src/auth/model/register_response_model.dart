@@ -55,53 +55,69 @@ class RegisterResponseModel {
 
 class RegisterResponseData {
   int? id;
-  String? name;
-  String? companyName;
-  String? phone;
-  String? ownerName;
-  String? photo;
-  String? cpName;
-  String? cpPhone;
-  String? kbli;
-  int? completeness;
-  RegisterResponseUser? user;
+  String? email;
+  String? role;
+  RegisterResponseSellerProfile? sellerProfile;
+  RegisterResponseAddress? address;
   String? createdAt;
-  String? updatedAt;
 
   RegisterResponseData({
     this.id,
-    this.name,
-    this.companyName,
-    this.phone,
-    this.ownerName,
-    this.photo,
-    this.cpName,
-    this.cpPhone,
-    this.kbli,
-    this.completeness,
-    this.user,
+    this.email,
+    this.role,
+    this.sellerProfile,
+    this.address,
     this.createdAt,
-    this.updatedAt,
   });
 
   RegisterResponseData.fromJson(Map<String, dynamic> json) {
     id = json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? '');
+    email = json['email']?.toString();
+    role = json['role']?.toString();
+    sellerProfile = json['seller_profile'] != null
+        ? RegisterResponseSellerProfile.fromJson(json['seller_profile'])
+        : null;
+    address = json['address'] != null
+        ? RegisterResponseAddress.fromJson(json['address'])
+        : null;
+    createdAt = json['created_at']?.toString();
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'role': role,
+      'seller_profile': sellerProfile?.toJson(),
+      'address': address?.toJson(),
+      'created_at': createdAt,
+    };
+  }
+}
+
+class RegisterResponseSellerProfile {
+  int? id;
+  String? name;
+  String? companyName;
+  String? ownerName;
+  int? completeness;
+
+  RegisterResponseSellerProfile({
+    this.id,
+    this.name,
+    this.companyName,
+    this.ownerName,
+    this.completeness,
+  });
+
+  RegisterResponseSellerProfile.fromJson(Map<String, dynamic> json) {
+    id = json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? '');
     name = json['name']?.toString();
     companyName = json['company_name']?.toString();
-    phone = json['phone']?.toString();
     ownerName = json['owner_name']?.toString();
-    photo = json['photo']?.toString();
-    cpName = json['cp_name']?.toString();
-    cpPhone = json['cp_phone']?.toString();
-    kbli = json['kbli']?.toString();
     completeness = json['completeness'] is int
         ? json['completeness']
         : int.tryParse(json['completeness']?.toString() ?? '');
-    user = json['user'] != null
-        ? RegisterResponseUser.fromJson(json['user'])
-        : null;
-    createdAt = json['created_at']?.toString();
-    updatedAt = json['updated_at']?.toString();
   }
 
   Map<String, dynamic> toJson() {
@@ -109,35 +125,28 @@ class RegisterResponseData {
       'id': id,
       'name': name,
       'company_name': companyName,
-      'phone': phone,
       'owner_name': ownerName,
-      'photo': photo,
-      'cp_name': cpName,
-      'cp_phone': cpPhone,
-      'kbli': kbli,
       'completeness': completeness,
-      'user': user?.toJson(),
-      'created_at': createdAt,
-      'updated_at': updatedAt,
     };
   }
 }
 
-class RegisterResponseUser {
+class RegisterResponseAddress {
   int? id;
-  String? email;
-  String? role;
+  String? detail;
 
-  RegisterResponseUser({this.id, this.email, this.role});
+  RegisterResponseAddress({this.id, this.detail});
 
-  RegisterResponseUser.fromJson(Map<String, dynamic> json) {
+  RegisterResponseAddress.fromJson(Map<String, dynamic> json) {
     id = json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? '');
-    email = json['email']?.toString();
-    role = json['role']?.toString();
+    detail = json['detail']?.toString();
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'email': email, 'role': role};
+    return {
+      'id': id,
+      'detail': detail,
+    };
   }
 }
 

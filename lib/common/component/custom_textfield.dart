@@ -258,6 +258,7 @@ class CustomTextField {
   }
 
   static Widget borderTextField({
+    Key? key,
     required TextEditingController controller,
     String? hintText,
     String? labelText,
@@ -327,6 +328,7 @@ class CustomTextField {
               ),
             ),
           TextFormField(
+            key: key,
             readOnly: readOnly,
             onTap: onTap,
             // The validator receives the text that the user has entered.

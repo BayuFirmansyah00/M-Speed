@@ -36,66 +36,90 @@ class Constant {
   ///
   /// Constant.firstColor;
   ///
-  static Color primaryColor = Color(0xFF2E7DAB); // M-SPEED Primary Blue
-  static Color secondaryColor = Color(0xFFE53935); // M-SPEED Primary Red
-  static Color tertiaryColor = Color(0xFFFBC02D); // M-SPEED Accent Yellow
-  static Color quarteryColor = Color(0xFFC5E2FF);
-  static Color tableBlueColor = Color(0xFFE9F0FF);
-  static Color textHyperlinkColor = Color(0xFF0095FF);
-  static Color splashText = Color(0xFF569CB0);
+  static Color primaryColor = const Color(0xFF1565C0); // M-SPEED Primary Blue
+  static Color secondaryColor = const Color(0xFF1E88E5); // M-SPEED Secondary Blue
+  static Color tertiaryColor = const Color(0xFFF57C00); // M-SPEED Accent Orange
+  static Color quarteryColor = const Color(0xFFC5E2FF);
+  static Color tableBlueColor = const Color(0xFFE9F0FF);
+  static Color textHyperlinkColor = const Color(0xFF0095FF);
+  static Color splashText = const Color(0xFF569CB0);
   static Color darkGrayColor = Colors.grey.shade800;
   static Color grayColor = Colors.grey.shade600;
   static Color lightGrayColor = Colors.grey.shade400;
-  static Color textHintColor = Color(0xFF999999);
-  static Color textHintColor2 = Color(0xFF949494);
+  static Color textHintColor = const Color(0xFF999999);
+  static Color textHintColor2 = const Color(0xFF949494);
   static Color darkGrayButtonColor = Colors.black;
-  static Color bgFieldColor = Color(0xff8CC6FF4D);
-  static Color textColor = Color(0xFF212121); // Primary Text
-  static Color textColor2 = Color(0xFF757575); // Secondary Text
-  static Color textKomisiColor = Color(0xFFFFCB47);
-  static Color textPriceColor = Color(0xFFE53935); // Using red for price
-  static Color backgroundColor = Color(0xFFF8F9FB); // Background
-  static Color textColorBlack = Color(0xFF212121);
+  static Color bgFieldColor = const Color(0xff8CC6FF).withValues(alpha: 0.3);
+  static Color textColor = const Color(0xFF212121); // Primary Text
+  static Color textColor2 = const Color(0xFF757575); // Secondary Text
+  static Color textKomisiColor = const Color(0xFFFFCB47);
+  static Color textPriceColor = const Color(0xFFE53935); // Danger / Price
+  static Color backgroundColor = const Color(0xFFF8F9FB); // Background
+  static Color textColorBlack = const Color(0xFF212121);
   static Color textColorWhite = Colors.white;
-  static Color textColorBlue = Color(0xFF2E7DAB);
-  static Color timerColor = Color(0xFFE7B641);
-  static Color progressColor = Color(0xFFFBC02D);
-  // static Color textPriceColor = Color(0xFF3DA11A);
-  static Color textOnAuthColor = Color(0xFF21272A);
-  static Color greyIndicatorColor = Color(0xFFD9D9D9);
-  // static Color backgroundColor = Color(0xFFF9F9F9);
-  static Color borderLightColor = Color(0xFFE0E0E0); // Divider
-  static Color borderRegularColor = Color(0xFF9D9B9B);
-  static Color borderSearchColor = Color(0xFF949494);
-  static Color greenColor = Color(0xFF1ABC62);
-  static Color redColor = Color(0xFFE53935);
-  static Color blueColor = Color(0xFF2E7DAB);
-  static Color blueGreenColor = Color(0xFF5397AA);
+  static Color textColorBlue = const Color(0xFF1565C0);
+  static Color timerColor = const Color(0xFFE7B641);
+  static Color progressColor = const Color(0xFFFBC02D);
+  static Color textOnAuthColor = const Color(0xFF21272A);
+  static Color greyIndicatorColor = const Color(0xFFD9D9D9);
+  static Color borderLightColor = const Color(0xFFE8EAF0); // Border Light
+  static Color borderRegularColor = const Color(0xFF9D9B9B);
+  static Color borderSearchColor = const Color(0xFF949494);
+  static Color greenColor = const Color(0xFF43A047); // Success
+  static Color redColor = const Color(0xFFE53935); // Danger
+  static Color blueColor = const Color(0xFF1565C0);
+  static Color blueGreenColor = const Color(0xFF5397AA);
   static Color pesananBaruColor = greenColor;
-  static Color pesananDiterimaColor = Color(0xff2B64F5);
+  static Color pesananDiterimaColor = const Color(0xff2B64F5);
 
-  // --- NEW DESIGN SYSTEM TOKENS (BUYER) ---
-  static const Color dsTeal = Color(0xFF45B0A8);
-  static const Color dsPeach = Color(0xFFFF9F43);
-  static const Color dsRedAccent = Color(0xFFE55959);
-  static const Color dsBackground = Color(0xFFF8F9FA);
-  static const Color dsSurface = Colors.white;
-  static const Color dsTextHeading = Color(0xFF333333);
-  static const Color dsTextBody = Color(0xFF666666);
-  static const Color dsTextHint = Color(0xFF999999);
-  static const Color dsBorder = Color(0xFFEEEEEE);
-  
-  static BoxShadow dsSoftShadow = BoxShadow(
-    color: Colors.black.withValues(alpha: 0.05),
-    blurRadius: 20,
+  // --- NEW DESIGN SYSTEM TOKENS (MARKETPLACE MODERN UX) ---
+  // A. Color Palette (Solid Colors Only)
+  static const Color dsPrimary = Color(0xFF1565C0);
+  static const Color dsSecondary = Color(0xFFE53935);
+  static const Color dsAccent = Color(0xFFF9A825);
+  static const Color dsBackground = Color(0xFFF8F9FB);
+  static const Color dsSurface = Color(0xFFFFFFFF);
+  static const Color dsTextPrimary = Color(0xFF111827);
+  static const Color dsTextSecondary = Color(0xFF6B7280);
+  static const Color dsBorder = Color(0xFFE5E7EB);
+  static const Color dsDivider = Color(0xFFF3F4F6);
+
+  // B. Spacing System
+  static const double space2 = 2.0;
+  static const double space4 = 4.0;
+  static const double space8 = 8.0;
+  static const double space12 = 12.0;
+  static const double space16 = 16.0;
+  static const double space20 = 20.0;
+  static const double space24 = 24.0;
+  static const double space32 = 32.0;
+  static const double space40 = 40.0;
+
+  // C. Radius System
+  static const double radiusXs = 4.0;
+  static const double radiusSm = 8.0;
+  static const double radiusMd = 12.0;
+  static const double radiusLg = 16.0;
+  static const double radiusXl = 24.0;
+
+  // D. Shadow System
+  static BoxShadow shadowSmall = BoxShadow(
+    color: Colors.black.withValues(alpha: 0.04),
+    blurRadius: 8,
     spreadRadius: 0,
-    offset: Offset(0, 4),
+    offset: const Offset(0, 4),
   );
-  static BoxShadow dsSoftGlow = BoxShadow(
-    color: dsPeach.withValues(alpha: 0.3),
-    blurRadius: 15,
-    spreadRadius: 2,
-    offset: Offset(0, 4),
+  static BoxShadow shadowMedium = BoxShadow(
+    color: Colors.black.withValues(alpha: 0.05),
+    blurRadius: 18,
+    spreadRadius: 0,
+    offset: const Offset(0, 4),
+  );
+  static BoxShadow shadowLarge = BoxShadow(
+    color: Colors.black.withValues(alpha: 0.08),
+    blurRadius: 24,
+    spreadRadius: 0,
+    offset: const Offset(0, 8),
   );
   static Color pesananDikirimColor = Color(0xffF58B2B);
   static Color barangDiterimaColor = Color(0xffF40BA7);
@@ -118,100 +142,100 @@ class Constant {
   }
 
   static TextStyle primaryTextStyle = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColor,
   );
   static TextStyle secondaryTextStyle = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColor2,
   );
   static TextStyle komisiTextStyle = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textKomisiColor,
   );
   static TextStyle priceTextStyle = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textPriceColor,
   );
   static TextStyle s12BoldBlack = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColor,
     fontWeight: FontWeight.bold,
   );
 
   static TextStyle primaryTextStyle2 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColor,
   );
   static TextStyle secondaryTextStyle2 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColor2,
   );
   static TextStyle komisiTextStyle2 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textKomisiColor,
   );
   static TextStyle priceTextStyle2 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textPriceColor,
   );
   static TextStyle s12BoldBlack2 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColor,
     fontWeight: FontWeight.bold,
   );
-  static TextStyle iBlack = TextStyle(fontFamily: GoogleFonts.inter().fontFamily);
+  static TextStyle iBlack = TextStyle(fontFamily: GoogleFonts.poppins().fontFamily);
 
   static TextStyle iPrimaryMedium8 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: primaryColor,
     fontSize: 8,
     fontWeight: medium,
   );
   static TextStyle iPrimaryMedium12 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: primaryColor,
     fontSize: 12,
     fontWeight: medium,
   );
 
   static TextStyle iBlackMedium8 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 8,
     fontWeight: medium,
   );
   static TextStyle iBlackMedium10 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 8,
     fontWeight: medium,
   );
   static TextStyle iBlackMedium12 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 12,
     fontWeight: medium,
   );
   static TextStyle iBlackMedium13 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 13,
     fontWeight: medium,
   );
   static TextStyle iBlackMedium = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontWeight: medium,
   );
   static TextStyle iBlackMedium18 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 18,
     fontWeight: medium,
   );
   static TextStyle iBlackMedium16StrkWhite = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 16,
     shadows: [
@@ -239,19 +263,19 @@ class Constant {
     fontWeight: medium,
   );
   static TextStyle iBlackMedium16 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 16,
     fontWeight: medium,
   );
   static TextStyle iBlackMedium20 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 20,
     fontWeight: medium,
   );
   static TextStyle iBlackMedium40StrkWhite = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 40,
     shadows: [
@@ -280,7 +304,7 @@ class Constant {
   );
 
   static TextStyle primaryBold15 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: primaryColor,
     fontSize: 15,
     fontWeight: bold,
@@ -292,291 +316,291 @@ class Constant {
     fontWeight: medium,
   );
   static TextStyle primaryBold16 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: primaryColor,
     fontSize: 16,
     fontWeight: bold,
   );
   static TextStyle primaryBold20 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: primaryColor,
     fontSize: 20,
     fontWeight: bold,
   );
   static TextStyle productDark14 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 14,
     fontWeight: medium,
   );
   static TextStyle quartenary = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: quarteryColor,
     fontWeight: regular,
   );
   static TextStyle whiteExtraBold18 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: Colors.white,
     fontSize: 18,
     fontWeight: bold,
   );
 
   static TextStyle purple16 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: Colors.purple,
     fontSize: 16,
     fontWeight: medium,
   );
   static TextStyle dark14 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 14,
     fontWeight: medium,
   );
   static TextStyle dark15 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 15,
     fontWeight: medium,
   );
   static TextStyle dark16 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 15,
     fontWeight: medium,
   );
   static TextStyle darkBold12 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 12,
     fontWeight: bold,
   );
   static TextStyle darkBold14 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 14,
     fontWeight: bold,
   );
   static TextStyle darkBold16 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 16,
     fontWeight: bold,
   );
   static TextStyle darkBold18 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 18,
     fontWeight: bold,
   );
   static TextStyle darkBold20 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 20,
     fontWeight: bold,
   );
   static TextStyle darkBold22 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 22,
     fontWeight: bold,
   );
   static TextStyle darkMedium14 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 14,
     fontWeight: bold,
   );
   static TextStyle darkMedium16 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 16,
     fontWeight: bold,
   );
   static TextStyle darkUnderline14 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 14,
     fontWeight: bold,
   );
 
   static TextStyle blackBold10 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 10,
     fontWeight: bold,
   );
   static TextStyle blackBold13 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: Colors.black,
     fontSize: 13,
     fontWeight: bold,
   );
   static TextStyle blackBold = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontWeight: bold,
   );
   static TextStyle blackBold15 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 15,
     fontWeight: bold,
   );
   static TextStyle blackBold16 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 16,
     fontWeight: bold,
   );
   static TextStyle blackBold20 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: textColorBlack,
     fontSize: 20,
     fontWeight: bold,
   );
 
   static TextStyle grayRegular = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: lightGrayColor,
   );
   static TextStyle grayRegular8 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: lightGrayColor,
     fontSize: 8,
   );
   static TextStyle grayRegular12 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: lightGrayColor,
     fontSize: 12,
   );
   static TextStyle greyRegular12 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: lightGrayColor,
     fontSize: 12,
   );
   static TextStyle grayRegular13 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: lightGrayColor,
     fontSize: 13,
   );
   static TextStyle greyThrough12 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: lightGrayColor,
     fontSize: 12,
   );
   static TextStyle greyThrough14 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: lightGrayColor,
     fontSize: 14,
     decoration: TextDecoration.lineThrough,
   );
   static TextStyle greyThrough16 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: lightGrayColor,
     fontSize: 16,
   );
   static TextStyle grayMedium10 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: lightGrayColor,
     fontSize: 10,
     fontWeight: medium,
   );
   static TextStyle grayMedium13 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: lightGrayColor,
     fontSize: 13,
     fontWeight: medium,
   );
   static TextStyle grayMedium = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: lightGrayColor,
     fontWeight: medium,
   );
   static TextStyle grayMedium15 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: lightGrayColor,
     fontSize: 15,
     fontWeight: medium,
   );
   static TextStyle grayBold12 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: lightGrayColor,
     fontSize: 12,
     fontWeight: bold,
   );
   static TextStyle grayBold15 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: lightGrayColor,
     fontSize: 15,
     fontWeight: bold,
   );
   static TextStyle grayBold16 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: lightGrayColor,
     fontSize: 16,
     fontWeight: bold,
   );
   static TextStyle whiteRegular12 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: Colors.white,
     fontSize: 12,
   );
   static TextStyle whiteBold = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: Colors.white,
     fontWeight: bold,
   );
   static TextStyle whiteBold15 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: Colors.white,
     fontSize: 15,
     fontWeight: bold,
   );
   static TextStyle whiteBold16 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: Colors.white,
     fontSize: 16,
     fontWeight: bold,
   );
   static TextStyle whiteExtraBold = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: Colors.white,
     fontWeight: extraBold,
   );
 
   static TextStyle greenBold12 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: greenColor,
     fontSize: 12,
     fontWeight: bold,
   );
   static TextStyle blueBold12 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: blueColor,
     fontSize: 12,
     fontWeight: bold,
   );
   static TextStyle blueMedium14 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: blueColor,
     fontSize: 14,
     fontWeight: medium,
   );
   static TextStyle blue12 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: blueColor,
     fontSize: 12,
     fontWeight: regular,
   );
   static TextStyle redBold12 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: redColor,
     fontSize: 12,
     fontWeight: bold,
   );
   static TextStyle brandGrey13 = TextStyle(
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     color: grayColor,
     fontSize: 13,
     fontWeight: regular,
@@ -598,7 +622,7 @@ class Constant {
     scaffoldBackgroundColor: backgroundColor,
     primaryColor: primaryColor,
     focusColor: primaryColor,
-    fontFamily: GoogleFonts.inter().fontFamily,
+    fontFamily: GoogleFonts.poppins().fontFamily,
     colorScheme: ColorScheme.fromSeed(
       seedColor: primaryColor,
       primary: primaryColor,

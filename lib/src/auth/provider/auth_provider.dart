@@ -269,65 +269,15 @@ class AuthProvider extends BaseController with ChangeNotifier {
   }
 
   Future<BaseResponse> postForgot() async {
-    final param = {'email': emailForgotC.text};
-    loading(true);
-    final response = BaseResponse.from(
-        await post(Constant.BASE_API_FULL + '/forgot', body: param));
-    loading(false);
-
-    if (response.success) {
-      return response;
-    } else {
-      final message = response.message;
-      throw Exception(message);
-    }
+    throw Exception('Fitur ini belum tersedia pada API backend.');
   }
 
   Future<String> postToken() async {
-    final param = {
-      'email': emailForgotC.text,
-      'token': tokenC.text,
-    };
-
-    loading(true);
-    final response = BaseResponse.from(
-        await post(Constant.BASE_API_FULL + '/forgot/verify', body: param));
-    loading(false);
-
-    final message = response.message;
-    if (response.success) {
-      return message;
-    } else {
-      throw Exception(message);
-    }
+    throw Exception('Fitur ini belum tersedia pada API backend.');
   }
 
   Future<String> postPassword() async {
-    final param = {
-      'email': emailForgotC.text,
-      'token': tokenC.text,
-      'password': passForgotC.text,
-      'c_password': confirmPassForgotC.text
-    };
-
-    loading(true);
-    final response = BaseResponse.from(await post(
-        Constant.BASE_API_FULL + '/forgot/change-password',
-        body: param));
-
-    loading(false);
-
-    final message = response.message;
-    if (response.success) {
-      usernameC.clear();
-      emailForgotC.clear();
-      passC.clear();
-      passForgotC.clear();
-      confirmPassForgotC.clear();
-      return message;
-    } else {
-      throw Exception(message);
-    }
+    throw Exception('Fitur ini belum tersedia pada API backend.');
   }
 
   setDate(DateTime? date) {

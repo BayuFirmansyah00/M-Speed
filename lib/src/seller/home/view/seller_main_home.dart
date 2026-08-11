@@ -31,6 +31,10 @@ class _SellerMainHomeState extends State<SellerMainHome> with SingleTickerProvid
   late Animation<double> _indicatorAnim;
   int _prevIndex = 0;
 
+  // M-SPEED Brand Colors
+  static const Color _primaryBlue = Color(0xFF1565C0);
+  static const Color _inactiveGrey = Color(0xFF9CA3AF);
+
   static const _navItems = [
     _NavItem(icon: Icons.home_outlined,         activeIcon: Icons.home_rounded,            label: 'Beranda'),
     _NavItem(icon: Icons.inventory_2_outlined,   activeIcon: Icons.inventory_2_rounded,     label: 'Produk'),
@@ -94,7 +98,6 @@ class _SellerMainHomeState extends State<SellerMainHome> with SingleTickerProvid
   }
 
   Widget _buildNav() {
-    final primary = Constant.primaryColor;
     final bottomPad = Platform.isIOS ? 20.0 : 12.0;
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 0, 20, bottomPad),
@@ -102,35 +105,46 @@ class _SellerMainHomeState extends State<SellerMainHome> with SingleTickerProvid
         final slotWidth = constraints.maxWidth / _navItems.length;
         const inset = 6.0;
         return Container(
-          height: 68,
+          height: 66,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: const Color(0xFFE5E7EB), width: 0.5),
             boxShadow: [
-              BoxShadow(color: primary.withOpacity(0.15), blurRadius: 30, offset: const Offset(0, 10)),
-              BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 16, offset: const Offset(0, 4)),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
             ],
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(30),
             child: Stack(children: [
-              // Sliding indicator
+              // Sliding indicator — SOLID color, no gradient
               AnimatedBuilder(
                 animation: _indicatorAnim,
                 builder: (_, __) => Positioned(
                   left: _indicatorAnim.value * slotWidth + inset,
-                  top: 8,
+                  top: 7,
                   child: Container(
                     width: slotWidth - inset * 2,
                     height: 52,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [primary, primary.withOpacity(0.82)],
-                      ),
+                      color: _primaryBlue,
                       borderRadius: BorderRadius.circular(22),
-                      boxShadow: [BoxShadow(color: primary.withOpacity(0.4), blurRadius: 14, offset: const Offset(0, 6))],
+                      boxShadow: [
+                        BoxShadow(
+                          color: _primaryBlue.withOpacity(0.25),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -143,7 +157,7 @@ class _SellerMainHomeState extends State<SellerMainHome> with SingleTickerProvid
                     behavior: HitTestBehavior.opaque,
                     onTap: () => _onTap(i),
                     child: SizedBox(
-                      height: 68,
+                      height: 66,
                       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 250),
@@ -153,19 +167,33 @@ class _SellerMainHomeState extends State<SellerMainHome> with SingleTickerProvid
                             scale: anim, child: FadeTransition(opacity: anim, child: child)),
                           child: Icon(_navItems[i].activeIcon,
                             key: ValueKey(isActive),
-                            size: 24,
-                            color: isActive ? Colors.white : Colors.grey.shade400),
+                            size: 22,
+                            color: isActive ? Colors.white : _inactiveGrey),
                         ),
                         AnimatedSize(
                           duration: const Duration(milliseconds: 220),
                           curve: Curves.easeInOut,
                           child: isActive
                               ? Padding(
-                                  padding: const EdgeInsets.only(top: 3),
+                                  padding: const EdgeInsets.only(top: 2),
                                   child: Text(_navItems[i].label,
-                                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.2)),
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                      letterSpacing: 0.1,
+                                    )),
                                 )
-                              : const SizedBox.shrink(),
+                              : Padding(
+                                  padding: const EdgeInsets.only(top: 2),
+                                  child: Text(_navItems[i].label,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w500,
+                                      color: _inactiveGrey,
+                                      letterSpacing: 0.1,
+                                    )),
+                                ),
                         ),
                       ]),
                     ),

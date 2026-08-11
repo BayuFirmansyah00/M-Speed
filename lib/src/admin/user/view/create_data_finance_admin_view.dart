@@ -188,6 +188,38 @@ class _CreateDataFinanceAdminViewState
                           ),
                         ],
                       ),
+                      const SizedBox(height: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Manager',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xff4A5568),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          CustomDropdown.normalDropdown(
+                            controller: TextEditingController(),
+                            hintText: 'Pilih Manager (Opsional)',
+                            list: p.allManagers
+                                .map(
+                                  (e) => DropdownMenuItem(
+                                    value: e['id']?.toString() ?? '0',
+                                    child: Text(e['name'] ?? ''),
+                                  ),
+                                )
+                                .toList(),
+                            selectedItem: p.selectedManagerId,
+                            onChanged: (value) {
+                              p.selectedManagerId = value;
+                              setState(() {});
+                            },
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                   const SizedBox(height: 14),

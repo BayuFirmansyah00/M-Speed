@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:mspeed/common/base/base_controller.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
@@ -24,6 +25,9 @@ class AdminFormKeuanganProvider extends BaseController with ChangeNotifier {
   List<Map<String, dynamic>> subdirektorates = [];
   List<Map<String, dynamic>> allDepartments = [];
 
+  String? selectedManagerId;
+  List<Map<String, dynamic>> allManagers = [];
+
   List<Map<String, dynamic>> get filteredDepartments {
     if (selectedSubditId == null) return [];
     return allDepartments
@@ -39,6 +43,7 @@ class AdminFormKeuanganProvider extends BaseController with ChangeNotifier {
         
         subdirektorates = List<Map<String, dynamic>>.from(data['sub_direktorates'] ?? []);
         allDepartments = List<Map<String, dynamic>>.from(data['departments'] ?? []);
+        allManagers = List<Map<String, dynamic>>.from(data['managers'] ?? []);
         
         notifyListeners();
       }
@@ -79,6 +84,7 @@ class AdminFormKeuanganProvider extends BaseController with ChangeNotifier {
             isActive = data['status'] == 'active' ? true : false;
             accessC.text = uData['access']?.toString() ?? '';
             selectedDepartmentId = (uData['department'] as Map<String, dynamic>?)?['id']?.toString();
+            selectedManagerId = (uData['manager'] as Map<String, dynamic>?)?['id']?.toString();
           }
         } catch (e) {
           debugPrint("Failed to fetch detail: $e");
@@ -99,15 +105,25 @@ class AdminFormKeuanganProvider extends BaseController with ChangeNotifier {
     isActive = true;
     selectedSubditId = null;
     selectedDepartmentId = null;
+    selectedManagerId = null;
     subdirektorates.clear();
     allDepartments.clear();
+    allManagers.clear();
   }
 
   Future<void> sendKeuangan(BuildContext context,
       {bool withLoading = false, String? keuanganId}) async {
+    if (emailC.text.trim().isEmpty) {
+      return Utils.showFailed(msg: 'Email wajib diisi');
+    }
+    if (keuanganId == null && passwordC.text.isEmpty) {
+      return Utils.showFailed(msg: 'Password wajib diisi untuk user baru');
+    }
+    if (firstNameC.text.trim().isEmpty) {
+      return Utils.showFailed(msg: 'First Name wajib diisi');
+    }
     if (selectedDepartmentId == null) {
-      Utils.showFailed(msg: 'Silakan pilih departemen terlebih dahulu.');
-      return;
+      return Utils.showFailed(msg: 'Silakan pilih departemen terlebih dahulu.');
     }
 
     if (withLoading) loading(true);
@@ -117,11 +133,14 @@ class AdminFormKeuanganProvider extends BaseController with ChangeNotifier {
       'last_name': lastNameC.text,
       'email': emailC.text,
       'phone': phoneNumberC.text,
-      'subdit_id': selectedSubditId,
       'department_id': selectedDepartmentId,
       'access': accessC.text,
-      'active': isActive ? '1' : '0',
+      'active': isActive,
     };
+    
+    if (selectedManagerId != null) {
+      param['manager_id'] = selectedManagerId!;
+    }
     
     if (passwordC.text.isNotEmpty) {
       param['password'] = passwordC.text;
@@ -139,11 +158,23 @@ class AdminFormKeuanganProvider extends BaseController with ChangeNotifier {
         notifyListeners();
         await Utils.showSuccess(msg: 'Data finance berhasil disimpan!');
         await Future.delayed(const Duration(seconds: 2));
-        CusNav.nPushReplace(
-            context, const UserDataAdminView(userType: UserDataType.FINANCE));
+        CusNav.nPop(context, true);
       } else {
         Utils.showFailed(msg: 'Gagal menyimpan data.');
       }
+    } on DioException catch (e) {
+      var decoded = e.response?.data;
+      String errorMessage = 'Terjadi kesalahan saat menyimpan data.';
+      if (decoded != null && decoded['message'] != null) {
+        errorMessage = decoded['message'];
+      }
+      if (decoded != null && decoded['errors'] != null) {
+        final errors = decoded['errors'] as Map<String, dynamic>;
+        if (errors.isNotEmpty) {
+          errorMessage = errors.values.first[0].toString();
+        }
+      }
+      Utils.showFailed(msg: errorMessage);
     } catch (e) {
       Utils.showFailed(msg: e.toString());
     } finally {
@@ -164,8 +195,7 @@ class AdminFormKeuanganProvider extends BaseController with ChangeNotifier {
         notifyListeners();
         await Utils.showSuccess(msg: 'Data finance berhasil dihapus.');
         await Future.delayed(const Duration(seconds: 2));
-        CusNav.nPushReplace(
-            context, const UserDataAdminView(userType: UserDataType.FINANCE));
+        CusNav.nPop(context, true);
       }
     } catch (e) {
       Utils.showFailed(msg: e.toString());
