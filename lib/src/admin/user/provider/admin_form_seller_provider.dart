@@ -23,13 +23,11 @@ class AdminFormSellerProvider extends BaseController with ChangeNotifier {
   final TextEditingController emailC = TextEditingController();
   final TextEditingController ownerNameC = TextEditingController();
   final TextEditingController cpNameC = TextEditingController();
-  final TextEditingController subditC = TextEditingController();
   final TextEditingController cpPhoneNumberC = TextEditingController();
   final TextEditingController phoneNumberC = TextEditingController();
   final TextEditingController kbliC = TextEditingController();
   final TextEditingController alamatC = TextEditingController();
   final TextEditingController cityC = TextEditingController();
-  final TextEditingController locationC = TextEditingController();
   final TextEditingController latC = TextEditingController();
   final TextEditingController lonC = TextEditingController();
   final TextEditingController npwpC = TextEditingController();
@@ -37,24 +35,16 @@ class AdminFormSellerProvider extends BaseController with ChangeNotifier {
   final TextEditingController bankNameC = TextEditingController();
   final TextEditingController bankNumberC = TextEditingController();
   final TextEditingController bankAccountC = TextEditingController();
-  final TextEditingController npwpFileC = TextEditingController();
-  final TextEditingController ktpFileC = TextEditingController();
-  final TextEditingController bankBookC = TextEditingController();
-  final TextEditingController spSkpC = TextEditingController();
   final TextEditingController passwordC = TextEditingController();
-
-  File? npwpFile;
-  File? ktpFile;
-  File? bankBookFile;
-  File? spSkpFile;
+  
+  String? addressId;
 
   LatLng? locationCoordinate;
   String? locationName;
 
-  // Update the method signature to remove GoogleMapController
   void updateLocation(LatLng newLocation) {
     locationCoordinate = newLocation;
-    locationName = ""; // Use reverse geocoding if necessary
+    locationName = "";
     notifyListeners();
   }
 
@@ -64,47 +54,55 @@ class AdminFormSellerProvider extends BaseController with ChangeNotifier {
       pickedData.latLong.latitude,
       pickedData.latLong.longitude,
     );
-
-    // Notify listeners to update UI
     notifyListeners();
   }
 
-  SellerAdminModel sellerAdminModel = SellerAdminModel();
-
-  void setData(SellerAdminModelData? seller) async {
+  void setData(SellerAdminModelData? seller) {
     clearData();
-    await fetchSubditAdmin();
     if (seller != null) {
-      companyNameC.text = seller.nama ?? '';
       emailC.text = seller.email ?? '';
-      ownerNameC.text = seller.namaPemilik ?? '';
-      cpNameC.text = seller.namaCp ?? '';
-      cpPhoneNumberC.text = seller.telpCp ?? '';
-      phoneNumberC.text = seller.telp ?? '';
-      kbliC.text = seller.kbli ?? '';
-      alamatC.text = seller.alamat ?? '';
-      cityC.text = seller.kota ?? '';
-      latC.text = seller.lattitude ?? '';
-      lonC.text = seller.longitude ?? '';
-      locationCoordinate = LatLng(
-        double.parse(seller.lattitude ?? '0'),
-        double.parse(seller.longitude ?? '0'),
-      );
-      npwpC.text = seller.npwp ?? '';
-      ktpC.text = seller.ktp ?? '';
-      bankNameC.text = seller.bank ?? '';
-      bankNumberC.text = seller.noRek ?? '';
-      bankAccountC.text = seller.anRek ?? '';
+      
+      final data = seller.sellerData;
+      if (data != null) {
+        companyNameC.text = data.companyName ?? '';
+        ownerNameC.text = data.ownerName ?? '';
+        cpNameC.text = data.cpName ?? '';
+        cpPhoneNumberC.text = data.cpPhone ?? '';
+        phoneNumberC.text = data.phone ?? '';
+        kbliC.text = data.kbli ?? '';
+      }
+
+      final address = seller.sellerAddress;
+      if (address != null) {
+        addressId = address.id?.toString();
+        alamatC.text = address.detail ?? '';
+        cityC.text = address.cityId?.toString() ?? '';
+        
+        if (address.latitude != null && address.longitude != null) {
+          final lat = double.tryParse(address.latitude!);
+          final lon = double.tryParse(address.longitude!);
+          if (lat != null && lon != null) {
+            locationCoordinate = LatLng(lat, lon);
+          }
+        }
+      }
     }
   }
 
   void clearData() {
     emailC.clear();
-    subditC.clear();
+    companyNameC.clear();
+    ownerNameC.clear();
+    cpNameC.clear();
+    cpPhoneNumberC.clear();
     phoneNumberC.clear();
+    kbliC.clear();
     alamatC.clear();
     cityC.clear();
     passwordC.clear();
+    addressId = null;
+    locationCoordinate = null;
+    locationName = null;
   }
 
   Future<void> sendSeller(
@@ -113,75 +111,85 @@ class AdminFormSellerProvider extends BaseController with ChangeNotifier {
     String? sellerId,
   }) async {
     if (withLoading) loading(true);
-    var param = {
-      'email': emailC.text,
-      'first_name': ownerNameC.text.isNotEmpty
-          ? ownerNameC.text
-          : companyNameC.text,
-      'last_name': cpNameC.text,
-      'phone': phoneNumberC.text.isNotEmpty
-          ? phoneNumberC.text
-          : cpPhoneNumberC.text,
-    };
-    if (passwordC.text.isNotEmpty) {
-      param['password'] = passwordC.text;
-    }
 
-    try {
-      // API endpoint CRUD Seller untuk Admin TIDAK TERSEDIA DI LARAVEL
-      throw Exception('BACKEND API NOT AVAILABLE');
-    } catch (e) {
-      Utils.showFailed(msg: e.toString());
-    } finally {
+    final cityIdInt = int.tryParse(cityC.text);
+    if (cityIdInt == null) {
+      Utils.showFailed(msg: 'Pembuatan Seller gagal. Fitur ini memiliki dependency Backend API Province/City yang belum tersedia untuk mendapatkan City ID secara valid.');
       if (withLoading) loading(false);
+      return;
     }
-  }
-
-  Future<void> deleteSeller(
-    BuildContext context, {
-    bool withLoading = false,
-    String? sellerId,
-  }) async {
-    if (sellerId == null) return;
-    if (withLoading) loading(true);
-
+    
     try {
-      // API endpoint CRUD Seller untuk Admin TIDAK TERSEDIA DI LARAVEL
-      throw Exception('BACKEND API NOT AVAILABLE');
-    } catch (e) {
-      Utils.showFailed(msg: e.toString());
-    } finally {
-      if (withLoading) loading(false);
-    }
-  }
+      FormData formData = FormData.fromMap({
+        'email': emailC.text,
+        'company_name': companyNameC.text,
+        'owner_name': ownerNameC.text,
+        'cp_name': cpNameC.text,
+        'cp_phone': cpPhoneNumberC.text,
+        'phone': phoneNumberC.text,
+        'kbli': kbliC.text,
+        'detail': alamatC.text.isNotEmpty ? alamatC.text : '-',
+        'city_id': cityIdInt.toString(),
+      });
 
-  SubditAdminModel subditAdminModel = SubditAdminModel();
-  TextEditingController subditSearchC = TextEditingController();
+      // NOTE: category_id tidak dimasukkan ke dalam formData karena di Laravel
+      // validationnya bersifat nullable. Tidak ada UI dropdown kategori saat ini, 
+      // sehingga pengirimannya di-skip agar tetap aman.
 
-  Future<void> fetchSubditAdmin({bool withLoading = false}) async {
-    if (withLoading) loading(true);
-    Map<String, String> param = {};
-    if (subditSearchC.text.isNotEmpty)
-      param.addAll({'search': subditSearchC.text});
+      if (passwordC.text.isNotEmpty) {
+        formData.fields.add(MapEntry('password', passwordC.text));
+      } else if (sellerId == null) {
+        // Create requires password
+        formData.fields.add(MapEntry('password', 'password123')); 
+      }
 
-    try {
-      final response = await ApiClient().dio.get(
-        '/audit/v1/admin/sub-direktorates',
-        queryParameters: param,
-      );
+      if (locationCoordinate != null) {
+        formData.fields.add(MapEntry('latitude', locationCoordinate!.latitude.toString()));
+        formData.fields.add(MapEntry('longitude', locationCoordinate!.longitude.toString()));
+      }
 
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        subditAdminModel = SubditAdminModel.fromJson(response.data);
-        notifyListeners();
-        if (withLoading) loading(false);
+      if (sellerId != null) {
+        formData.fields.add(MapEntry('_method', 'PUT'));
+        if (addressId != null) {
+          formData.fields.add(MapEntry('address_id', addressId!));
+        }
+      }
+
+      Response response;
+      if (sellerId != null) {
+        response = await ApiClient().dio.post(
+          '/audit/v1/admin/sellers/$sellerId',
+          data: formData,
+        );
+      } else {
+        response = await ApiClient().dio.post(
+          '/audit/v1/admin/sellers',
+          data: formData,
+        );
+      }
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Utils.showSuccess(msg: 'Berhasil menyimpan data seller');
+        Navigator.pop(context, true); // Return true to refresh list
       }
     } on DioException catch (e) {
-      final message = e.response?.data["message"] ?? e.message;
-      loading(false);
-      debugPrint('Error fetchSubditAdmin: $message');
+      if (e.response?.statusCode == 422) {
+        final errors = e.response?.data['errors'];
+        String errorMsg = 'Validasi gagal:\n';
+        if (errors is Map) {
+          errors.forEach((key, value) {
+            errorMsg += '- ${(value as List).join(", ")}\n';
+          });
+        }
+        Utils.showFailed(msg: errorMsg);
+      } else {
+        final message = e.response?.data["message"] ?? e.message;
+        Utils.showFailed(msg: message);
+      }
     } catch (e) {
-      loading(false);
-      debugPrint('Error fetchSubditAdmin: $e');
+      Utils.showFailed(msg: e.toString());
+    } finally {
+      if (withLoading) loading(false);
     }
   }
 }

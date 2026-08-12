@@ -19,8 +19,8 @@ import 'package:provider/provider.dart';
 
 class ProdukAddSellerView extends StatefulWidget {
   ProdukAddSellerView({super.key, this.isEdit = false, this.productId});
-  bool isEdit;
-  String? productId;
+  final bool isEdit;
+  final String? productId;
   @override
   State<ProdukAddSellerView> createState() => _ProdukAddSellerViewState();
 }
@@ -193,22 +193,22 @@ class _ProdukAddSellerViewState extends State<ProdukAddSellerView> {
               color: Color(0xff100629),
             ),
             labelPadding: const EdgeInsets.only(bottom: 10),
-            list: p.kategoriModel?.data?.map((e) => e?.nama ?? '').toList() ?? [],
+            list: p.kategoriModel?.data?.map((e) => e?.name ?? '').toList() ?? [],
             selectedItem: () {
               var dataList = p.kategoriModel?.data;
               if (dataList != null) {
-                var index = dataList.indexWhere((e) => e?.ID == p.selectedKategori);
-                if (index != -1) return dataList[index]?.nama;
+                var index = dataList.indexWhere((e) => e?.id == p.selectedKategori);
+                if (index != -1) return dataList[index]?.name;
               }
               return null;
             }(),
             onChanged: (v) {
               var dataList = p.kategoriModel?.data;
               if (dataList != null) {
-                var index = dataList.indexWhere((e) => e?.nama == v);
+                var index = dataList.indexWhere((e) => e?.name == v);
                 if (index != -1) {
-                  p.selectedKategori = dataList[index]?.ID;
-                  p.kategoriC.text = dataList[index]?.nama ?? '';
+                  p.selectedKategori = dataList[index]?.id;
+                  p.kategoriC.text = dataList[index]?.name ?? '';
                 }
               }
               FocusManager.instance.primaryFocus?.unfocus();

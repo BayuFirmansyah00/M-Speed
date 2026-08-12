@@ -9,6 +9,7 @@ import 'package:mspeed/utils/utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
 import 'package:mspeed/core/network/api_client.dart';
+import 'package:mspeed/src/admin/user/model/seller_admin_model.dart';
 
 class AdminUserProvider extends BaseController with ChangeNotifier {
   List<UserData> userData = [];
@@ -33,8 +34,9 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data['data'] ?? {};
-        final impersonatedUser = data['impersonated_user'] ?? {};
+        final impersonatedUser = data['user'] ?? {};
         final accessToken = data['access_token']?.toString() ?? '';
+        final adminId = data['admin_id']?.toString() ?? '';
         final role = impersonatedUser['role']?.toString().toUpperCase() ?? '';
 
         // Simpan token impersonate baru
@@ -42,9 +44,10 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
         await prefs.setString(Constant.kSetPrefId, impersonatedUser['id']?.toString() ?? '');
         await prefs.setString(Constant.kSetPrefEmail, impersonatedUser['email']?.toString() ?? '');
         await prefs.setString(Constant.kSetPrefRoles, role);
+        await prefs.setString('admin_original_id', adminId);
         await prefs.setBool(Constant.kSetPrefIsAdmin, false);
 
-        log('IMPERSONATE SUCCESS: role=$role, token=$accessToken');
+        log('IMPERSONATE SUCCESS: role=$role, token=$accessToken, adminId=$adminId');
 
         // Navigasi berdasarkan role target
         if (role == 'SELLER') {
@@ -81,18 +84,35 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       SharedPreferences prefs = await SharedPreferences.getInstance();
 
       // POST /api/impersonate/stop — revoke token impersonate
+      final adminId = prefs.getString('admin_original_id') ?? '';
+      bool tokenRestoredFromApi = false;
       try {
-        await ApiClient().dio.post('/impersonate/stop');
+        final response = await ApiClient().dio.post(
+          '/impersonate/stop',
+          data: {'admin_id': adminId},
+        );
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          final data = response.data['data'] ?? {};
+          final newAdminToken = data['access_token']?.toString() ?? '';
+          if (newAdminToken.isNotEmpty) {
+            await prefs.setString(Constant.kSetPrefToken, newAdminToken);
+            tokenRestoredFromApi = true;
+          }
+        }
       } catch (_) {
-        // Token impersonate mungkin sudah expired, lanjutkan saja
+        // Abaikan error jika API gagal
       }
 
-      // Restore token admin asli
-      final adminToken = prefs.getString('admin_original_token') ?? '';
-      if (adminToken.isNotEmpty) {
-        await prefs.setString(Constant.kSetPrefToken, adminToken);
-        await prefs.remove('admin_original_token');
+      // Restore token admin asli sebagai fallback
+      if (!tokenRestoredFromApi) {
+        final adminToken = prefs.getString('admin_original_token') ?? '';
+        if (adminToken.isNotEmpty) {
+          await prefs.setString(Constant.kSetPrefToken, adminToken);
+        }
       }
+      
+      await prefs.remove('admin_original_token');
+      await prefs.remove('admin_original_id');
 
       // Set kembali ke role admin
       await prefs.setString(Constant.kSetPrefRoles, 'ADMIN');
@@ -202,23 +222,99 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
     }
   }
 
-  // NOTE: AdminSellerApiController belum tersedia dari tim backend.
-  // Fungsi ini adalah placeholder sementara.
   Future<void> fetchSellers({bool withLoading = false, String search = '', int page = 1}) async {
-    if (withLoading) loading(true);
-    userData.clear();
+    if (page == 1) {
+      if (withLoading) loading(true);
+      userData.clear();
+      hasMore = true;
+      currentPage = 1;
+    } else {
+      isLoadingMore = true;
+    }
     notifyListeners();
-    if (withLoading) loading(false);
-    // TODO: Ganti dengan endpoint v1/admin/sellers setelah backend ready
-    debugPrint('fetchSellers: AdminSellerApiController belum tersedia dari tim backend');
+    Map<String, dynamic> param = {'page': page};
+    
+    if (search.isNotEmpty) param.addAll({'search': search});
+
+    try {
+      final response = await ApiClient().dio.get(
+        '/audit/v1/admin/sellers',
+        queryParameters: param,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final parsed = SellerAdminModel.fromJson(response.data as Map<String, dynamic>);
+        final dataList = parsed.data ?? [];
+        final _meta = parsed.meta;
+        if (_meta != null) {
+          currentPage = _meta['current_page'] ?? 1;
+          final lastPage = _meta['last_page'] ?? 1;
+          hasMore = currentPage < lastPage;
+        } else {
+          hasMore = dataList.isNotEmpty;
+        }
+    
+        for (var item in dataList) {
+          final sellerData = item.sellerData;
+          final sellerAddress = item.sellerAddress;
+          
+          userData.add(
+            UserData(
+              name1: sellerData?.companyName ?? sellerData?.name ?? '',
+              name2: sellerData?.ownerName ?? '',
+              email: item.email ?? '',
+              id: item.id?.toString() ?? '',
+              alamat: sellerAddress?.fullAddress ?? sellerAddress?.cityName ?? '',
+              status: 'Aktif', // Sesuaikan jika ada field status dari backend
+              rawModel: item,
+            ),
+          );
+        }
+
+        notifyListeners();
+      } else {
+        throw Exception("Gagal memuat data seller");
+      }
+    } catch (e) {
+      debugPrint("fetchSellers Error: $e");
+      Utils.showFailed(msg: "Gagal memuat data seller dari server");
+    } finally {
+      if (page == 1) {
+        if (withLoading) loading(false);
+      } else {
+        isLoadingMore = false;
+        notifyListeners();
+      }
+    }
   }
 
   Future<void> deleteSeller({
     bool withLoading = false,
     String id = '0',
   }) async {
-    Utils.showFailed(msg: 'Fitur hapus seller belum tersedia dari backend');
-    // TODO: Ganti dengan endpoint DELETE v1/admin/sellers/{id} setelah backend ready
+    if (withLoading) loading(true);
+
+    try {
+      final response = await ApiClient().dio.delete(
+        '/audit/v1/admin/sellers/$id',
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final message = response.data['message'] ?? 'Berhasil menghapus seller';
+        notifyListeners();
+        await Utils.showSuccess(msg: message);
+        await Future.delayed(Duration(seconds: 2), () {});
+        if (withLoading) loading(false);
+        fetchSellers(withLoading: true);
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data["message"] ?? e.message;
+      loading(false);
+      throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
+    }
   }
 
   Future<void> fetchKeuangan({bool withLoading = false, String search = '', int page = 1}) async {
@@ -656,6 +752,87 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       }
     } catch (e) {
       debugPrint("deleteDireksi Error: $e");
+      Utils.showFailed(msg: e.toString());
+    } finally {
+      if (withLoading) loading(false);
+    }
+  }
+  Future<void> fetchSubDirektorat({bool withLoading = false, String search = '', int page = 1}) async {
+    if (page == 1) {
+      if (withLoading) loading(true);
+      userData.clear();
+      hasMore = true;
+      currentPage = 1;
+    } else {
+      isLoadingMore = true;
+    }
+    notifyListeners();
+    Map<String, dynamic> param = {'page': page};
+    
+    if (search.isNotEmpty) param.addAll({'search': search});
+
+    try {
+      final response = await ApiClient().dio.get(
+        '/audit/v1/admin/sub-direktorates',
+        queryParameters: param,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final dataList = response.data['data'] as List<dynamic>;
+        final _meta = response.data['meta'];
+        if (_meta != null) {
+          currentPage = _meta['current_page'] ?? 1;
+          final lastPage = _meta['last_page'] ?? 1;
+          hasMore = currentPage < lastPage;
+        } else {
+          hasMore = dataList.isNotEmpty;
+        }
+    
+        for (var item in dataList) {
+          userData.add(
+            UserData(
+              name1: item['subdit_code']?.toString() ?? '',
+              name2: item['subdit_name']?.toString() ?? '',
+              email: '-', // Sub-direktorat tidak memiliki email
+              id: item['id']?.toString() ?? '',
+              alamat: '${item['total_departments'] ?? 0} Departemen', // Sub-direktorat tidak punya alamat
+              rawModel: item,
+            ),
+          );
+        }
+
+        notifyListeners();
+      } else {
+        throw Exception("Gagal memuat data sub-direktorat");
+      }
+    } catch (e) {
+      debugPrint("fetchSubDirektorat Error: $e");
+      Utils.showFailed(msg: "Gagal memuat data dari server (500)");
+    } finally {
+      if (withLoading) loading(false);
+    }
+  }
+
+  Future<void> deleteSubDirektorat({
+    bool withLoading = false,
+    String subditId = "0",
+  }) async {
+    if (withLoading) loading(true);
+
+    try {
+      final response = await ApiClient().dio.delete('/audit/v1/admin/sub-direktorates/$subditId');
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        notifyListeners();
+        await Utils.showSuccess(msg: "Data sub-direktorat berhasil dihapus");
+        await Future.delayed(Duration(seconds: 2), () {});
+        if (withLoading) loading(false);
+        fetchSubDirektorat(withLoading: true);
+      } else {
+        throw Exception("Gagal menghapus data sub-direktorat");
+      }
+    } catch (e) {
+      debugPrint("deleteSubDirektorat Error: $e");
       Utils.showFailed(msg: e.toString());
     } finally {
       if (withLoading) loading(false);

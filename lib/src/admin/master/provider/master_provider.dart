@@ -167,38 +167,16 @@ class MasterProvider extends BaseController with ChangeNotifier {
     bool withLoading = false,
     String search = '',
   }) async {
-    if (withLoading) loading(true);
-
-    try {
-      // API endpoint /audit/v1/admin/addresses TIDAK TERSEDIA DI LARAVEL
-      throw Exception('BACKEND API NOT AVAILABLE');
-    } on DioException catch (e) {
-      final message = e.response?.data["messages"]?["error"] ?? e.message;
-      loading(false);
-      throw Exception(message);
-    } catch (e) {
-      loading(false);
-      throw Exception(e.toString());
-    }
+    if (withLoading) loading(false);
+    Utils.showFailed(msg: 'Fitur Alamat belum tersedia pada API backend.');
   }
 
   Future<void> fetchPajakAdmin({
     bool withLoading = false,
     String search = '',
   }) async {
-    if (withLoading) loading(true);
-
-    try {
-      // API endpoint /audit/v1/admin/taxes TIDAK TERSEDIA DI LARAVEL
-      throw Exception('BACKEND API NOT AVAILABLE');
-    } on DioException catch (e) {
-      final message = e.response?.data["messages"]?["error"] ?? e.message;
-      loading(false);
-      throw Exception(message);
-    } catch (e) {
-      loading(false);
-      throw Exception(e.toString());
-    }
+    if (withLoading) loading(false);
+    Utils.showFailed(msg: 'Fitur Pajak belum tersedia pada API backend.');
   }
 
   Future<void> fetchSubditAdmin({
@@ -232,19 +210,8 @@ class MasterProvider extends BaseController with ChangeNotifier {
     bool withLoading = false,
     String search = '',
   }) async {
-    if (withLoading) loading(true);
-
-    try {
-      // API endpoint /audit/v1/admin/categories TIDAK TERSEDIA DI LARAVEL
-      throw Exception('BACKEND API NOT AVAILABLE');
-    } on DioException catch (e) {
-      final message = e.response?.data["message"] ?? e.message;
-      loading(false);
-      throw Exception(message);
-    } catch (e) {
-      loading(false);
-      throw Exception(e.toString());
-    }
+    if (withLoading) loading(false);
+    Utils.showFailed(msg: 'Fitur Kategori belum tersedia pada API backend.');
   }
 
   Future<void> sendKategori(
@@ -258,59 +225,15 @@ class MasterProvider extends BaseController with ChangeNotifier {
   TextEditingController provinsiSearchC = TextEditingController();
 
   Future<void> fetchProvinsiAdmin({bool withLoading = false}) async {
-    if (withLoading) loading(true);
-    Map<String, dynamic> param = {};
-    if (provinsiSearchC.text.isNotEmpty)
-      param.addAll({'search': provinsiSearchC.text});
-
-    try {
-      final response = await ApiClient().dio.get(
-        '/provinces',
-        queryParameters: param,
-      );
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        provinsiAdminModel = ProvinsiAdminModel.fromJson(response.data);
-        notifyListeners();
-        if (withLoading) loading(false);
-      }
-    } on DioException catch (e) {
-      final message = e.response?.data["message"] ?? e.message;
-      loading(false);
-      throw Exception(message);
-    } catch (e) {
-      loading(false);
-      throw Exception(e.toString());
-    }
+    if (withLoading) loading(false);
+    Utils.showFailed(msg: 'Fitur Provinsi belum tersedia pada API backend.');
   }
 
   TextEditingController kotaSearchC = TextEditingController();
 
   Future<void> fetchKotaAdmin({bool withLoading = false}) async {
-    if (withLoading) loading(true);
-    Map<String, dynamic> param = {};
-    if (kotaSearchC.text.isNotEmpty) param.addAll({'search': kotaSearchC.text});
-    param.addAll({'prov_id': "${selectedProvince ?? 0}"});
-
-    try {
-      final response = await ApiClient().dio.get(
-        '/cities',
-        queryParameters: param,
-      );
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        kotaAdminModel = KotaAdminModel.fromJson(response.data);
-        notifyListeners();
-        if (withLoading) loading(false);
-      }
-    } on DioException catch (e) {
-      final message = e.response?.data["message"] ?? e.message;
-      loading(false);
-      throw Exception(message);
-    } catch (e) {
-      loading(false);
-      throw Exception(e.toString());
-    }
+    if (withLoading) loading(false);
+    Utils.showFailed(msg: 'Fitur Kota belum tersedia pada API backend.');
   }
 
   Future<void> sendAlamat(
@@ -337,15 +260,8 @@ class MasterProvider extends BaseController with ChangeNotifier {
   }
 
   fetchMateraiAdmin({bool withLoading = true, String search = ""}) async {
-    if (withLoading) loading(true);
-
-    try {
-      // API endpoint /audit/v1/admin/materais TIDAK TERSEDIA DI LARAVEL
-      throw Exception('BACKEND API NOT AVAILABLE');
-    } catch (e) {
-      if (withLoading) loading(false);
-      Utils.showFailed(msg: 'Terjadi Kesalahan: $e');
-    }
+    if (withLoading) loading(false);
+    Utils.showFailed(msg: 'Fitur Materai belum tersedia pada API backend.');
   }
 
   Future<void> sendMaterai(

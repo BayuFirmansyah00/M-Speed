@@ -16,30 +16,16 @@ class AdminBannerProvider extends BaseController with ChangeNotifier {
 
   final ImagePicker _picker = ImagePicker();
 
-  // DUMMY DATA INITIALIZATION
+  // DUMMY DATA REMOVED
   AdminBannerProvider() {
-    bannerList = [
-      BannerAdminModelData(
-        id: '1',
-        judul: 'Promo Akhir Tahun',
-        deskripsi: 'Dapatkan diskon besar-besaran untuk pembelian alat kebersihan.',
-        imageUrl: 'https://via.placeholder.com/600x300.png?text=Promo+Akhir+Tahun',
-      ),
-      BannerAdminModelData(
-        id: '2',
-        judul: 'Produk Baru 2024',
-        deskripsi: 'Sapu lidi kualitas premium kini hadir di katalog.',
-        imageUrl: 'https://via.placeholder.com/600x300.png?text=Produk+Baru',
-      ),
-    ];
+    bannerList = [];
   }
 
   Future<void> fetchBanners({bool withLoading = false}) async {
-    if (withLoading) loading(true);
-    // Simulasi delay jaringan
-    await Future.delayed(const Duration(seconds: 1));
-    notifyListeners();
     if (withLoading) loading(false);
+    Utils.showFailed(msg: 'Fitur Banner belum tersedia pada API backend.');
+    bannerList = [];
+    notifyListeners();
   }
 
   void setData(BannerAdminModelData? banner) {

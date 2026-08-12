@@ -61,6 +61,13 @@ class _UserAdminViewState extends BaseState<UserAdminView> {
         onTap: () => CusNav.nPush(context, UserDataAdminView(userType: UserDataType.AUDIT)),
       ),
       _UserMenu(
+        title: 'Data Sub-Direktorat',
+        subtitle: 'Kelola data sub-direktorat',
+        icon: Icons.account_tree_rounded,
+        gradient: [const Color(0xffB91C1C), const Color(0xff991B1B)],
+        onTap: () => CusNav.nPush(context, UserDataAdminView(userType: UserDataType.SUB_DIREKTORAT)),
+      ),
+      _UserMenu(
         title: 'Data Direksi',
         subtitle: 'Melihat data jajaran direksi',
         icon: Icons.work_outline_rounded,

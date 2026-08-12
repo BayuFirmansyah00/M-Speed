@@ -40,7 +40,7 @@ class _CreateDataSellerAdminViewState extends State<CreateDataSellerAdminView> {
         await context.read<AdminFormSellerProvider>().sendSeller(
               context,
               withLoading: true,
-              sellerId: widget.seller?.ID,
+              sellerId: widget.seller?.id?.toString(),
             );
       },
       noCallback: () => Navigator.pop(context),
@@ -113,7 +113,7 @@ class _CreateDataSellerAdminViewState extends State<CreateDataSellerAdminView> {
                     icon: Icons.location_on_outlined,
                     accentColor: _accent,
                     children: [
-                      AdminFormField(controller: p.cityC, label: 'Kota', hint: 'Masukkan kota', icon: Icons.location_city_outlined),
+                      AdminFormField(controller: p.cityC, label: 'Kota (City ID)', hint: 'Masukkan ID Kota (angka)', icon: Icons.location_city_outlined, inputType: TextInputType.number),
                       AdminFormField(controller: p.alamatC, label: 'Alamat Perusahaan', hint: 'Masukkan alamat lengkap', icon: Icons.map_outlined, maxLines: 3),
 
                     ],

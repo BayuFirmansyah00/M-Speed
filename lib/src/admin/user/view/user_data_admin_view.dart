@@ -18,6 +18,7 @@ import 'package:mspeed/src/admin/user/view/create_data_penerima_admin_view.dart'
 import 'package:mspeed/src/admin/user/view/create_data_seller_admin_view.dart';
 import 'package:mspeed/src/admin/user/view/create_data_manager_admin_view.dart';
 import 'package:mspeed/src/admin/user/view/create_data_audit_admin_view.dart';
+import 'package:mspeed/src/admin/user/view/create_data_subdirektorat_admin_view.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
 import 'package:mspeed/src/admin/user/model/basic_user_admin_model.dart';
@@ -34,7 +35,8 @@ enum UserDataType {
   PENERIMA('Data Penerima'),
   MANAGER('Data Manager'),
   AUDIT('Data Audit'),
-  DIREKSI('Data Direksi');
+  DIREKSI('Data Direksi'),
+  SUB_DIREKTORAT('Data Sub-Direktorat');
 
   final String title;
   const UserDataType(this.title);
@@ -71,6 +73,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       case UserDataType.MANAGER:  return [const Color(0xff7F1D1D), const Color(0xff450A0A)];
       case UserDataType.AUDIT:    return [const Color(0xffE11D48), const Color(0xffBE123C)];
       case UserDataType.DIREKSI:  return [const Color(0xffB91C1C), const Color(0xff991B1B)];
+      case UserDataType.SUB_DIREKTORAT: return [const Color(0xff8B5CF6), const Color(0xff6D28D9)];
     }
   }
 
@@ -85,6 +88,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       case UserDataType.MANAGER:  return Icons.manage_accounts_rounded;
       case UserDataType.AUDIT:    return Icons.fact_check_rounded;
       case UserDataType.DIREKSI:  return Icons.work_outline_rounded;
+      case UserDataType.SUB_DIREKTORAT: return Icons.account_tree_rounded;
     }
   }
 
@@ -128,6 +132,8 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       await p.fetchAudit(withLoading: false, search: q);
     } else if (widget.userType == UserDataType.DIREKSI) {
       await p.fetchDireksi(withLoading: false, search: q);
+    } else if (widget.userType == UserDataType.SUB_DIREKTORAT) {
+      await p.fetchSubDirektorat(withLoading: false, search: q);
     }
     Utils.dismissLoading();
   }
@@ -147,6 +153,8 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       CusNav.nPush(context, CreateDataManagerAdminView(manager: p.userData[i].rawModel as dynamic));
     } else if (widget.userType == UserDataType.AUDIT) {
       CusNav.nPush(context, CreateDataAuditAdminView(audit: p.userData[i].rawModel as dynamic));
+    } else if (widget.userType == UserDataType.SUB_DIREKTORAT) {
+      CusNav.nPush(context, CreateDataSubDirektoratAdminView(subdit: p.userData[i].rawModel as dynamic));
     }
   }
 
@@ -187,6 +195,8 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       CusNav.nPush(context, CreateDataManagerAdminView());
     } else if (widget.userType == UserDataType.AUDIT) {
       CusNav.nPush(context, CreateDataAuditAdminView());
+    } else if (widget.userType == UserDataType.SUB_DIREKTORAT) {
+      CusNav.nPush(context, CreateDataSubDirektoratAdminView());
     }
   }
 
@@ -441,7 +451,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                     ),
                   ),
                 ),
-              if (widget.userType != UserDataType.MANAGER && widget.userType != UserDataType.AUDIT && widget.userType != UserDataType.DIREKSI)
+              if (widget.userType != UserDataType.MANAGER && widget.userType != UserDataType.AUDIT && widget.userType != UserDataType.DIREKSI && widget.userType != UserDataType.BUYER)
                 Padding(
                   padding: const EdgeInsets.only(right: 12),
                   child: GestureDetector(
@@ -682,7 +692,7 @@ class _UserCard extends StatelessWidget {
   }
 
   bool get _isManagerOrAudit =>
-      userType == UserDataType.MANAGER || userType == UserDataType.AUDIT || userType == UserDataType.DIREKSI;
+      userType == UserDataType.MANAGER || userType == UserDataType.AUDIT || userType == UserDataType.DIREKSI || userType == UserDataType.SUB_DIREKTORAT;
 
   @override
   Widget build(BuildContext context) {
@@ -756,9 +766,8 @@ class _UserCard extends StatelessWidget {
                   ),
                 ],
                 // ── 3-dots menu ──
-                if (!_isManagerOrAudit)
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert_rounded, color: Color(0xff8A93A3), size: 22),
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert_rounded, color: Color(0xff8A93A3), size: 22),
                   color: Colors.white,
                   surfaceTintColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -775,22 +784,20 @@ class _UserCard extends StatelessWidget {
                       label: 'Ubah Data',
                       iconColor: const Color(0xff3B82F6),
                     ),
-                    if (!_isManagerOrAudit) ...[
-                      _popupItem(
-                        value: 'session',
-                        icon: Icons.swap_horiz_rounded,
-                        label: 'Ganti Sesi',
-                        iconColor: const Color(0xffF59E0B),
-                      ),
-                      const PopupMenuDivider(height: 1),
-                      _popupItem(
-                        value: 'delete',
-                        icon: Icons.delete_outline_rounded,
-                        label: 'Hapus Data',
-                        iconColor: const Color(0xffED1C24),
-                        textColor: const Color(0xffED1C24),
-                      ),
-                    ]
+                    _popupItem(
+                      value: 'session',
+                      icon: Icons.swap_horiz_rounded,
+                      label: 'Ganti Sesi',
+                      iconColor: const Color(0xffF59E0B),
+                    ),
+                    const PopupMenuDivider(height: 1),
+                    _popupItem(
+                      value: 'delete',
+                      icon: Icons.delete_outline_rounded,
+                      label: 'Hapus Data',
+                      iconColor: const Color(0xffED1C24),
+                      textColor: const Color(0xffED1C24),
+                    ),
                   ],
                 ),
               ],

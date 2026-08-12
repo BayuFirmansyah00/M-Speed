@@ -29,7 +29,7 @@ class _ProdukDetailSellerViewState extends BaseState<ProdukDetailSellerView> {
   @override
   Widget build(BuildContext context) {
     final p = context.watch<ProdukSellerProvider>();
-    final detailData = p.productDetailSellerModel.data?.produk;
+    final detailData = p.productDetailSellerModel.data;
     PreferredSizeWidget appBar() {
       return CustomAppBar.appBar(context, 'View Produk',
           color: Colors.white,
@@ -71,7 +71,7 @@ class _ProdukDetailSellerViewState extends BaseState<ProdukDetailSellerView> {
                 children: [
                   Constant.xSizedBox4,
                   Text(
-                    detailData?.nama ?? '',
+                    detailData?.name ?? '',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -80,7 +80,7 @@ class _ProdukDetailSellerViewState extends BaseState<ProdukDetailSellerView> {
                   Constant.xSizedBox4,
                   Text(
                     Utils.thousandSeparator(
-                        int.parse(detailData?.harga ?? '0')),
+                        (detailData?.price ?? 0).toInt()),
                     style: TextStyle(
                       color: Color(0xffED1C24),
                       fontWeight: FontWeight.bold,
@@ -106,7 +106,7 @@ class _ProdukDetailSellerViewState extends BaseState<ProdukDetailSellerView> {
                       ),
                       Constant.xSizedBox4,
                       Text(
-                        detailData?.kodeProduk ?? '',
+                        detailData?.productCode ?? '',
                         textAlign: TextAlign.right,
                         style: TextStyle(
                           fontSize: 12,
@@ -151,19 +151,13 @@ class _ProdukDetailSellerViewState extends BaseState<ProdukDetailSellerView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Kategori',
-              style: TextStyle(color: Color(0xff6D7588)),
-            ),
+            Text('Kategori', style: TextStyle(color: Color(0xff6D7588))),
             Constant.xSizedBox4,
-            Text('Consumable', style: TextStyle(color: Color(0xff100629))),
+            Text(detailData?.category?.name ?? '-', style: TextStyle(color: Color(0xff100629))),
             Constant.xSizedBox16,
-            Text(
-              'Deskripsi',
-              style: TextStyle(color: Color(0xff6D7588)),
-            ),
+            Text('Deskripsi', style: TextStyle(color: Color(0xff6D7588))),
             Constant.xSizedBox4,
-            Text(detailData?.deskripsi ?? '',
+            Text(detailData?.description ?? '',
                 style: TextStyle(color: Color(0xff100629))),
             Constant.xSizedBox16,
           ],
@@ -180,11 +174,7 @@ class _ProdukDetailSellerViewState extends BaseState<ProdukDetailSellerView> {
           child: ListView(
             children: [
               ImageCarousel(
-                // imageUrls: List.generate(data?.fotoProduk?.length ?? 0, (i) {
-                //   final item = data?.fotoProduk?[i];
-                //   return item?.foto ?? '';
-                // }),
-                imageUrls: [detailData?.foto ?? ''],
+                imageUrls: detailData?.images?.map((e) => e.imgUrl ?? '').toList() ?? [],
                 isMiniPreview: true,
               ),
               Constant.xSizedBox16,

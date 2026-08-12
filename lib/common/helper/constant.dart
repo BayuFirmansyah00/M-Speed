@@ -24,7 +24,7 @@ class Constant {
   static const String BASE_API_FULL2 = "https://${DOMAIN2}/api";
   static const String APP_NAME = "M-Speed";
   static const int maxPaginationPerPage = 1000;
-  static const String epProducts = "/products";
+  static const String epProducts = "/seller/v1/products";
   static const String epParentOrders = "/parent-orders";
   static const String epNegos = "/negos";
   static const String epChats = "/chats";

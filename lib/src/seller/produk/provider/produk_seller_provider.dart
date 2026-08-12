@@ -8,7 +8,7 @@ import 'package:mspeed/common/base/base_controller.dart';
 import 'package:mspeed/common/component/custom_image_picker.dart';
 import 'package:mspeed/common/helper/multipart.dart';
 import 'package:mspeed/src/buyer/product/model/product_model.dart';
-import 'package:mspeed/src/seller/home/model/kategori_model.dart';
+import 'package:mspeed/src/seller/produk/model/kategori_model.dart';
 import 'package:mspeed/src/seller/produk/model/produk_detail_seller_model.dart';
 import 'package:mspeed/src/seller/produk/model/produk_list_seller_model.dart';
 import 'package:mspeed/utils/utils.dart';
@@ -64,20 +64,13 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
   }
 
   onRemoveProductImage(int index) async {
-    // if (fotoProduk[index] != null && fotoProduk.length == 2) {
-    //   fotoProduk[index] = null;
-    //   fotoProduk.removeAt(1);
-    // } else {
-    final imageId = productDetailSellerModel.data?.fotoProduk?[index - 1]?.ID;
-    if (imageId != null) deletedImageId.add(imageId);
-    if (index == 0) {
-      fotoProduk[index] = null;
-    } else {
-      fotoProduk.removeAt(index);
-      fotoProdukUrl.removeAt(index);
-    }
+    final imageId = productDetailSellerModel.data?.images?[index].id;
+    if (imageId != null) deletedImageId.add(imageId.toString());
+    
+    fotoProduk.removeAt(index);
+    fotoProdukUrl.removeAt(index);
+    
     notifyListeners();
-    // }
   }
 
   ProdukListSellerModel _produkSellerListModel = ProdukListSellerModel();
@@ -152,34 +145,30 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
 
   Future<void> initEditProduk(String id) async {
     await fetchDetailProduct(productId: id);
-    var data = productDetailSellerModel.data?.produk;
-    var foto = productDetailSellerModel.data?.fotoProduk;
-    namaC.text = data?.nama ?? '';
-    hargaC.text = data?.harga ?? '';
-    kodeC.text = data?.kodeProduk ?? '';
-    selectedKategori = data?.IDKategori ?? '';
-    stokC.text = data?.qty ?? '';
-    deskripsiC.text = data?.deskripsi ?? '';
+    var data = productDetailSellerModel.data;
+    var foto = productDetailSellerModel.data?.images;
+    
+    namaC.text = data?.name ?? '';
+    hargaC.text = (data?.price ?? 0).toInt().toString();
+    kodeC.text = data?.productCode ?? '';
+    selectedKategori = data?.category?.id?.toString() ?? '';
+    stokC.text = (data?.qty ?? 0).toString();
+    deskripsiC.text = data?.description ?? '';
+    
     fotoProduk.clear();
     fotoProdukUrl.clear();
-    if (data?.foto != null) {
-      fotoProdukUrl.add(data?.foto);
-      fotoProduk.add(null);
-    }
+    
     if (foto != null) {
       for (var item in foto) {
-        if (item?.foto != null) {
-          fotoProdukUrl.add(item!.foto!);
-          fotoProduk.add(null); // Assuming foto is a URL or path
+        if (item.imgUrl != null) {
+          fotoProdukUrl.add(item.imgUrl);
+          fotoProduk.add(null);
         }
       }
     }
     fotoProdukUrl.add(null);
     fotoProduk.add(null); // To allow adding new images
 
-    // fotoProdukUrl.add(data?.foto);
-    // for (int i = 0; i < (foto?.length ?? 0); i++)
-    //   fotoProdukUrl.add(foto?[i]?.foto);
     notifyListeners();
   }
 
@@ -192,18 +181,20 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
     try {
       if (withLoading) loading(true);
 
-      final userId = await SessionHelper.getSellerId();
       final data = productDetailSellerModel.data;
 
-      // Prepare request body
+      // Prepare request body (Laravel API format baru)
       Map<String, String?> body = {
-        'nama': namaC.text,
-        'harga': hargaC.text.replaceAll(".", ""),
-        'kategori_id': selectedKategori ?? '0',
+        'name': namaC.text,
+        'price': hargaC.text.replaceAll(".", ""),
+        'category_id': selectedKategori ?? '0',
         'qty': stokC.text,
-        'deskripsi': deskripsiC.text,
-        'seller_id': userId,
+        'description': deskripsiC.text,
       };
+      
+      if (kodeC.text.isNotEmpty) {
+        body['product_code'] = kodeC.text;
+      }
 
       if (isEdit) {
         body['_method'] = 'PUT'; // Laravel multipart update
@@ -211,84 +202,59 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
 
       // Prepare file uploads
       List<http.MultipartFile> files = [];
+      final fotoList = data?.images ?? [];
 
-      // Add main image
-      if (fotoProduk.isNotEmpty && fotoProduk.first != null) {
-        files.add(await getMultipart('fileupload', File(fotoProduk.first!.path)));
-      }
-
-      final fotoList = data?.fotoProduk ?? [];
-      List<File> newFileList = [];
-
-      // Process additional images
-      for (int i = 1; i < fotoProduk.length; i++) {
-        final item = fotoProduk[i];
-        final isNewFile = i > fotoList.length;
-
-        if (item != null && !isNewFile) {
-          files.add(await getMultipart('upload[${i - 1}]', File(item.path)));
-        } else if (item != null) {
-          newFileList.add(File(item.path));
-        } else if (i < fotoProduk.length - 1) {
-          files.add(await getMultipart('upload[${i - 1}]', null));
-        }
-      }
-
-      if (isEdit) {
-        // Add existing image IDs for update
-        for (int i = 0; i < fotoList.length; i++) {
-          final item = fotoList[i];
-
-          if (item != null &&
-              i < fotoProduk.length - 2 &&
-              (item.ID ?? '').trim().isNotEmpty &&
-              fotoProduk[i + 1] != null) {
-            body['upload_id[$i]'] = item.ID!;
-          } else if (fotoProduk[i + 1] == null) {
-            body['upload_id[$i]'] = null;
+      if (!isEdit) {
+        // --- CREATE PRODUCT ---
+        int uploadIndex = 0;
+        for (int i = 0; i < fotoProduk.length; i++) {
+          final item = fotoProduk[i];
+          if (item != null) {
+            files.add(await getMultipart('images[$uploadIndex][file]', File(item.path)));
+            body['images[$uploadIndex][caption]'] = 'Gambar ${uploadIndex + 1}';
+            uploadIndex++;
           }
         }
+      } else {
+        // --- UPDATE PRODUCT ---
+        int newUploadIndex = 0;
+        int deleteIndex = 0;
 
-        // Add new images for edit
-        for (int i = 0; i < newFileList.length; i++) {
-          files.add(await getMultipart('upload_new[$i]', File(newFileList[i].path)));
+        // Tambahkan ID gambar yang dihapus
+        for (var delId in deletedImageId) {
+          body['delete_image_ids[$deleteIndex]'] = delId;
+          deleteIndex++;
         }
 
-        // Add deleted image IDs
-        for (int i = 0; i < deletedImageId.length; i++) {
-          body['upload_id_delete[$i]'] = deletedImageId[i];
+        // Tambahkan gambar baru (serta relasinya jika menggantikan gambar lama di slot tersebut)
+        for (int i = 0; i < fotoProduk.length; i++) {
+          final item = fotoProduk[i];
+          if (item != null) {
+            files.add(await getMultipart('new_images[$newUploadIndex][file]', File(item.path)));
+            
+            // Cek jika ini me-replace gambar yang sudah ada pada index 'i'
+            if (i < fotoList.length && fotoList[i].id != null) {
+               body['existing_image_ids[$newUploadIndex]'] = fotoList[i].id.toString();
+            }
+            newUploadIndex++;
+          }
         }
       }
 
-      // ========= IMPORTANT FIX =========
-      // Backend expects at least one "upload" index.
-      // If none exists, send a placeholder upload[0].
-      bool hasUploadField = files.any((f) => f.field.startsWith('upload'));
-      if (!hasUploadField) {
-        files.add(await getMultipart('upload[0]', null));
-      }
-
-      // Debug logs
       print("========== REQUEST BODY ==========");
       print(body);
 
-      print("========== FILES SENT ==========");
-      for (var f in files) {
-        print("KEY: ${f.field}, FILE: ${f.filename}");
-      }
-
       // Perform API request
       final parsed = await postRest(
-        '${Constant.BASE_API_FULL}/products${isEdit ? '/${data?.produk?.ID ?? 0}' : ''}',
+        '${Constant.BASE_API_FULL}${Constant.epProducts}${isEdit ? '/${data?.id ?? 0}' : ''}',
         body: body,
-        files: files,
+        files: files.isNotEmpty ? files : null,
       );
 
       print("========== PARSED SUCCESS JSON ==========");
       print(parsed);
 
       fetchProductListSeller();
-      productDetailSellerModel = ProdukDetailSellerModel.fromJson(parsed);
       deletedImageId.clear();
       notifyListeners();
     } catch (e) {
@@ -425,8 +391,8 @@ class ProdukSellerProvider extends BaseController with ChangeNotifier {
           kategoriModel?.data
               ?.map(
                 (e) => DropdownMenuItem<String>(
-                  child: Text(e?.nama ?? ''),
-                  value: e?.ID ?? '',
+                  child: Text(e?.name ?? ''),
+                  value: e?.id ?? '',
                 ),
               )
               .toList() ??

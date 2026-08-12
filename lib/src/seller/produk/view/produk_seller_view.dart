@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_button.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
-import 'package:mspeed/common/helper/constant.dart';
 import 'package:mspeed/common/helper/safe_network_image.dart';
 import 'package:mspeed/generated/assets.dart';
-import 'package:mspeed/src/seller/produk/model/produk_list_seller_model.dart';
+import 'package:mspeed/src/seller/produk/model/produk_detail_seller_model.dart';
 import 'package:mspeed/src/seller/produk/provider/produk_seller_provider.dart';
 import 'package:mspeed/src/seller/produk/view/produk_add_seller_view.dart';
 import 'package:mspeed/src/seller/produk/view/produk_detail_seller_view.dart';
@@ -16,7 +15,6 @@ import 'package:provider/provider.dart';
 // M-SPEED Brand Color Palette — Solid Colors Only
 // ═══════════════════════════════════════════════════════════════════
 const Color _kPrimaryBlue = Color(0xFF1565C0);
-const Color _kSuccess = Color(0xFF16A765);
 const Color _kDanger = Color(0xFFE53935);
 const Color _kBackground = Color(0xFFF7F8FA);
 const Color _kSurface = Color(0xFFFFFFFF);
@@ -33,7 +31,7 @@ class ProdukSellerView extends StatefulWidget {
 
 class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
   late ScrollController scrollC;
-  List<ProdukListSellerModelData?> listProdukModel = [];
+  List<ProdukDetailSellerModelData?> listProdukModel = [];
   final searchController = TextEditingController();
 
   @override
@@ -94,7 +92,7 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: _kPrimaryBlue.withOpacity(0.1),
+                color: _kPrimaryBlue.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.add_rounded, size: 24, color: _kPrimaryBlue),
@@ -137,7 +135,7 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
                   setState(() {
                     listProdukModel = p.produkSellerListModel.data
                             ?.where((element) =>
-                                element?.nama?.toLowerCase().contains(
+                                element.name?.toLowerCase().contains(
                                       val.toLowerCase(),
                                     ) ??
                                 false)
@@ -169,7 +167,7 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.inventory_2_outlined, size: 48, color: _kTextSecondary.withOpacity(0.3)),
+          Icon(Icons.inventory_2_outlined, size: 48, color: _kTextSecondary.withValues(alpha: 0.3)),
           const SizedBox(height: 16),
           const Text(
             'Tidak ada produk',
@@ -185,7 +183,7 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
-              color: _kTextSecondary.withOpacity(0.8),
+              color: _kTextSecondary.withValues(alpha: 0.8),
             ),
           ),
         ],
@@ -193,7 +191,7 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
     );
   }
 
-  Widget _buildProdukItem(ProdukListSellerModelData? data) {
+  Widget _buildProdukItem(ProdukDetailSellerModelData? data) {
     if (data == null) return const SizedBox.shrink();
 
     return Padding(
@@ -203,7 +201,7 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
         onTap: () async {
           await CusNav.nPush(
             context,
-            ProdukDetailSellerView(productId: data.ID ?? ''),
+            ProdukDetailSellerView(productId: data.id?.toString() ?? ''),
           );
         },
         child: Container(
@@ -214,7 +212,7 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
             border: Border.all(color: _kBorder, width: 1),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -231,7 +229,7 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
                     child: SafeNetworkImage(
                       width: 72,
                       height: 72,
-                      url: data.foto ?? '',
+                      url: data.images?.isNotEmpty == true ? (data.images![0].imgUrl ?? '') : '',
                       errorBuilder: Image.asset(Assets.imagesImgPlaceholder, fit: BoxFit.cover),
                     ),
                   ),
@@ -242,7 +240,7 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          data.nama ?? '-',
+                          data.name ?? '-',
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -253,7 +251,7 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          Utils.thousandSeparator(int.parse(data.harga ?? '0')),
+                          Utils.thousandSeparator((data.price ?? 0).toInt()),
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
@@ -263,18 +261,18 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            Icon(Icons.inventory_2_outlined, size: 14, color: _kTextSecondary.withOpacity(0.8)),
+                            Icon(Icons.inventory_2_outlined, size: 14, color: _kTextSecondary.withValues(alpha: 0.8)),
                             const SizedBox(width: 4),
                             Text(
-                              'Stok: ${data.qty ?? '0'}',
+                              'Stok: ${data.qty ?? 0}',
                               style: const TextStyle(fontSize: 12, color: _kTextSecondary),
                             ),
                             const SizedBox(width: 12),
-                            Icon(Icons.qr_code_rounded, size: 14, color: _kTextSecondary.withOpacity(0.8)),
+                            Icon(Icons.qr_code_rounded, size: 14, color: _kTextSecondary.withValues(alpha: 0.8)),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
-                                data.kodeProduk ?? '-',
+                                data.productCode ?? '-',
                                 style: const TextStyle(fontSize: 12, color: _kTextSecondary),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -288,7 +286,7 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
                 ],
               ),
               const SizedBox(height: 16),
-              Divider(height: 1, color: _kBorder.withOpacity(0.6)),
+              Divider(height: 1, color: _kBorder.withValues(alpha: 0.6)),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -303,7 +301,7 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
                           yesCallback: () async {
                             CusNav.nPop(context);
                             await context.read<ProdukSellerProvider>().hapusProduk(
-                                  productId: data.ID ?? '0',
+                                  productId: data.id?.toString() ?? '0',
                                   withLoading: true,
                                 );
                             scrollC.jumpTo(0);
@@ -326,7 +324,7 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
                           context,
                           ProdukAddSellerView(
                             isEdit: true,
-                            productId: data.ID,
+                            productId: data.id?.toString(),
                           ),
                         );
                       },
