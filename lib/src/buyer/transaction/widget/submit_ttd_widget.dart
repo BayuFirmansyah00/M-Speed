@@ -114,7 +114,8 @@ class _SubmitTtdWidgetState extends State<SubmitTtdWidget> {
                     final dir = await getTemporaryDirectory();
 
                     if (data != null) {
-                      final file = File('${dir.path}/signature.png');
+                      final timestamp = DateTime.now().millisecondsSinceEpoch;
+                      final file = File('${dir.path}/signature_$timestamp.png');
                       if (file.existsSync()) {
                         file.deleteSync();
                       }

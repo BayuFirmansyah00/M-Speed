@@ -3,7 +3,6 @@ import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/common/helper/constant.dart';
 
-import 'package:mspeed/src/buyer/transaction/provider/transaction_status.dart';
 import 'package:mspeed/src/seller/pesanan/model/pesanan_seller_model.dart';
 import 'package:mspeed/src/seller/pesanan/provider/seller_pesanan_provider.dart';
 import 'package:mspeed/src/seller/pesanan/view/pesanan_seller_detail_view.dart';
@@ -14,7 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 // ═══════════════════════════════════════════════════════════════════
 // M-SPEED Brand Color Palette — Solid Colors Only
 // ═══════════════════════════════════════════════════════════════════
-const Color _kPrimaryBlue = Color(0xFF1565C0);
+const Color _kPrimary = Color(0xFF1565C0);
 const Color _kBackground = Color(0xFFF7F8FA);
 const Color _kSurface = Color(0xFFFFFFFF);
 const Color _kTextPrimary = Color(0xFF1F2937);
@@ -30,7 +29,7 @@ class PesananSellerView extends StatefulWidget {
 
 class _PesananSellerViewState extends BaseState<PesananSellerView> {
   String userId = "", userName = "";
-  List<PesananSellerModelData?> listPesanan = [];
+  List<SellerOrderData> listPesanan = [];
   final searchController = TextEditingController();
 
   @override
@@ -111,7 +110,7 @@ class _PesananSellerViewState extends BaseState<PesananSellerView> {
                 onChanged: (val) {
                   setState(() {
                     listPesanan = p.pesananSellerModel.data?.where((e) {
-                          return e?.nomorOrder?.toUpperCase().contains(
+                          return e.orderNum?.toUpperCase().contains(
                                 val.toUpperCase(),
                               ) ??
                               false;
@@ -184,7 +183,7 @@ class _PesananSellerViewState extends BaseState<PesananSellerView> {
             _buildSearchBar(p),
             Expanded(
               child: RefreshIndicator(
-                color: _kPrimaryBlue,
+                color: _kPrimary,
                 onRefresh: refresh,
                 child: listPesanan.isEmpty
                     ? ListView(
@@ -199,7 +198,6 @@ class _PesananSellerViewState extends BaseState<PesananSellerView> {
                         itemCount: listPesanan.length,
                         itemBuilder: (context, index) {
                           final item = listPesanan[index];
-                          if (item == null) return const SizedBox.shrink();
 
                           return InkWell(
                             borderRadius: BorderRadius.circular(16),
@@ -207,20 +205,18 @@ class _PesananSellerViewState extends BaseState<PesananSellerView> {
                               CusNav.nPush(
                                 context,
                                 PesananSellerDetailView(
-                                  transaction_id: item.ID ?? "",
+                                  transaction_id: item.id?.toString() ?? "",
                                 ),
                               );
                             },
                             child: PesananSellerItemWidget(
                               bgColor: Colors.white,
-                              orderNumber: item.nomorOrder ?? "-",
-                              date: item.tglTtdSuratPesanan ?? "-",
-                              alamat: item.alamat ?? "-",
-                              totalPesanan: item.jum ?? "-",
+                              orderNumber: item.orderNum ?? "-",
+                              date: item.createdAt ?? "-",
+                              alamat: item.buyer?.address ?? "-",
+                              totalPesanan: item.items?.length.toString() ?? "-",
                               sellerName: "-", // Kept for compatibility but unused visually
-                              status: TransactionStatus.fromString(
-                                item.status ?? "PESANAN_BARU",
-                              ),
+                              status: item.statusEnum,
                             ),
                           );
                         },

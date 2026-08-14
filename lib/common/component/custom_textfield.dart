@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../../utils/text_input_formatter_helper.dart';
 import '../helper/constant.dart';
+import '../helper/app_colors.dart';
 
 class CustomTextField {
   static Widget underlineTextField({
@@ -50,19 +51,19 @@ class CustomTextField {
         focusColor: Constant.primaryColor,
         disabledBorder: UnderlineInputBorder(
           borderSide: BorderSide(
-            color: colorBorder ?? color ?? Colors.black45,
+            color: colorBorder ?? color ?? AppColors.border,
             width: borderWidth ?? 0.4,
           ),
         ),
         enabledBorder: UnderlineInputBorder(
           borderSide: BorderSide(
-            color: colorBorder ?? color ?? Colors.black45,
+            color: colorBorder ?? color ?? AppColors.border,
             width: borderWidth ?? 0.4,
           ),
         ),
         border: UnderlineInputBorder(
           borderSide: BorderSide(
-            color: colorBorder ?? color ?? Colors.black45,
+            color: colorBorder ?? color ?? AppColors.border,
             width: borderWidth ?? 0.4,
           ),
         ),
@@ -171,7 +172,7 @@ class CustomTextField {
                           style: Constant.primaryTextStyle.copyWith(
                             fontSize: labelFontSize ?? 14,
                             fontWeight: Constant.medium,
-                            color: Colors.red,
+                            color: AppColors.error,
                           ),
                         )
                       : SizedBox(),
@@ -195,7 +196,7 @@ class CustomTextField {
               suffixIconColor: suffixIconColor ?? Constant.primaryColor,
               hoverColor: Constant.primaryColor,
               focusColor: Constant.primaryColor,
-              errorStyle: TextStyle(color: validatorTextColor ?? Colors.red),
+              errorStyle: TextStyle(color: validatorTextColor ?? AppColors.error),
               prefixIcon: prefix,
               prefix: prefix == null ? SizedBox(width: 12) : null,
               border: OutlineInputBorder(
@@ -320,7 +321,7 @@ class CustomTextField {
                           style: Constant.primaryTextStyle.copyWith(
                             fontSize: labelFontSize ?? 14,
                             fontWeight: Constant.medium,
-                            color: Colors.red,
+                            color: AppColors.error,
                           ),
                         )
                       : SizedBox(),
@@ -339,10 +340,10 @@ class CustomTextField {
               suffixText: suffixText ?? null,
               filled: true,
               fillColor: fillColor ??
-                  ((enabled ?? false) ? Colors.white : Constant.textHintColor),
+                  ((enabled ?? false) ? AppColors.surface : Constant.textHintColor),
               hoverColor: Constant.primaryColor,
               focusColor: Constant.primaryColor,
-              errorStyle: TextStyle(color: validatorTextColor ?? Colors.red),
+              errorStyle: TextStyle(color: validatorTextColor ?? AppColors.error),
               hintStyle: TextStyle(color: hintColor ?? Constant.textHintColor2),
               prefixIcon: prefix,
               prefix: prefix == null ? SizedBox(width: 12) : null,
@@ -472,7 +473,7 @@ class CustomTextField {
                           style: Constant.primaryTextStyle.copyWith(
                             fontSize: labelFontSize ?? 14,
                             fontWeight: Constant.medium,
-                            color: Colors.red,
+                            color: AppColors.error,
                           ),
                         )
                       : SizedBox(),
@@ -481,7 +482,7 @@ class CustomTextField {
             ),
           Container(
             decoration: BoxDecoration(
-              color: (enabled ?? false) ? Colors.white : Constant.textHintColor,
+              color: (enabled ?? false) ? AppColors.surface : Constant.textHintColor,
               border: Border.all(
                 color: Constant.borderSearchColor,
                 width: borderWidth ?? 0.5,
@@ -507,7 +508,7 @@ class CustomTextField {
                 filled: true,
                 fillColor: fillColor ??
                     ((enabled ?? false)
-                        ? Colors.white
+                        ? AppColors.surface
                         : Constant.textHintColor),
                 hoverColor: Constant.primaryColor,
                 hintStyle:
@@ -558,12 +559,12 @@ class CustomTextField {
           focusColor: Constant.primaryColor,
           enabledBorder: UnderlineInputBorder(
             borderSide: BorderSide(
-              color: Colors.black45,
+              color: AppColors.border,
             ),
           ),
           border: UnderlineInputBorder(
             borderSide: BorderSide(
-              color: Colors.black45,
+              color: AppColors.border,
             ),
           ),
           focusedBorder: UnderlineInputBorder(

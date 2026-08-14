@@ -8,42 +8,59 @@ import 'package:mspeed/common/helper/multipart.dart';
 import 'package:mspeed/src/seller/pesanan/model/detail_pesanan_seller_model.dart';
 import 'package:mspeed/src/seller/pesanan/model/pesanan_seller_model.dart';
 import 'package:mspeed/src/seller/pesanan/view/pesanan_buat_surat_view.dart';
-import 'package:mspeed/src/seller/pesanan/view/upload_lampiran_view.dart';
 import 'package:path/path.dart';
 import 'package:http/http.dart' as http;
 import 'package:mspeed/common/helper/session_helper.dart';
 import 'package:mspeed/utils/utils.dart';
 
 class SellerPesananProvider extends BaseController with ChangeNotifier {
-  var pesananSellerModel = PesananSellerModel();
+  var pesananSellerModel = SellerOrderModel();
+  var detailPesananSellerModel = DetailPesananSellerModel(); // Legacy for Buyer
+
   int currentPage = 1;
   Future<void> fetchListPesanan({
     bool withLoading = false,
     bool isLoadMore = false,
   }) async {
     if (!isLoadMore) {
-      pesananSellerModel = PesananSellerModel();
+      pesananSellerModel = SellerOrderModel();
       currentPage = 1;
     } else {
       currentPage++;
     }
 
     if (withLoading) loading(true);
-    
+
     try {
-      throw Exception('Fitur ini belum tersedia pada API backend.');
+      final response = await get(
+        Constant.BASE_API_FULL +
+            '${Constant.epSellerOrders}?page=$currentPage&per_page=${Constant.maxPaginationPerPage}',
+      );
+      final parsed = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        if (!isLoadMore) {
+          pesananSellerModel = SellerOrderModel.fromJson(parsed);
+        } else {
+          var moreData = SellerOrderModel.fromJson(parsed);
+          pesananSellerModel.data?.addAll(moreData.data ?? []);
+          pesananSellerModel.meta = moreData.meta;
+        }
+      } else {
+        throw Exception(parsed['message'] ?? 'Failed to load orders');
+      }
     } catch (e) {
       if (isLoadMore) currentPage--;
       Utils.showFailed(msg: e.toString());
     } finally {
       if (withLoading) loading(false);
+      notifyListeners();
     }
   }
 
-  var detailPesananSellerModel = DetailPesananSellerModel();
+  var detailPesanan = SellerOrderData();
 
   void reset() {
-    detailPesananSellerModel = DetailPesananSellerModel();
+    detailPesanan = SellerOrderData();
     notifyListeners();
   }
 
@@ -56,11 +73,20 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     try {
-      throw Exception('Fitur ini belum tersedia pada API backend.');
+      final response = await get(
+        Constant.BASE_API_FULL + '${Constant.epSellerOrders}/$parent_id',
+      );
+      final parsed = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        detailPesanan = SellerOrderData.fromJson(parsed['data']);
+      } else {
+        throw Exception(parsed['message'] ?? 'Failed to load detail');
+      }
     } catch (e) {
-      // throw Exception(e);
+      Utils.showFailed(msg: e.toString());
     } finally {
       if (withLoading) loading(false);
+      notifyListeners();
     }
   }
 
@@ -72,8 +98,24 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
     required bool terima,
   }) async {
     if (withLoading) loading(true);
-    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
-    if (withLoading) loading(false);
+    try {
+      // Laravel endpoint: /seller/v1/seller/orders/{order}/accept
+      final response = await post(
+        Constant.BASE_API_FULL + '${Constant.epSellerOrders}/$parent_id/accept',
+        body: {'note': rejectOrderReason ?? ''},
+      );
+      final parsed = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Utils.showSuccess(msg: 'Pesanan berhasil diterima');
+        return true;
+      } else {
+        Utils.showFailed(msg: parsed['message'] ?? 'Gagal menerima pesanan');
+      }
+    } catch (e) {
+      Utils.showFailed(msg: e.toString());
+    } finally {
+      if (withLoading) loading(false);
+    }
     return false;
   }
 
@@ -82,8 +124,24 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
     required String parent_id,
   }) async {
     if (withLoading) loading(true);
-    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
-    if (withLoading) loading(false);
+    try {
+      // Laravel endpoint: /seller/v1/seller/orders/{order}/ship
+      final response = await post(
+        Constant.BASE_API_FULL + '${Constant.epSellerOrders}/$parent_id/ship',
+        body: {'receipt_num': 'AUTO_RESI', 'note': 'Dikirim'},
+      );
+      final parsed = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Utils.showSuccess(msg: 'Barang berhasil dikirim');
+        return true;
+      } else {
+        Utils.showFailed(msg: parsed['message'] ?? 'Gagal mengirim barang');
+      }
+    } catch (e) {
+      Utils.showFailed(msg: e.toString());
+    } finally {
+      if (withLoading) loading(false);
+    }
     return false;
   }
 
@@ -106,19 +164,6 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
     Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
     if (withLoading) loading(false);
     isTtdSuccess = false;
-    return false;
-  }
-
-  Future<bool> uploadLampiran({
-    bool withLoading = false,
-    required String transaction_id,
-    required File faktur,
-    required File eNota,
-    required List<OtherFile> lainnya,
-  }) async {
-    if (withLoading) loading(true);
-    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
-    if (withLoading) loading(false);
     return false;
   }
 

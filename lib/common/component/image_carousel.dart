@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/common/helper/constant.dart';
+import 'package:mspeed/common/helper/app_colors.dart';
 import 'package:mspeed/common/helper/safe_network_image.dart';
 import 'package:mspeed/generated/assets.dart';
 
@@ -69,9 +70,9 @@ class _ImageCarouselState extends State<ImageCarousel> {
                   child: Container(
                     padding: EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Color(0xFFEEF0F8),
+                      color: AppColors.background,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Color(0XFF6D7588)),
+                      border: Border.all(color: AppColors.border),
                     ),
                     child:
                         Text('${_currentIndex + 1}/${widget.imageUrls.length}'),
@@ -111,7 +112,7 @@ class _ImageCarouselState extends State<ImageCarousel> {
                             Container(
                               width: 70,
                               height: 70,
-                              color: Colors.white.withOpacity(0.7),
+                              color: AppColors.surface.withOpacity(0.7),
                             ),
                         ],
                       ),

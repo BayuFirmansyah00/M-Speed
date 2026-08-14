@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:mspeed/src/seller/home/provider/seller_home_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:mspeed/common/helper/app_colors.dart';
 
 class HomeSellerGraphView extends StatefulWidget {
   const HomeSellerGraphView({super.key});
@@ -12,7 +13,7 @@ class HomeSellerGraphView extends StatefulWidget {
 
 class _HomeSellerGraphViewState extends State<HomeSellerGraphView> {
   // M-SPEED Brand Colors
-  static const Color _primaryBlue = Color(0xFF1565C0);
+  static const Color _primaryBlue = AppColors.primary;
   static const Color _textSecondary = Color(0xFF6B7280);
   static const Color _border = Color(0xFFE5E7EB);
 

@@ -17,9 +17,9 @@ class DetailPesananSellerModelDataTimeline {
 
   DetailPesananSellerModelDataTimeline({this.label, this.time, this.desc});
   DetailPesananSellerModelDataTimeline.fromJson(Map<String, dynamic> json) {
-    label = json['label']?.toString();
-    time = json['time']?.toString();
-    desc = json['desc']?.toString();
+    label = json['label']?.toString() ?? json['status']?.toString();
+    time = json['time']?.toString() ?? json['created_at']?.toString();
+    desc = json['desc']?.toString() ?? json['note']?.toString();
   }
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
@@ -83,8 +83,8 @@ class DetailPesananSellerModelDataDetail {
   });
   DetailPesananSellerModelDataDetail.fromJson(Map<String, dynamic> json) {
     ID = json['ID']?.toString();
-    nama = json['nama']?.toString();
-    harga = json['harga']?.toString();
+    nama = json['nama']?.toString() ?? json['product_name']?.toString();
+    harga = json['harga']?.toString() ?? json['initial_price']?.toString();
     kodeProduk = json['kode_produk']?.toString();
     size = json['size']?.toString();
     qty = json['qty']?.toString();
@@ -252,17 +252,36 @@ class DetailPesananSellerModelDataParentOrderModel {
     ID = json['ID']?.toString() ?? json['id']?.toString();
     Created = json['Created']?.toString() ?? json['created_at']?.toString();
     Updated = json['Updated']?.toString() ?? json['updated_at']?.toString();
-    nomorOrder = json['nomor_order']?.toString() ?? json['order_number']?.toString();
+    nomorOrder = json['nomor_order']?.toString() ?? json['order_num']?.toString() ?? json['order_number']?.toString();
     subtotal = json['subtotal']?.toString();
     pajak = json['pajak']?.toString();
     ongkir = json['ongkir']?.toString() ?? json['shipping']?['cost']?.toString();
     total = json['total']?.toString();
-    BuyerID = json['BuyerID']?.toString() ?? json['actors_snapshot']?['buyer']?['id']?.toString();
+    BuyerID = json['BuyerID']?.toString() ?? json['buyer']?['id']?.toString() ?? json['actors_snapshot']?['buyer']?['id']?.toString();
     SellerID = json['SellerID']?.toString() ?? json['seller_snapshot']?['id']?.toString();
-    nama = json['nama']?.toString() ?? json['actors_snapshot']?['buyer']?['name']?.toString();
-    alamat = json['alamat']?.toString() ?? json['seller_snapshot']?['address']?.toString();
-    telp = json['telp']?.toString() ?? json['seller_snapshot']?['phone']?.toString();
-    status = json['status']?.toString() ?? json['payment_status']?.toString();
+    nama = json['nama']?.toString() ?? json['buyer']?['name']?.toString() ?? json['actors_snapshot']?['buyer']?['name']?.toString();
+    alamat = json['alamat']?.toString() ?? json['buyer']?['address']?.toString() ?? json['seller_snapshot']?['address']?.toString();
+    telp = json['telp']?.toString() ?? json['buyer']?['phone']?.toString() ?? json['seller_snapshot']?['phone']?.toString();
+    String rawStatus = json['status']?.toString() ?? json['latest_status']?['status']?.toString() ?? json['payment_status']?.toString() ?? '';
+    switch (rawStatus) {
+      case 'approve pesanan by manager':
+        status = 'PESANAN_BARU';
+        break;
+      case 'pesanan diterima penjual':
+        status = 'PESANAN_DITERIMA';
+        break;
+      case 'pesanan dikirim':
+        status = 'PESANAN_DIKIRIM';
+        break;
+      case 'siap tagih by manager':
+        status = 'PESANAN_TELAH_DITERIMA'; // triggers invoice button
+        break;
+      case 'penerimaan & verifikasi':
+        status = 'TELAH_DIBAYAR';
+        break;
+      default:
+        status = rawStatus;
+    }
     PengajuanID = json['PengajuanID']?.toString();
     keterangan = json['keterangan']?.toString();
     penerimaID = json['penerimaID']?.toString() ?? json['actors_snapshot']?['recipient']?['id']?.toString();
@@ -412,27 +431,50 @@ class DetailPesananSellerModelData {
     this.timeline,
   });
   DetailPesananSellerModelData.fromJson(Map<String, dynamic> json) {
-    ParentOrderModel =
-        (json['ParentOrderModel'] != null)
-            ? DetailPesananSellerModelDataParentOrderModel.fromJson(
-              json['ParentOrderModel'],
-            )
-            : null;
-    if (json['detail'] != null) {
-      final v = json['detail'];
-      final arr0 = <DetailPesananSellerModelDataDetail>[];
-      v.forEach((v) {
-        arr0.add(DetailPesananSellerModelDataDetail.fromJson(v));
-      });
-      detail = arr0;
-    }
-    if (json['timeline'] != null) {
-      final v = json['timeline'];
-      final arr0 = <DetailPesananSellerModelDataTimeline>[];
-      v.forEach((v) {
-        arr0.add(DetailPesananSellerModelDataTimeline.fromJson(v));
-      });
-      timeline = arr0;
+    if (json.containsKey('order_num') || json.containsKey('payment_status')) {
+      // It's the native Laravel response
+      ParentOrderModel = DetailPesananSellerModelDataParentOrderModel.fromJson(json);
+      
+      if (json['items'] != null) {
+        final v = json['items'];
+        final arr0 = <DetailPesananSellerModelDataDetail>[];
+        v.forEach((v) {
+          arr0.add(DetailPesananSellerModelDataDetail.fromJson(v));
+        });
+        detail = arr0;
+      }
+      if (json['logs_history'] != null) {
+        final v = json['logs_history'];
+        final arr0 = <DetailPesananSellerModelDataTimeline>[];
+        v.forEach((v) {
+          arr0.add(DetailPesananSellerModelDataTimeline.fromJson(v));
+        });
+        timeline = arr0;
+      }
+    } else {
+      // It's the old wrapper structure
+      ParentOrderModel =
+          (json['ParentOrderModel'] != null)
+              ? DetailPesananSellerModelDataParentOrderModel.fromJson(
+                json['ParentOrderModel'],
+              )
+              : null;
+      if (json['detail'] != null) {
+        final v = json['detail'];
+        final arr0 = <DetailPesananSellerModelDataDetail>[];
+        v.forEach((v) {
+          arr0.add(DetailPesananSellerModelDataDetail.fromJson(v));
+        });
+        detail = arr0;
+      }
+      if (json['timeline'] != null) {
+        final v = json['timeline'];
+        final arr0 = <DetailPesananSellerModelDataTimeline>[];
+        v.forEach((v) {
+          arr0.add(DetailPesananSellerModelDataTimeline.fromJson(v));
+        });
+        timeline = arr0;
+      }
     }
   }
   Map<String, dynamic> toJson() {

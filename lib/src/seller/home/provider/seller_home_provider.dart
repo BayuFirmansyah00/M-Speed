@@ -55,7 +55,10 @@ class SellerHomeProvider extends BaseController with ChangeNotifier {
       if (withLoading) loading(false);
     } else {
       final decoded = jsonDecode(response.body);
-      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
+      final message =
+          decoded['message'] ??
+          decoded['messages']?['error'] ??
+          'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -77,8 +80,9 @@ class SellerHomeProvider extends BaseController with ChangeNotifier {
     buyerProductModel = BuyerProductModel();
 
     final categoryData = kategoriModel?.data ?? [];
-    selectedCategory =
-        kategoriMap.keys.where((e) => kategoriMap[e] == true).toList();
+    selectedCategory = kategoriMap.keys
+        .where((e) => kategoriMap[e] == true)
+        .toList();
     selectedCategoryID = categoryData
         .where((item) => selectedCategory.contains(item?.nama))
         .map((item2) => item2?.ID ?? '0')
@@ -96,14 +100,20 @@ class SellerHomeProvider extends BaseController with ChangeNotifier {
     for (int i = 0; i < selectedCategoryID.length; i++)
       body['category_id[$i]'] = selectedCategoryID[i];
 
-    final response = await get(Constant.BASE_API_FULL + '/products', body: body);
+    final response = await get(
+      Constant.BASE_API_FULL + Constant.epProducts,
+      body: body,
+    );
     if (response.statusCode == 201 || response.statusCode == 200) {
       buyerProductModel = BuyerProductModel.fromJson(jsonDecode(response.body));
       notifyListeners();
       if (withLoading) loading(false);
     } else {
       final decoded = jsonDecode(response.body);
-      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
+      final message =
+          decoded['message'] ??
+          decoded['messages']?['error'] ??
+          'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -125,8 +135,9 @@ class SellerHomeProvider extends BaseController with ChangeNotifier {
     String? sellerId = await prefs.getString(Constant.kSetPrefId) ?? "";
 
     final categoryData = kategoriModel?.data ?? [];
-    selectedCategory =
-        kategoriMap.keys.where((e) => kategoriMap[e] == true).toList();
+    selectedCategory = kategoriMap.keys
+        .where((e) => kategoriMap[e] == true)
+        .toList();
     selectedCategoryID = categoryData
         .where((item) => selectedCategory.contains(item?.nama))
         .map((item2) => item2?.ID ?? '0')
@@ -136,7 +147,7 @@ class SellerHomeProvider extends BaseController with ChangeNotifier {
     if (sellerId.isNotEmpty) {
       body['seller_id'] = sellerId;
     }
-    
+
     if (searchController.text.isNotEmpty)
       body['search'] = searchController.text;
     if (minPrice.text.isNotEmpty && maxPrice.text.isNotEmpty) {
@@ -147,14 +158,22 @@ class SellerHomeProvider extends BaseController with ChangeNotifier {
     for (int i = 0; i < selectedCategoryID.length; i++)
       body['category_id[$i]'] = selectedCategoryID[i];
 
-    final response = await get(Constant.BASE_API_FULL + '/products', body: body);
+    final response = await get(
+      Constant.BASE_API_FULL + Constant.epProducts,
+      body: body,
+    );
     if (response.statusCode == 201 || response.statusCode == 200) {
-      buyerHomeProductModel = BuyerProductModel.fromJson(jsonDecode(response.body));
+      buyerHomeProductModel = BuyerProductModel.fromJson(
+        jsonDecode(response.body),
+      );
       notifyListeners();
       if (withLoading) loading(false);
     } else {
       final decoded = jsonDecode(response.body);
-      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
+      final message =
+          decoded['message'] ??
+          decoded['messages']?['error'] ??
+          'Terjadi kesalahan';
       loading(false);
       throw Exception(message);
     }
@@ -172,12 +191,7 @@ class SellerHomeProvider extends BaseController with ChangeNotifier {
   int biggestGraphVal = 0;
 
   String? selectedPeriodeData = 'Hari Ini';
-  List<String> periodeData = [
-    'Hari Ini',
-    'Harian',
-    'Bulanan',
-    'Tahunan',
-  ];
+  List<String> periodeData = ['Hari Ini', 'Harian', 'Bulanan', 'Tahunan'];
   DateTime? _selectedDate;
   DateTime? get selectedDate => this._selectedDate;
   set selectedDate(DateTime? value) => this._selectedDate = value;
@@ -196,48 +210,26 @@ class SellerHomeProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    var userId = await prefs.getString(Constant.kSetPrefId);
     var firstName = await prefs.getString(Constant.kSetPrefFirstName);
     var lastName = await prefs.getString(Constant.kSetPrefLastName);
     name = (firstName ?? '') + ' ' + (lastName ?? '');
-    Map<String, String> body = {}; // 'seller_id' is normally fetched from Auth context on backend
-    if (selectedPeriodeData == 'Harian' && selectedDate != null) {
-      body['status'] = '1';
-      body['date'] = DateFormat('yyyy-MM-dd').format(selectedDate!);
-    }
 
-    if (selectedPeriodeData == 'Bulanan' && selectedMonth != null && selectedYear != null) {
-      body['status'] = '2';
-      body['month'] = selectedMonth!;
-      body['year'] = selectedYear!;
-    }
+    // NOTE: Dashboard API is currently not available in Laravel Backend.
+    // Simulating empty state gracefully without throwing error or calling non-existent API.
+    homeSellerModel = HomeSellerModel(
+      data: HomeSellerModelData(
+        pesananDibayar: '0',
+        produk: '0',
+        totalPendapatan: '0',
+        chartPenjualan: <int?>[],
+      ),
+    );
 
-    if (selectedPeriodeData == 'Tahunan' && selectedYear != null) {
-      body['status'] = '3';
-      body['year'] = selectedYear!;
-    }
+    graphList.clear();
+    biggestGraphVal = 0;
 
-    // GET /api/dashboard
-    final response = await get(Constant.BASE_API_FULL + '/dashboard', body: body);
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      homeSellerModel = HomeSellerModel.fromJson(jsonDecode(response.body));
-      final chart = homeSellerModel?.data?.chartPenjualan;
-      graphList.clear();
-      biggestGraphVal = 0;
-      for (int i = 0; i < (chart?.length ?? 0); i++) {
-        var val = chart?[i] ?? 0;
-        if (val >= biggestGraphVal) biggestGraphVal = val;
-        graphList.add(FlSpot(i.toDouble(), val.toDouble()));
-      }
-      notifyListeners();
-      if (withLoading) loading(false);
-    } else {
-      final decoded = jsonDecode(response.body);
-      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
-      loading(false);
-      throw Exception(message);
-    }
+    notifyListeners();
+    if (withLoading) loading(false);
   }
 
   // KATEGORI

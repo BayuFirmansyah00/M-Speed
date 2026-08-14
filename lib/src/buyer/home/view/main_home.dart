@@ -8,6 +8,7 @@ import 'package:mspeed/src/buyer/wishlist/view/wishlist_view.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../common/helper/constant.dart';
+import '../../../../common/helper/app_colors.dart';
 
 // ─────────────────────────────────────────
 // Data model nav item
@@ -41,7 +42,7 @@ class _MainHomeState extends State<MainHome> with SingleTickerProviderStateMixin
 
   static const _navItems = [
     _NavItem(icon: Icons.home_outlined,          activeIcon: Icons.home_rounded,              label: 'Beranda'),
-    _NavItem(icon: Icons.favorite_border_rounded, activeIcon: Icons.favorite_rounded,          label: 'Wishlist'),
+    _NavItem(icon: Icons.favorite_border_rounded, activeIcon: Icons.favorite_rounded,          label: 'Favorit'),
     _NavItem(icon: Icons.notifications_outlined,  activeIcon: Icons.notifications_rounded,     label: 'Notifikasi'),
     _NavItem(icon: Icons.person_outline_rounded,  activeIcon: Icons.person_rounded,            label: 'Akun'),
   ];
@@ -99,7 +100,7 @@ class _MainHomeState extends State<MainHome> with SingleTickerProviderStateMixin
         itemBuilder: (i, isActive) => _NavIconLabel(
           item: _navItems[i],
           isActive: isActive,
-          primaryColor: Constant.primaryColor,
+          primaryColor: AppColors.buyerPrimary,
         ),
       ),
       body: SafeArea(
@@ -141,7 +142,7 @@ class _FloatingNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Constant.primaryColor;
+    final primary = AppColors.buyerPrimary;
     final bottomPad = Platform.isIOS ? 20.0 : 12.0;
 
     return Padding(

@@ -12,11 +12,12 @@ import 'package:mspeed/src/seller/nego/model/nego_seller_model.dart';
 import 'package:mspeed/src/seller/nego/provider/nego_seller_provider.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
+import 'package:mspeed/common/helper/app_colors.dart';
 
 // ═══════════════════════════════════════════════════════════════════
 // M-SPEED Brand Color Palette — Solid Colors Only
 // ═══════════════════════════════════════════════════════════════════
-const Color _kPrimaryBlue = Color(0xFF1565C0);
+const Color _kPrimary = AppColors.primary;
 const Color _kSuccess = Color(0xFF16A765);
 const Color _kDanger = Color(0xFFE53935);
 const Color _kWarning = Color(0xFFF9A825);
@@ -440,7 +441,7 @@ class _NegoSellerViewState extends State<NegoSellerView> {
             _buildSearchBar(p),
             Expanded(
               child: RefreshIndicator(
-                color: _kPrimaryBlue,
+                color: _kPrimary,
                 onRefresh: refresh,
                 child: negoData.isEmpty
                     ? ListView(

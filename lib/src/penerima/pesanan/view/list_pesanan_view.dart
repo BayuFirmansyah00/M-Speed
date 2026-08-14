@@ -176,11 +176,17 @@ class _ListPesananViewState extends BaseState<ListPesananView> {
           s == 'PESANAN_DITERIMA' ||
           s == 'PESANAN_DIKIRIM' ||
           s == 'PROSES_PEMBAYARAN' ||
-          s == 'TELAH_DIBAYAR';
+          s == 'TELAH_DIBAYAR' ||
+          s == 'pesanan baru' ||
+          s == 'approve pesanan by manager' ||
+          s == 'pesanan diterima penjual' ||
+          s == 'pesanan dikirim' ||
+          s == 'siap tagih by manager' ||
+          s == 'penerimaan & verifikasi';
     }).length;
     final selesai = source.where((e) {
       final s = e?.status ?? '';
-      return s == 'BARANG_DITERIMA' || s == 'PESANAN_SELESAI';
+      return s == 'BARANG_DITERIMA' || s == 'PESANAN_SELESAI' || s == 'pesanan diterima penerima' || s == 'pesanan dibayar';
     }).length;
 
     return Scaffold(

@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../../common/helper/constant.dart';
+import '../../../../common/helper/app_colors.dart';
 import '../provider/auth_provider.dart';
 
 class _LoginHeaderClipper extends CustomClipper<Path> {
@@ -61,9 +62,9 @@ class _LoginViewState extends BaseState<LoginView> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Color(0xFF051C3F),
-                Constant.secondaryColor,
-                Color(0xFF1E5C99),
+                AppColors.primaryDark,
+                AppColors.primary,
+                AppColors.primaryLight,
               ],
             ),
           ),
@@ -80,8 +81,8 @@ class _LoginViewState extends BaseState<LoginView> {
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        Color(0xFFF15A24).withOpacity(0.25),
-                        Color(0xFFF15A24).withOpacity(0.0),
+                        AppColors.secondary.withOpacity(0.25),
+                        AppColors.secondary.withOpacity(0.0),
                       ],
                     ),
                   ),
@@ -98,8 +99,8 @@ class _LoginViewState extends BaseState<LoginView> {
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        Color(0xFFF7931E).withOpacity(0.18),
-                        Color(0xFFF7931E).withOpacity(0.0),
+                        AppColors.accent.withOpacity(0.18),
+                        AppColors.accent.withOpacity(0.0),
                       ],
                     ),
                   ),
@@ -123,7 +124,7 @@ class _LoginViewState extends BaseState<LoginView> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Color(0xFF0B4177).withOpacity(0.14),
+              color: AppColors.primaryDark.withOpacity(0.14),
               blurRadius: 18,
               offset: Offset(0, 6),
             ),
@@ -209,7 +210,7 @@ class _LoginViewState extends BaseState<LoginView> {
                   padding: EdgeInsets.symmetric(horizontal: 12),
                   child: Icon(
                     Icons.mail_outline_rounded,
-                    color: Constant.secondaryColor.withOpacity(0.85),
+                    color: AppColors.primary.withOpacity(0.85),
                     size: 20,
                   ),
                 ),
@@ -238,7 +239,7 @@ class _LoginViewState extends BaseState<LoginView> {
                   padding: EdgeInsets.symmetric(horizontal: 12),
                   child: Icon(
                     Icons.lock_outline_rounded,
-                    color: Constant.secondaryColor.withOpacity(0.85),
+                    color: AppColors.primary.withOpacity(0.85),
                     size: 20,
                   ),
                 ),
@@ -269,7 +270,7 @@ class _LoginViewState extends BaseState<LoginView> {
                       "Lupa Password?",
                       style: TextStyle(
                           fontSize: 12,
-                          color: Color(0xFFF15A24),
+                          color: AppColors.secondary,
                           fontWeight: FontWeight.w700),
                     ),
                   ),
@@ -283,8 +284,8 @@ class _LoginViewState extends BaseState<LoginView> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Color(0xFFF15A24),
-                      Color(0xFFFF8C00),
+                      AppColors.primary,
+                      AppColors.primaryLight,
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -292,7 +293,7 @@ class _LoginViewState extends BaseState<LoginView> {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: Color(0xFFF15A24).withOpacity(0.3),
+                      color: AppColors.primary.withOpacity(0.3),
                       blurRadius: 14,
                       offset: Offset(0, 5),
                     ),
@@ -352,19 +353,19 @@ class _LoginViewState extends BaseState<LoginView> {
                   CusNav.nPush(context, SellerRegisterView());
                 },
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Constant.secondaryColor.withOpacity(0.8), width: 1.5),
+                  side: BorderSide(color: AppColors.primary.withOpacity(0.8), width: 1.5),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
                   padding: EdgeInsets.symmetric(vertical: 12),
                   elevation: 0,
-                  backgroundColor: Constant.secondaryColor.withOpacity(0.01),
+                  backgroundColor: AppColors.primary.withOpacity(0.01),
                 ),
                 child: Text(
                   "Daftar Sebagai Vendor",
                   style: TextStyle(
                     fontSize: 13,
-                    color: Constant.secondaryColor,
+                    color: AppColors.primary,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -390,7 +391,7 @@ class _LoginViewState extends BaseState<LoginView> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Color(0xFF0B4177).withOpacity(0.03),
+                      color: AppColors.primaryDark.withOpacity(0.03),
                       blurRadius: 12,
                       offset: Offset(0, 4),
                     ),

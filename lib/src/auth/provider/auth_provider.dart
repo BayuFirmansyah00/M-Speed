@@ -86,6 +86,9 @@ class AuthProvider extends BaseController with ChangeNotifier {
         final response = await ApiClient().dio.post('/login', data: param);
 
         if (response.statusCode == 200 || response.statusCode == 201) {
+          debugPrint('LOGIN RESPONSE: ${response.data}');
+          debugPrint('RAW ROLE: ${response.data['data']?['role']}');
+
           // Parsing response Laravel Sanctum yang benar
           final AuthResponseModel authResponse =
               AuthResponseModel.fromJson(response.data);
@@ -101,17 +104,38 @@ class AuthProvider extends BaseController with ChangeNotifier {
 
           SharedPreferences prefs = await SharedPreferences.getInstance();
 
-          // Simpan token Bearer yang sebenarnya dari Laravel Sanctum
+          // Simpan data ke SharedPreferences
           await prefs.setString(Constant.kSetPrefToken, token);
-          await prefs.setString(Constant.kSetPrefEmail, usernameC.text);
+          
+          final String email = authResponse.email ?? usernameC.text;
+          final String role = authResponse.role ?? 'BUYER';
+          final String userId = authResponse.id ?? '';
+          
+          debugPrint('PARSED ROLE: ${authResponse.role}');
 
-          // Fetch data user (role, nama, dll.) menggunakan token yang baru diperoleh
-          // untuk menentukan navigasi yang tepat
-          await _fetchAndStoreUserProfile(context, prefs, token);
+          final bool isAdmin = ['ADMIN', 'MANAGER', 'AUDIT'].contains(role.toUpperCase());
 
+          await prefs.setString(Constant.kSetPrefId, userId);
+          await prefs.setString(Constant.kSetPrefRoles, role);
+          await prefs.setBool(Constant.kSetPrefIsAdmin, isAdmin);
+          await prefs.setString(Constant.kSetPrefEmail, email);
+          
+          // Data fallback agar aman (karena response login backend belum mengembalikan profil lengkap)
+          await prefs.setString(Constant.kSetPrefFirstName, '');
+          await prefs.setString(Constant.kSetPrefLastName, '');
+          await prefs.setString(Constant.kSetPrefPhone, '');
+
+          log("ROLE USER: $role, IS_ADMIN: $isAdmin");
+
+          // Default completeness aman ke '100' agar seller baru bisa masuk beranda tanpa force-edit.
+          final completeness = '100'; 
+          
           usernameC.clear();
           passC.clear();
           loading(false);
+          
+          debugPrint('NAVIGATE ROLE: $role');
+          _navigateByRole(context, role, completeness);
         }
       } else {
         loading(false);
@@ -130,83 +154,11 @@ class AuthProvider extends BaseController with ChangeNotifier {
     }
   }
 
-  /// Fetch profil user setelah login untuk mendapatkan role dan data user.
-  /// Menggunakan endpoint GET /api/v1/user (jika aktif di backend).
-  /// Jika endpoint belum aktif, fallback ke role cerdas berdasarkan input username/email.
-  Future<void> _fetchAndStoreUserProfile(
-      BuildContext context, SharedPreferences prefs, String token) async {
-    try {
-      // Coba fetch user profile dari Laravel
-      final userResponse = await ApiClient().dio.get('/v1/user');
-
-      if (userResponse.statusCode == 200) {
-        final userData = userResponse.data;
-
-        // Ambil data dari response user profile Laravel
-        final String role = userData['role']?.toString() ?? 'BUYER';
-        final String userId = userData['id']?.toString() ?? '';
-        final String email = userData['email']?.toString() ?? usernameC.text;
-
-        // Data profil (dari relasi userData jika ada)
-        final profile = userData['profile'];
-        final String firstName = profile?['first_name']?.toString() ?? '';
-        final String lastName = profile?['last_name']?.toString() ?? '';
-        final String phone = profile?['phone']?.toString() ?? '';
-
-        final bool isAdmin = ['ADMIN', 'MANAGER', 'AUDIT'].contains(role.toUpperCase());
-
-        await prefs.setString(Constant.kSetPrefId, userId);
-        await prefs.setString(Constant.kSetPrefRoles, role);
-        await prefs.setBool(Constant.kSetPrefIsAdmin, isAdmin);
-        await prefs.setString(Constant.kSetPrefEmail, email);
-        await prefs.setString(Constant.kSetPrefFirstName, firstName);
-        await prefs.setString(Constant.kSetPrefLastName, lastName);
-        await prefs.setString(Constant.kSetPrefPhone, phone);
-
-        log("ROLE USER: $role, IS_ADMIN: $isAdmin");
-        _navigateByRole(context, role, userData['completeness']?.toString());
-      } else {
-        _handleFallbackRole(context, prefs);
-      }
-    } on DioException catch (e) {
-      log("DioError fetch user profile: ${e.message}");
-      _handleFallbackRole(context, prefs);
-    } catch (e) {
-      // Fallback jika endpoint tidak tersedia
-      log("Error fetch user profile: $e");
-      _handleFallbackRole(context, prefs);
-    }
-  }
-
-  void _handleFallbackRole(BuildContext context, SharedPreferences prefs) async {
-    String fallbackRole = 'BUYER';
-    final inputLower = usernameC.text.trim().toLowerCase();
-
-    if (inputLower.contains('admin')) {
-      fallbackRole = 'ADMIN';
-    } else if (inputLower.contains('seller')) {
-      fallbackRole = 'SELLER';
-    } else if (inputLower.contains('penerima') || inputLower.contains('receiver')) {
-      fallbackRole = 'PENERIMA';
-    } else if (inputLower.contains('keuangan') || inputLower.contains('finance')) {
-      fallbackRole = 'KEUANGAN';
-    }
-
-    final bool isAdmin = ['ADMIN', 'MANAGER', 'AUDIT'].contains(fallbackRole.toUpperCase());
-
-    log("Endpoint /v1/user tidak merespons 200, fallback role ke '$fallbackRole' (IS_ADMIN: $isAdmin)");
-    await prefs.setString(Constant.kSetPrefRoles, fallbackRole);
-    await prefs.setBool(Constant.kSetPrefIsAdmin, isAdmin);
-    await prefs.setString(Constant.kSetPrefId, '');
-    await prefs.setString(Constant.kSetPrefFirstName, '');
-    await prefs.setString(Constant.kSetPrefLastName, '');
-    _navigateByRole(context, fallbackRole, null);
-  }
-
   /// Navigasi berdasarkan role user dari database Laravel.
   void _navigateByRole(BuildContext context, String role, String? completeness) {
     switch (role.toUpperCase()) {
       case 'SELLER':
+        debugPrint('NAVIGATING TO SELLER');
         CusNav.nPushReplace(context, SellerMainHome());
         // Jika profil belum lengkap, arahkan ke halaman edit profil
         if (completeness == '0') {
@@ -215,19 +167,23 @@ class AuthProvider extends BaseController with ChangeNotifier {
         break;
       case 'PENERIMA':
       case 'RECEIVER':
+        debugPrint('NAVIGATING TO PENERIMA');
         CusNav.nPushReplace(context, DashboardPesananView());
         break;
       case 'KEUANGAN':
       case 'FINANCE':
+        debugPrint('NAVIGATING TO KEUANGAN');
         CusNav.nPushReplace(context, MainHomeKeuanganView());
         break;
       case 'ADMIN':
       case 'MANAGER':
       case 'AUDIT':
+        debugPrint('NAVIGATING TO ADMIN');
         CusNav.nPushReplace(context, AdminMainHome());
         break;
       case 'BUYER':
       default:
+        debugPrint('NAVIGATING TO BUYER');
         CusNav.nPushReplace(context, MainHome());
         break;
     }

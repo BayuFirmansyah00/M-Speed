@@ -2,6 +2,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 
 import '../helper/constant.dart';
+import '../helper/app_colors.dart';
 
 class CustomButton {
   static Widget mainButton(
@@ -45,7 +46,7 @@ class CustomButton {
                 TextStyle(
                   fontWeight: Constant.medium,
                   fontSize: fontSize ?? 16,
-                  color: Colors.white,
+                  color: AppColors.textInverse,
                 ),
             textAlign: textAlign ?? TextAlign.center,
           ),
@@ -106,7 +107,7 @@ class CustomButton {
                           TextStyle(
                             fontWeight: Constant.medium,
                             fontSize: fontSize ?? 16,
-                            color: Colors.white,
+                            color: AppColors.textInverse,
                           ),
                       textAlign: textAlign ?? TextAlign.left,
                     ),
@@ -118,7 +119,7 @@ class CustomButton {
                         TextStyle(
                           fontWeight: Constant.medium,
                           fontSize: fontSize ?? 16,
-                          color: Colors.white,
+                          color: AppColors.textInverse,
                         ),
                     textAlign: textAlign ?? TextAlign.left,
                   ),
@@ -177,7 +178,7 @@ class CustomButton {
                       TextStyle(
                         fontWeight: Constant.medium,
                         fontSize: fontSize ?? 16,
-                        color: Colors.white,
+                        color: AppColors.textInverse,
                       ),
                   minFontSize: 6,
                   textAlign: TextAlign.center,
@@ -219,7 +220,7 @@ class CustomButton {
                 TextStyle(
                   fontWeight: Constant.medium,
                   fontSize: fontSize ?? 16,
-                  color: Colors.white,
+                  color: AppColors.textInverse,
                 ),
             textAlign: TextAlign.center,
           ),
@@ -262,7 +263,7 @@ class CustomButton {
                     TextStyle(
                       fontWeight: Constant.medium,
                       fontSize: fontSize ?? 16,
-                      color: Colors.white,
+                      color: AppColors.textInverse,
                     ),
                 textAlign: TextAlign.center,
               ),
@@ -392,7 +393,7 @@ class CustomButton {
       child: ElevatedButton(
         style: ButtonStyle(
           padding: WidgetStateProperty.all(padding ?? EdgeInsets.zero),
-          backgroundColor: WidgetStateProperty.all<Color>(Colors.white),
+          backgroundColor: WidgetStateProperty.all<Color>(AppColors.surface),
           shape: WidgetStateProperty.all<RoundedRectangleBorder>(
             RoundedRectangleBorder(
               borderRadius: borderRadius ?? BorderRadius.circular(25),
@@ -462,7 +463,7 @@ class CustomButton {
           shape: WidgetStateProperty.all<RoundedRectangleBorder>(
             RoundedRectangleBorder(
               borderRadius: borderRadius ?? BorderRadius.circular(12.0),
-              side: BorderSide(color: Colors.black),
+              side: BorderSide(color: AppColors.textPrimary),
             ),
           ),
           elevation: WidgetStateProperty.all<double>(0),
@@ -474,7 +475,7 @@ class CustomButton {
           child: Text(
             text,
             style: TextStyle(
-              color: Colors.black,
+              color: AppColors.textPrimary,
               fontWeight: Constant.medium,
               fontSize: 16,
             ),
@@ -497,7 +498,7 @@ class CustomButton {
           shape: WidgetStateProperty.all<RoundedRectangleBorder>(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20.0),
-              side: BorderSide(color: Colors.red),
+              side: BorderSide(color: AppColors.error),
             ),
           ),
           elevation: WidgetStateProperty.all<double>(0),
@@ -509,7 +510,7 @@ class CustomButton {
           child: Text(
             text,
             style: TextStyle(
-              color: Colors.red,
+              color: AppColors.error,
               fontWeight: Constant.medium,
               fontSize: 18,
             ),

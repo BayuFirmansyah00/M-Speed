@@ -10,6 +10,7 @@ import 'package:mspeed/src/seller/pesanan/model/detail_pesanan_seller_model.dart
 import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:mspeed/utils/utils.dart';
 
 class PenerimaPesananProvider extends BaseController with ChangeNotifier {
   PesananPenerimaModel pesananPenerimaModel = PesananPenerimaModel();
@@ -88,10 +89,8 @@ class PenerimaPesananProvider extends BaseController with ChangeNotifier {
       }
       // return model;
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
       loading(false);
       return null;
-      throw Exception(message);
     }
   }
 
@@ -103,49 +102,29 @@ class PenerimaPesananProvider extends BaseController with ChangeNotifier {
     _isTtdSuccess = value;
   }
 
-  Future<bool> addTtdSuratJalan({
+  Future<bool> terimaBarang({
     bool withLoading = false,
-    required String transaction_id,
-    required String nomor_order,
-    required File image,
+    required String parent_id,
   }) async {
     if (withLoading) loading(true);
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String userId = prefs.getString(Constant.kSetPrefId) ?? '1';
-    // userId = "124";
-
-    final file = await http.MultipartFile.fromPath(
-      'signature',
-      image.path,
-      filename: basename(image.path), // Use the file name of the image
-    );
-
-    final response = await post(
-      Constant.BASE_API_FULL + '/addsuratjalanpenerima',
-      body: {
-        "nomor_order": nomor_order,
-        "parent_order_id": transaction_id,
-        "penerima_id": userId,
-      },
-      files: [file],
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      if (withLoading) loading(false);
-      if (jsonDecode(response.body)["status"] == "success") {
-        isTtdSuccess = true;
+    try {
+      final response = await post(
+        Constant.BASE_API_FULL + '/receiver/v1/receiver/orders/$parent_id/receive',
+        body: {'note': 'Diterima'},
+      );
+      final parsed = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Utils.showSuccess(msg: 'Barang berhasil diterima');
         return true;
       } else {
-        isTtdSuccess = false;
-        return false;
+        Utils.showFailed(msg: parsed['message'] ?? 'Gagal menerima barang');
       }
-    } else {
-      isTtdSuccess = false;
-      return false;
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
+    } catch (e) {
+      Utils.showFailed(msg: e.toString());
+    } finally {
+      if (withLoading) loading(false);
     }
+    return false;
   }
 
   DetailPesananSellerModel detailPesananNew = DetailPesananSellerModel();
@@ -196,7 +175,6 @@ class PenerimaPesananProvider extends BaseController with ChangeNotifier {
         return null;
       }
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
       loading(false);
       return null;
     }

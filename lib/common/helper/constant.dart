@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:intl/intl.dart';
+import 'app_colors.dart';
 // import 'package:string_validator/string_validator.dart';
 
 class Constant {
@@ -24,7 +25,8 @@ class Constant {
   static const String BASE_API_FULL2 = "https://${DOMAIN2}/api";
   static const String APP_NAME = "M-Speed";
   static const int maxPaginationPerPage = 1000;
-  static const String epProducts = "/seller/v1/products";
+  static const String epProducts = "/seller/v1/seller/products";
+  static const String epSellerOrders = "/seller/v1/seller/orders";
   static const String epParentOrders = "/parent-orders";
   static const String epNegos = "/negos";
   static const String epChats = "/chats";
@@ -36,9 +38,9 @@ class Constant {
   ///
   /// Constant.firstColor;
   ///
-  static Color primaryColor = const Color(0xFF1565C0); // M-SPEED Primary Blue
-  static Color secondaryColor = const Color(0xFF1E88E5); // M-SPEED Secondary Blue
-  static Color tertiaryColor = const Color(0xFFF57C00); // M-SPEED Accent Orange
+  static Color primaryColor = AppColors.primary; // M-SPEED Primary Blue -> Red
+  static Color secondaryColor = AppColors.secondary; // M-SPEED Secondary Blue -> Orange
+  static Color tertiaryColor = AppColors.accent; // M-SPEED Accent Orange -> Yellow
   static Color quarteryColor = const Color(0xFFC5E2FF);
   static Color tableBlueColor = const Color(0xFFE9F0FF);
   static Color textHyperlinkColor = const Color(0xFF0095FF);
@@ -46,43 +48,43 @@ class Constant {
   static Color darkGrayColor = Colors.grey.shade800;
   static Color grayColor = Colors.grey.shade600;
   static Color lightGrayColor = Colors.grey.shade400;
-  static Color textHintColor = const Color(0xFF999999);
+  static Color textHintColor = AppColors.textSecondary;
   static Color textHintColor2 = const Color(0xFF949494);
   static Color darkGrayButtonColor = Colors.black;
-  static Color bgFieldColor = const Color(0xff8CC6FF).withValues(alpha: 0.3);
-  static Color textColor = const Color(0xFF212121); // Primary Text
-  static Color textColor2 = const Color(0xFF757575); // Secondary Text
-  static Color textKomisiColor = const Color(0xFFFFCB47);
-  static Color textPriceColor = const Color(0xFFE53935); // Danger / Price
-  static Color backgroundColor = const Color(0xFFF8F9FB); // Background
-  static Color textColorBlack = const Color(0xFF212121);
-  static Color textColorWhite = Colors.white;
-  static Color textColorBlue = const Color(0xFF1565C0);
-  static Color timerColor = const Color(0xFFE7B641);
-  static Color progressColor = const Color(0xFFFBC02D);
-  static Color textOnAuthColor = const Color(0xFF21272A);
+  static Color bgFieldColor = AppColors.primary.withValues(alpha: 0.1);
+  static Color textColor = AppColors.textPrimary; // Primary Text
+  static Color textColor2 = AppColors.textSecondary; // Secondary Text
+  static Color textKomisiColor = AppColors.accent;
+  static Color textPriceColor = AppColors.primaryDark; // Danger / Price
+  static Color backgroundColor = AppColors.background; // Background
+  static Color textColorBlack = AppColors.textPrimary;
+  static Color textColorWhite = AppColors.surface;
+  static Color textColorBlue = AppColors.info;
+  static Color timerColor = AppColors.warning;
+  static Color progressColor = AppColors.accent;
+  static Color textOnAuthColor = AppColors.textPrimary;
   static Color greyIndicatorColor = const Color(0xFFD9D9D9);
-  static Color borderLightColor = const Color(0xFFE8EAF0); // Border Light
-  static Color borderRegularColor = const Color(0xFF9D9B9B);
-  static Color borderSearchColor = const Color(0xFF949494);
-  static Color greenColor = const Color(0xFF43A047); // Success
-  static Color redColor = const Color(0xFFE53935); // Danger
-  static Color blueColor = const Color(0xFF1565C0);
+  static Color borderLightColor = AppColors.border; // Border Light
+  static Color borderRegularColor = AppColors.border;
+  static Color borderSearchColor = AppColors.textSecondary;
+  static Color greenColor = AppColors.success; // Success
+  static Color redColor = AppColors.error; // Danger
+  static Color blueColor = AppColors.info;
   static Color blueGreenColor = const Color(0xFF5397AA);
   static Color pesananBaruColor = greenColor;
   static Color pesananDiterimaColor = const Color(0xff2B64F5);
 
   // --- NEW DESIGN SYSTEM TOKENS (MARKETPLACE MODERN UX) ---
   // A. Color Palette (Solid Colors Only)
-  static const Color dsPrimary = Color(0xFF1565C0);
-  static const Color dsSecondary = Color(0xFFE53935);
-  static const Color dsAccent = Color(0xFFF9A825);
-  static const Color dsBackground = Color(0xFFF8F9FB);
-  static const Color dsSurface = Color(0xFFFFFFFF);
-  static const Color dsTextPrimary = Color(0xFF111827);
-  static const Color dsTextSecondary = Color(0xFF6B7280);
-  static const Color dsBorder = Color(0xFFE5E7EB);
-  static const Color dsDivider = Color(0xFFF3F4F6);
+  static const Color dsPrimary = AppColors.primary;
+  static const Color dsSecondary = AppColors.secondary;
+  static const Color dsAccent = AppColors.accent;
+  static const Color dsBackground = AppColors.background;
+  static const Color dsSurface = AppColors.surface;
+  static const Color dsTextPrimary = AppColors.textPrimary;
+  static const Color dsTextSecondary = AppColors.textSecondary;
+  static const Color dsBorder = AppColors.border;
+  static const Color dsDivider = AppColors.divider;
 
   // B. Spacing System
   static const double space2 = 2.0;
@@ -617,21 +619,25 @@ class Constant {
   static ThemeData mainThemeData = ThemeData(
     useMaterial3: true,
     visualDensity: VisualDensity.adaptivePlatformDensity,
-    indicatorColor: primaryColor,
-    dividerColor: borderLightColor,
-    scaffoldBackgroundColor: backgroundColor,
-    primaryColor: primaryColor,
-    focusColor: primaryColor,
+    indicatorColor: AppColors.primary,
+    dividerColor: AppColors.divider,
+    scaffoldBackgroundColor: AppColors.background,
+    primaryColor: AppColors.primary,
+    focusColor: AppColors.primary,
     fontFamily: GoogleFonts.poppins().fontFamily,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: primaryColor,
-      primary: primaryColor,
-      secondary: secondaryColor,
-      surface: Colors.white,
+      seedColor: AppColors.primary,
+      primary: AppColors.primary,
+      onPrimary: AppColors.surface,
+      secondary: AppColors.secondary,
+      onSecondary: AppColors.surface,
+      tertiary: AppColors.accent,
+      surface: AppColors.surface,
+      error: AppColors.error,
     ),
     appBarTheme: AppBarTheme(
-      backgroundColor: Colors.white,
-      foregroundColor: textColorBlack,
+      backgroundColor: AppColors.surface,
+      foregroundColor: AppColors.textPrimary,
       elevation: 0,
       centerTitle: true,
       systemOverlayStyle: const SystemUiOverlayStyle(
@@ -641,37 +647,45 @@ class Constant {
       ),
     ),
     cardTheme: CardThemeData(
-      color: Colors.white,
+      color: AppColors.surface,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: borderLightColor, width: 1),
+        side: BorderSide(color: AppColors.border, width: 1),
       ),
       margin: EdgeInsets.zero,
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppColors.surface,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: borderLightColor),
+        borderSide: BorderSide(color: AppColors.border),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: borderLightColor),
+        borderSide: BorderSide(color: AppColors.border),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: primaryColor, width: 1.5),
+        borderSide: BorderSide(color: AppColors.primary, width: 1.5),
       ),
-      hintStyle: TextStyle(color: textHintColor, fontSize: 14),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: AppColors.error, width: 1.5),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: AppColors.error, width: 1.5),
+      ),
+      hintStyle: TextStyle(color: AppColors.textSecondary, fontSize: 14),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.surface,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
@@ -680,18 +694,50 @@ class Constant {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        foregroundColor: primaryColor,
-        side: BorderSide(color: primaryColor),
+        foregroundColor: AppColors.primary,
+        side: BorderSide(color: AppColors.primary),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
       ),
     ),
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      backgroundColor: Colors.white,
-      selectedItemColor: primaryColor,
-      unselectedItemColor: textHintColor,
+      backgroundColor: AppColors.surface,
+      selectedItemColor: AppColors.primary,
+      unselectedItemColor: AppColors.textSecondary,
       elevation: 8,
       type: BottomNavigationBarType.fixed,
+    ),
+    radioTheme: RadioThemeData(
+      fillColor: MaterialStateProperty.resolveWith<Color>((states) {
+        if (states.contains(MaterialState.selected)) {
+          return AppColors.primary;
+        }
+        return AppColors.border;
+      }),
+    ),
+    checkboxTheme: CheckboxThemeData(
+      fillColor: MaterialStateProperty.resolveWith<Color>((states) {
+        if (states.contains(MaterialState.selected)) {
+          return AppColors.primary;
+        }
+        return Colors.transparent;
+      }),
+      side: BorderSide(color: AppColors.border, width: 1.5),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+    ),
+    switchTheme: SwitchThemeData(
+      thumbColor: MaterialStateProperty.resolveWith<Color>((states) {
+        if (states.contains(MaterialState.selected)) {
+          return AppColors.surface;
+        }
+        return AppColors.textSecondary;
+      }),
+      trackColor: MaterialStateProperty.resolveWith<Color>((states) {
+        if (states.contains(MaterialState.selected)) {
+          return AppColors.primary;
+        }
+        return AppColors.border;
+      }),
     ),
   );
 

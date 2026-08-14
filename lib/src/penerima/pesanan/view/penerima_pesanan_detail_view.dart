@@ -11,7 +11,8 @@ import 'package:mspeed/src/buyer/chat/view/chat_person_view.dart';
 import 'package:mspeed/src/penerima/chat/view/chat_pesanan_komplain_view.dart';
 import 'package:mspeed/src/penerima/pesanan/provider/penerima_pesanan_provider.dart';
 import 'package:mspeed/src/penerima/pesanan/view/cetak_surat_view.dart';
-import 'package:mspeed/src/penerima/pesanan/view/ttd_surat_perjalanan_view.dart';
+import 'package:mspeed/utils/utils.dart';
+
 import 'package:mspeed/src/penerima/pesanan/widget/transaction_status_stepper.dart';
 import 'package:mspeed/src/seller/pesanan/model/detail_pesanan_seller_model.dart';
 import 'package:provider/provider.dart';
@@ -643,23 +644,18 @@ class _PenerimaPesananDetailViewState
   }
 
   Widget buildBottomBar() {
-    final ttdPesananBuyer = data?.ParentOrderModel?.ttdPesananBuyer != null;
-    final ttdPesananSeller = data?.ParentOrderModel?.ttdPesananSeller != null;
     final ttdSuratJalanSeller =
         data?.ParentOrderModel?.ttdSuratjalanSeller != null;
     final ttdSuratJalanPenerima =
         data?.ParentOrderModel?.ttdSuratjalanPenerima != null;
-    final lampiran = data?.ParentOrderModel?.lampiran != null;
     final status = data?.ParentOrderModel?.status ?? '';
 
     PENERIMA_TYPE penerimaType = PENERIMA_TYPE.NONE;
-    if (status == 'PESANAN_DIKIRIM' &&
-        ttdSuratJalanSeller &&
-        !ttdSuratJalanPenerima &&
+    if (status == 'pesanan dikirim' &&
         !checks.contains(false)) {
       print('SIKLUS: 8');
       penerimaType = PENERIMA_TYPE.SURAT_JALAN;
-    } else if (status == 'PESANAN_TELAH_DITERIMA' &&
+    } else if (status == 'pesanan diterima penerima' &&
         ttdSuratJalanSeller &&
         ttdSuratJalanPenerima) {
       print('SIKLUS: 9');
@@ -737,21 +733,26 @@ class _PenerimaPesananDetailViewState
                   child: ElevatedButton(
                     onPressed: () async {
                       final p = context.read<PenerimaPesananProvider>();
-                      final pdf = await p.getPdf(
-                        parent_id: data?.ParentOrderModel?.ID ?? '',
-                      );
-
+                      
                       if (penerimaType == PENERIMA_TYPE.SURAT_JALAN) {
-                        CusNav.nPush(
-                          context,
-                          TtdSuratPerjalananView(
-                            name: '${data?.ParentOrderModel?.nomorOrder?.replaceAll('/', '_')}_surat_jalan',
-                            pdfUrl: pdf.toString(),
-                            noOrder: data?.ParentOrderModel?.nomorOrder ?? '',
-                            parentId: data?.ParentOrderModel?.ID ?? '',
-                          ),
+                        Utils.showYesNoDialog(
+                          context: context,
+                          title: 'Terima Barang',
+                          desc: 'Apakah Anda yakin ingin menerima pesanan ini?',
+                          yesCallback: () async {
+                            final success = await p.terimaBarang(
+                              parent_id: data?.ParentOrderModel?.ID ?? '',
+                            );
+                            if (success) {
+                              initData();
+                            }
+                          },
+                          noCallback: () {},
                         );
                       } else {
+                        final pdf = await p.getPdf(
+                          parent_id: data?.ParentOrderModel?.ID ?? '',
+                        );
                         CusNav.nPush(
                           context,
                           CetakSuratView(

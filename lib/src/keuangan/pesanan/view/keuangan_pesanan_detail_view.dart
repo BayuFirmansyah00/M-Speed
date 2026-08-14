@@ -15,7 +15,7 @@ import 'package:mspeed/common/page/web_view.dart';
 import 'package:mspeed/src/buyer/transaction/widget/transaction_status_stepper.dart';
 import 'package:mspeed/src/keuangan/pesanan/model/detail_transaksi_keuangan_model.dart';
 import 'package:mspeed/src/keuangan/pesanan/provider/keuangan_provider.dart';
-import 'package:mspeed/src/keuangan/pesanan/widget/return_receipt_widget.dart';
+
 import 'package:mspeed/utils/Utils.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -258,10 +258,10 @@ class _KeuanganPesananDetailViewState
       );
     }
 
-    void _uploadBukti(BuildContext context, String parentOrderId) {
+    void _verifyOrder(BuildContext context, String parentOrderId) {
       CustomDialog.newDialog(
         titlePadding: EdgeInsets.zero,
-        contentPadding: EdgeInsets.all(10),
+        contentPadding: EdgeInsets.all(16),
         context: context,
         title: Row(
           children: [
@@ -275,104 +275,110 @@ class _KeuanganPesananDetailViewState
               ),
             ),
             SizedBox(width: 20),
-            Text("Upload Bukti Pembayaran", style: Constant.blackBold13),
+            Text("Verifikasi Tagihan", style: Constant.blackBold13),
           ],
         ),
-        content: StatefulBuilder(
-          builder: (context, state) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CustomTextField.borderTextField(
-                  controller: keuanganP.uploadC,
-                  required: false,
-                  labelText: "Upload Bukti Bayar",
-                  readOnly: true,
-                  suffixIcon: Icon(Icons.cloud_upload, color: Colors.grey),
-                  hintText:
-                      keuanganP.attachC.text != ""
-                          ? keuanganP.attachC.text
-                          : "Upload",
-                  textInputType: TextInputType.number,
-                  textCapitalization: TextCapitalization.words,
-                  focusNode: keuanganP.uploadNode,
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    ThousandsSeparatorInputFormatter(),
-                  ],
-                  onTap: () async {
-                    String fileName;
-                    final file = await CustomImagePicker.cameraOrGallery(
-                      context,
-                    );
-                    FocusManager.instance.primaryFocus?.unfocus();
-                    if (file != null) {
-                      fileName = path.basename(file.path);
-                      keuanganP.attachC.text = fileName;
-                      keuanganP.imageAttachment = file;
-                      state(() {});
-                      setState(() {});
-                    }
-                  },
-                ),
-                SizedBox(height: 20),
-                CustomButton.mainButton(
-                  "Simpan",
-                  borderRadius: BorderRadius.circular(10),
-                  () async {
-                    await keuanganP.sendBuktiBayar(
-                      parent_order_id: parentOrderId,
-                      image: keuanganP.imageAttachment!,
-                    );
-                    await Utils.showSuccess(msg: "Berhasil Upload Pembayaran");
-                    initData();
-                    await CusNav.nPop(context);
-                  },
-                ),
-              ],
-            );
-          },
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Apakah Anda yakin ingin memverifikasi dokumen pesanan ini?",
+              style: Constant.iBlackMedium13,
+            ),
+            SizedBox(height: 20),
+            CustomTextField.borderTextField(
+              controller: keuanganP.descC,
+              required: false,
+              labelText: "Catatan (Opsional)",
+            ),
+            SizedBox(height: 20),
+            CustomButton.mainButton(
+              "Verifikasi",
+              borderRadius: BorderRadius.circular(10),
+              () async {
+                try {
+                  await keuanganP.verifyOrder(
+                    parentId: parentOrderId,
+                    note: keuanganP.descC.text,
+                  );
+                  await Utils.showSuccess(msg: "Berhasil memverifikasi pesanan.");
+                  keuanganP.descC.clear();
+                  initData();
+                  await CusNav.nPop(context);
+                } catch (e) {
+                  Utils.showToast(e.toString().replaceAll("Exception: ", ""));
+                }
+              },
+            ),
+          ],
         ),
       );
     }
 
-    void showKembalikanKwitansiDialog(BuildContext context) {
-      showDialog(
+    void _payOrder(BuildContext context, String parentOrderId) {
+      CustomDialog.newDialog(
+        titlePadding: EdgeInsets.zero,
+        contentPadding: EdgeInsets.all(16),
         context: context,
-        builder: (BuildContext context) {
-          return Dialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+        title: Row(
+          children: [
+            Align(
+              alignment: Alignment.topLeft,
+              child: IconButton(
+                icon: Icon(Icons.close, color: Colors.black, size: 24),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
             ),
-            child: ReturnReceiptWidget(
-              onSave: () async {
-                final success = await keuanganP.kembalikanKwitansi(
-                  parentOrderId: data?.ParentOrderModel?.ID ?? '',
-                );
-
-                if (success) {
-                  await Utils.showSuccess(msg: "Berhasil Kembalikan Tagihan!");
-                  await context.read<KeuanganProvider>().fetchDetailTransaction(
-                    transaction_id: widget.transaction_id,
-                    withLoading: true,
+            SizedBox(width: 20),
+            Text("Bayar Pesanan", style: Constant.blackBold13),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Konfirmasi bahwa pesanan ini telah dibayar secara finansial.",
+              style: Constant.iBlackMedium13,
+            ),
+            SizedBox(height: 20),
+            CustomTextField.borderTextField(
+              controller: keuanganP.descC,
+              required: false,
+              labelText: "Catatan (Opsional)",
+            ),
+            SizedBox(height: 20),
+            CustomButton.mainButton(
+              "Konfirmasi Pembayaran",
+              borderRadius: BorderRadius.circular(10),
+              () async {
+                try {
+                  await keuanganP.payOrder(
+                    parentId: parentOrderId,
+                    note: keuanganP.descC.text,
                   );
-                } else {
-                  return;
+                  await Utils.showSuccess(msg: "Berhasil mencatat pembayaran pesanan.");
+                  keuanganP.descC.clear();
+                  initData();
+                  await CusNav.nPop(context);
+                } catch (e) {
+                  Utils.showToast(e.toString().replaceAll("Exception: ", ""));
                 }
-                Navigator.of(context).pop();
               },
             ),
-          );
-        },
+          ],
+        ),
       );
     }
 
     Widget _buildBottomBar() {
-      final isSiapTagih = data?.timeline?.last?.label == 'Siap Tagih';
-      final isNotTelahDibayar = data?.ParentOrderModel?.status != "TELAH_DIBAYAR";
+      final currentStatus = data?.timeline?.last?.label?.toLowerCase() ?? '';
+      // Status mapping from backend (fallback handling typical display variations)
+      final isSiapTagih = currentStatus == 'siap tagih by manager' || currentStatus == 'siap tagih';
+      final isPenerimaanVerifikasi = currentStatus == 'penerimaan & verifikasi';
 
       return Container(
         padding: const EdgeInsets.all(16.0),
@@ -387,33 +393,6 @@ class _KeuanganPesananDetailViewState
             children: [
               Row(
                 children: [
-                  if (isSiapTagih) ...[
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          showKembalikanKwitansiDialog(context);
-                        },
-                        icon: const Icon(Icons.close_rounded, size: 18),
-                        label: const Text('Kembalikan Kwitansi'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Constant.primaryColor,
-                          side: BorderSide(
-                            color: Constant.primaryColor,
-                            width: 1.5,
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          textStyle: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                  ],
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
@@ -438,14 +417,37 @@ class _KeuanganPesananDetailViewState
                   ),
                 ],
               ),
-              if (isSiapTagih && isNotTelahDibayar) ...[
+              if (isSiapTagih) ...[
                 const SizedBox(height: 12),
                 ElevatedButton.icon(
-                  onPressed: () async {
-                    _uploadBukti(context, data?.ParentOrderModel?.ID ?? "");
+                  onPressed: () {
+                    _verifyOrder(context, data?.ParentOrderModel?.ID ?? "");
                   },
-                  icon: const Icon(Icons.check_rounded, size: 18),
-                  label: const Text('Terima Tagihan'),
+                  icon: const Icon(Icons.verified_user_rounded, size: 18),
+                  label: const Text('Verifikasi Tagihan'),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: oceanBlue,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+              if (isPenerimaanVerifikasi) ...[
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    _payOrder(context, data?.ParentOrderModel?.ID ?? "");
+                  },
+                  icon: const Icon(Icons.payment_rounded, size: 18),
+                  label: const Text('Bayar Pesanan'),
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
                     backgroundColor: Constant.primaryColor,

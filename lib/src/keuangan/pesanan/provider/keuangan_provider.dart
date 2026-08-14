@@ -347,81 +347,73 @@ class KeuanganProvider extends BaseController with ChangeNotifier {
     }
   }
 
-  bool? _isBuktiUpload = null;
-
-  bool? get isBuktiUpload => _isBuktiUpload;
-
-  set isBuktiUpload(bool? value) {
-    _isBuktiUpload = value;
-  }
-
-  Future<bool> sendBuktiBayar(
-      {bool withLoading = false,
-      required String parent_order_id,
-      required File image}) async {
+  Future<bool> verifyOrder({
+    bool withLoading = true,
+    required String parentId,
+    String? note,
+  }) async {
     if (withLoading) loading(true);
-    final prefs = await SharedPreferences.getInstance();
-    String? userId = await prefs.getString(Constant.kSetPrefId) ?? "";
 
-    final file = await http.MultipartFile.fromPath(
-      'bukti',
-      image.path,
-      filename: basename(image.path), // Use the file name of the image
-    );
+    try {
+      final response = await post(
+        Constant.BASE_API_FULL + '/finance/v1/finance/orders/$parentId/verify',
+        body: note != null && note.isNotEmpty ? {"note": note} : {},
+      );
 
-    final response = await post(Constant.BASE_API_FULL + '/uploadbuktibayar',
-        body: {"parent_order_id": parent_order_id, "keuangan_id": userId},
-        files: [file]);
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      if (withLoading) loading(false);
-      if (jsonDecode(response.body)["status"] == "success") {
-        isBuktiUpload = true;
+      if (response.statusCode == 200 || response.statusCode == 201) {
         return true;
+      } else if (response.statusCode == 401) {
+        throw Exception("Sesi Anda telah berakhir. Silakan login kembali (401).");
+      } else if (response.statusCode == 403) {
+        throw Exception("Akses ditolak. Anda tidak memiliki izin untuk tindakan ini (403).");
+      } else if (response.statusCode == 422) {
+        final message = jsonDecode(response.body)["message"] ?? "Transisi status tidak valid.";
+        throw Exception(message);
       } else {
-        isBuktiUpload = false;
-        return false;
+        throw Exception("Terjadi kesalahan server (500).");
       }
-    } else {
-      isBuktiUpload = false;
-      return false;
+    } catch (e) {
+      if (e is SocketException || e is TimeoutException) {
+        throw Exception("Terjadi kesalahan jaringan. Silakan periksa koneksi Anda.");
+      }
+      rethrow;
+    } finally {
+      if (withLoading) loading(false);
     }
   }
 
-  String? reason;
-
-  Future<bool> kembalikanKwitansi({
+  Future<bool> payOrder({
     bool withLoading = true,
-    required String parentOrderId,
+    required String parentId,
+    String? note,
   }) async {
     if (withLoading) loading(true);
-    final prefs = await SharedPreferences.getInstance();
-    String? keuanganId = await prefs.getString(Constant.kSetPrefId) ?? "";
 
-    final response = await post(
-      Constant.BASE_API_FULL + '/kembalikankwitansi',
-      body: {
-        "keuangan_id": keuanganId,
-        "parent_order_id": parentOrderId,
-        "desc": reason,
-      },
-    );
+    try {
+      final response = await post(
+        Constant.BASE_API_FULL + '/finance/v1/finance/orders/$parentId/pay',
+        body: note != null && note.isNotEmpty ? {"note": note} : {},
+      );
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      if (withLoading) loading(false);
-      if (jsonDecode(response.body)["status"] == "success") {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         return true;
+      } else if (response.statusCode == 401) {
+        throw Exception("Sesi Anda telah berakhir. Silakan login kembali (401).");
+      } else if (response.statusCode == 403) {
+        throw Exception("Akses ditolak. Anda tidak memiliki izin untuk tindakan ini (403).");
+      } else if (response.statusCode == 422) {
+        final message = jsonDecode(response.body)["message"] ?? "Transisi status tidak valid.";
+        throw Exception(message);
       } else {
-        return false;
+        throw Exception("Terjadi kesalahan server (500).");
       }
-      // notifyListeners();
-
-      // return model;
-    } else {
-      return false;
-      // final message = jsonDecode(response.body)["messages"]["error"];
-      // loading(false);
-      // throw Exception(message);
+    } catch (e) {
+      if (e is SocketException || e is TimeoutException) {
+        throw Exception("Terjadi kesalahan jaringan. Silakan periksa koneksi Anda.");
+      }
+      rethrow;
+    } finally {
+      if (withLoading) loading(false);
     }
   }
 }

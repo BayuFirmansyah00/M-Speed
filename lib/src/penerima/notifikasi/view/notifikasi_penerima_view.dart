@@ -5,6 +5,7 @@ import 'package:mspeed/src/penerima/notifikasi/widget/notifikasi_item.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../common/helper/constant.dart';
+import '../../../../common/helper/app_colors.dart';
 
 // ─── Palet Warna ─────────────────────────────────────────────
 class _C {
@@ -273,7 +274,7 @@ class _NotifHeroHeader extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF072A5C), Color(0xFF0B4177), Color(0xFF1565C0)],
+          colors: [Color(0xFF072A5C), Color(0xFF0B4177), AppColors.primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

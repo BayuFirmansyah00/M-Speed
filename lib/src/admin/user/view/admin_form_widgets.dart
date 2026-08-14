@@ -169,6 +169,7 @@ class AdminFormField extends StatefulWidget {
   final bool obscure;
   final int maxLines;
   final bool enabled;
+  final String? Function(String?)? validator;
 
   const AdminFormField({
     super.key,
@@ -180,6 +181,7 @@ class AdminFormField extends StatefulWidget {
     this.obscure = false,
     this.maxLines = 1,
     this.enabled = true,
+    this.validator,
   });
 
   @override
@@ -208,6 +210,7 @@ class _AdminFormFieldState extends State<AdminFormField> {
           obscureText: widget.obscure && !_showPass,
           maxLines: widget.obscure ? 1 : widget.maxLines,
           enabled: widget.enabled,
+          validator: widget.validator,
           style: const TextStyle(fontSize: 13, color: Color(0xff100629)),
           decoration: InputDecoration(
             hintText: widget.hint,

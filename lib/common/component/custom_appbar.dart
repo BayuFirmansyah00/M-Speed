@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../helper/constant.dart';
+import '../helper/app_colors.dart';
 
 class CustomAppBar {
   /// custom appbar
@@ -34,7 +35,7 @@ class CustomAppBar {
         style: textStyle ??
             TextStyle(
               fontWeight: Constant.semibold,
-              color: Colors.black,
+              color: AppColors.textPrimary,
               fontSize: 17,
             ),
       ),
@@ -44,15 +45,15 @@ class CustomAppBar {
       shape: border ?? null,
       elevation: 0,
       forceMaterialTransparency: true,
-      surfaceTintColor: color ?? Colors.white,
-      backgroundColor: color ?? Colors.white,
-      foregroundColor: foregroundColor ?? Colors.black,
+      surfaceTintColor: color ?? AppColors.surface,
+      backgroundColor: color ?? AppColors.surface,
+      foregroundColor: foregroundColor ?? AppColors.textPrimary,
       bottom: bottom ?? null,
       automaticallyImplyLeading: isLeading,
       centerTitle: isCenter,
       actions: action,
       systemOverlayStyle: SystemUiOverlayStyle(
-        statusBarColor: Colors.white,
+        statusBarColor: AppColors.surface,
         statusBarIconBrightness:
             Brightness.dark, //<-- For Android SEE HERE (dark icons)
         statusBarBrightness:
@@ -90,14 +91,14 @@ class CustomAppBar {
       titleSpacing: titleSpacing ?? 0,
       shape: border ?? null,
       elevation: 0,
-      backgroundColor: color ?? Colors.white,
-      foregroundColor: foregroundColor ?? Colors.black,
+      backgroundColor: color ?? AppColors.surface,
+      foregroundColor: foregroundColor ?? AppColors.textPrimary,
       bottom: bottom ?? null,
       automaticallyImplyLeading: isLeading,
       centerTitle: isCenter,
       actions: action,
       systemOverlayStyle: SystemUiOverlayStyle(
-        statusBarColor: Colors.white,
+        statusBarColor: AppColors.surface,
         statusBarIconBrightness:
             Brightness.dark, //<-- For Android SEE HERE (dark icons)
         statusBarBrightness:

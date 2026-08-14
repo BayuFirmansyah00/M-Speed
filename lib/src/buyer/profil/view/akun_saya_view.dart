@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/common/helper/Constant.dart';
+import 'package:mspeed/common/helper/app_colors.dart';
 import 'package:mspeed/generated/assets.dart';
 import 'package:mspeed/src/admin/user/provider/admin_user_provider.dart';
 import 'package:mspeed/src/auth/provider/auth_provider.dart';
@@ -10,31 +11,32 @@ import 'package:mspeed/src/auth/view/login_view.dart';
 import 'package:mspeed/src/buyer/profil/model/akun_saya_buyer_model.dart';
 import 'package:mspeed/src/buyer/profil/provider/profile_provider.dart';
 import 'package:mspeed/src/buyer/profil/view/settings_view.dart';
+import 'package:mspeed/src/buyer/cart/view/shopping_cart_view.dart';
+import 'package:mspeed/src/buyer/chat/view/chat_list_view.dart';
+import 'package:mspeed/src/buyer/cart/provider/shopping_cart_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../utils/utils.dart';
 import '../../transaction/view/transaction_list_view.dart';
 
-// ─── PALET : M-Speed Premium ──────────────────────────────────
+// ─── PALET : M-Speed Buyer Blue ───────────────────────────────
 class _C {
-  static const primary   = Color(0xFFE50012); // Merah M-Speed
-  static const secondary = Color(0xFF0B4177); // Biru M-Speed
-  static const bg        = Color(0xFFF5F5F7); // Background Apple Grey
+  static Color get primary   => AppColors.buyerPrimary;
+  static Color get secondary => AppColors.buyerDark;
+  static const bg        = Color(0xFFF5F5F7);
   static const card      = Color(0xFFFFFFFF);
   static const txt1      = Color(0xFF111827);
   static const txt2      = Color(0xFF6B7280);
   static const txt3      = Color(0xFF9CA3AF);
   static const border    = Color(0xFFEEEEEE);
 
-  // Warna per status transaksi
+  // Warna per status transaksi (hanya 4 utama)
   static const statusColors = [
-    Color(0xFFF58B2B), // Pesanan Baru   – orange
-    Color(0xFF2B64F5), // Diterima       – blue
-    Color(0xFF10B981), // Dikirim        – green
-    Color(0xFF8B5CF6), // Barang Diterima– purple
-    Color(0xFFEC4899), // Proses Bayar   – pink
-    Color(0xFF1ABC62), // Telah Dibayar  – emerald
+    Color(0xFF1565C0), // Pesanan Baru  – blue
+    Color(0xFF10B981), // Diterima      – green
+    Color(0xFFF58B2B), // Dikirim       – orange
+    Color(0xFF8B5CF6), // Brg. Diterima – purple
   ];
 
   static const statusIcons = [
@@ -42,8 +44,6 @@ class _C {
     Icons.check_circle_outline_rounded,
     Icons.local_shipping_rounded,
     Icons.inventory_2_rounded,
-    Icons.payment_rounded,
-    Icons.verified_rounded,
   ];
 
   static const shadow = BoxShadow(
@@ -70,8 +70,6 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
     "Diterima",
     "Dikirim",
     "Brg. Diterima",
-    "Proses Bayar",
-    "Telah Dibayar",
   ];
 
   final List<String> imgStatus = [
@@ -79,8 +77,6 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
     Assets.iconsImgAkunPesananditerima,
     Assets.iconsImgAkunPesanandikirim,
     Assets.iconsImgAkunBarangditerima,
-    Assets.iconsImgAkunProsespembayaran,
-    Assets.iconsImgAkunTelahdibayar,
   ];
 
   @override
@@ -139,6 +135,7 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
   @override
   Widget build(BuildContext context) {
     userModel = context.watch<ProfileProvider>().akunBuyerModel;
+    final cartTotal = context.watch<ShoppingCartProvider>().countQtyCartItem();
 
     return Scaffold(
       backgroundColor: _C.bg,
@@ -154,265 +151,204 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
               idBuyer: userId,
             );
           },
-          child: CustomScrollView(
+          child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              _buildSliverHeader(),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    const SizedBox(height: 20),
-                    _buildOrderStats(),
-                    const SizedBox(height: 16),
-                    _buildSettingsGroup(),
-                    const SizedBox(height: 32),
-                  ]),
+            child: Column(
+              children: [
+                _buildProfileHeader(cartTotal),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+                  child: Column(
+                    children: [
+                      _buildOrderStats(),
+                      const SizedBox(height: 16),
+                      _buildSettingsGroup(),
+                      const SizedBox(height: 120),
+                    ],
+                  ),
                 ),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 120)),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // ─── Sliver Header dengan gradient ───────────────────────────
-  Widget _buildSliverHeader() {
-    return SliverAppBar(
-      expandedHeight: 240,
-      pinned: false,
-      floating: false,
-      snap: false,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      backgroundColor: _C.secondary,
-      // Collapsed: tampilkan nama user
-      title: AnimatedBuilder(
-        animation: const AlwaysStoppedAnimation(0),
-        builder: (context, _) {
-          return FutureBuilder<String>(
-            future: getName(),
-            builder: (context, snap) => Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.35),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.person_rounded,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  snap.data ?? 'Akun Saya',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    fontSize: 16,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-      centerTitle: true,
-      flexibleSpace: FlexibleSpaceBar(
-        background: _buildProfileHeader(),
-        collapseMode: CollapseMode.parallax,
-      ),
-    );
-  }
-
-  Widget _buildProfileHeader() {
+  // ─── Profile Header (Blue gradient with decorative circles) ──
+  Widget _buildProfileHeader(int cartTotal) {
     return Container(
-      decoration: const BoxDecoration(
+      width: double.infinity,
+      decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF072A5C), Color(0xFF0B4177), Color(0xFF1565C0)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
+          colors: [
+            AppColors.buyerDark,
+            AppColors.buyerPrimary,
+            AppColors.buyerMedium,
+          ],
         ),
       ),
       child: Stack(
         children: [
-          // Dekorasi bulat besar kanan atas
+          // ── Decorative circles ──
           Positioned(
-            top: -60,
-            right: -60,
+            top: -50,
+            right: -50,
             child: Container(
-              width: 220,
-              height: 220,
+              width: 200,
+              height: 200,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withValues(alpha: 0.06),
               ),
             ),
           ),
-          // Bulat kecil kiri tengah
           Positioned(
-            bottom: 30,
+            bottom: 20,
             left: -40,
             child: Container(
-              width: 140,
-              height: 140,
+              width: 130,
+              height: 130,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withValues(alpha: 0.05),
               ),
             ),
           ),
-          // Bulat kecil tengah
           Positioned(
-            top: 60,
-            right: 80,
+            top: 80,
+            right: 60,
             child: Container(
-              width: 50,
-              height: 50,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white.withValues(alpha: 0.08),
               ),
             ),
           ),
-          // Garis dekoratif diagonal
-          Positioned(
-            bottom: -10,
-            right: -20,
-            child: Transform.rotate(
-              angle: -0.3,
-              child: Container(
-                width: 150,
-                height: 2,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-          ),
-          // Konten utama
+
+          // ── Content ──
           SafeArea(
+            bottom: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 56, 24, 20),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Top bar: centered person icon + right action buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      // Notification button
+                      _ActionButton(
+                        icon: Icons.notifications_none_rounded,
+                        badge: null,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => ChatListView()),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      // Cart button
+                      _ActionButton(
+                        icon: Icons.shopping_cart_outlined,
+                        badge: cartTotal > 0 ? '$cartTotal' : null,
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => ShoppingCartView()),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Profile row: Avatar + Name + Badge
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Avatar dengan glowing ring
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Outer glow ring
-                          Container(
-                            width: 82,
-                            height: 82,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.2),
-                                width: 2,
-                              ),
-                            ),
+                      // Avatar with ring
+                      Container(
+                        width: 88,
+                        height: 88,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.3),
+                            width: 3,
                           ),
-                          // Avatar
-                          Container(
-                            width: 72,
-                            height: 72,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.white.withValues(alpha: 0.35),
-                                  Colors.white.withValues(alpha: 0.15),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.6),
-                                width: 2,
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.person_rounded,
-                              color: Colors.white,
-                              size: 36,
-                            ),
+                        ),
+                        child: Container(
+                          margin: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.15),
                           ),
-                        ],
+                          child: const Icon(
+                            Icons.person_rounded,
+                            color: Colors.white,
+                            size: 44,
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 18),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Label kecil
                             Text(
-                              'PROFIL SAYA',
+                              'Profil Saya',
                               style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white.withValues(alpha: 0.6),
-                                letterSpacing: 1.5,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white.withValues(alpha: 0.7),
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            // Nama user
+                            const SizedBox(height: 2),
                             FutureBuilder<String>(
                               future: getName(),
                               builder: (context, snap) => Text(
-                                snap.data ?? 'Memuat...',
+                                'Hai, ${snap.data ?? 'Pengguna'}!',
                                 style: const TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w800,
                                   color: Colors.white,
-                                  letterSpacing: -0.5,
-                                  height: 1.1,
+                                  letterSpacing: -0.3,
+                                  height: 1.2,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            // Badge member
+                            const SizedBox(height: 10),
+                            // Member badge
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
+                                horizontal: 12,
+                                vertical: 5,
                               ),
                               decoration: BoxDecoration(
-                                color: _C.primary.withValues(alpha: 0.85),
+                                color: Colors.white.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.2),
+                                  color: Colors.white.withValues(alpha: 0.25),
                                 ),
                               ),
-                              child: const Row(
+                              child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.verified_rounded,
-                                      size: 12, color: Colors.white),
-                                  SizedBox(width: 5),
-                                  Text(
+                                  Icon(
+                                    Icons.verified_rounded,
+                                    size: 14,
+                                    color: Colors.greenAccent.shade200,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Text(
                                     'Member M-Speed',
                                     style: TextStyle(
-                                      fontSize: 11,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                       color: Colors.white,
                                       letterSpacing: 0.2,
@@ -435,15 +371,13 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
     );
   }
 
-  // ─── Ringkasan Transaksi ──────────────────────────────────────
+  // ─── Ringkasan Transaksi (4 items, grid layout) ──────────────
   Widget _buildOrderStats() {
     List<String> statusCount = [
       userModel.data?.pesananBaru ?? '0',
       userModel.data?.pesananDiterima ?? '0',
       userModel.data?.pesananDikirim ?? '0',
       userModel.data?.barangDiterima?.toString() ?? '0',
-      userModel.data?.prosesPembayaran?.toString() ?? '0',
-      userModel.data?.telahDibayar ?? '0',
     ];
 
     return Container(
@@ -453,90 +387,78 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
         boxShadow: const [_C.shadow],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header row
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: _C.secondary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.receipt_long_rounded,
-                        size: 16,
-                        color: _C.secondary,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Text(
-                      'Ringkasan Transaksi',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: _C.txt1,
-                      ),
-                    ),
-                  ],
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _C.secondary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.receipt_long_rounded,
+                    size: 18,
+                    color: _C.secondary,
+                  ),
                 ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Ringkasan Transaksi',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: _C.txt1,
+                  ),
+                ),
+                const Spacer(),
                 GestureDetector(
                   onTap: () => CusNav.nPush(context, TransactionListView()),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 5,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _C.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      'Lihat Semua →',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: _C.primary,
+                  child: Row(
+                    children: [
+                      Text(
+                        'Lihat Semua',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: _C.primary,
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 2),
+                      Icon(Icons.chevron_right, size: 18, color: _C.primary),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 140,
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              scrollDirection: Axis.horizontal,
-              itemCount: 6,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                final statusColor = _C.statusColors[index];
-                final count = statusCount[index];
-                return GestureDetector(
-                  onTap: () => CusNav.nPush(
-                    context,
-                    TransactionListView(initialRoute: index),
-                  ),
-                  child: _StatusCard(
-                    image: imgStatus[index],
-                    label: statusName[index],
-                    count: count,
-                    color: statusColor,
-                    icon: _C.statusIcons[index],
+          const SizedBox(height: 18),
+          // 4-item grid
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
+            child: Row(
+              children: List.generate(4, (index) {
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () => CusNav.nPush(
+                      context,
+                      TransactionListView(initialRoute: index),
+                    ),
+                    child: _StatusCard(
+                      image: imgStatus[index],
+                      label: statusName[index],
+                      count: statusCount[index],
+                      color: _C.statusColors[index],
+                      icon: _C.statusIcons[index],
+                    ),
                   ),
                 );
-              },
+              }),
             ),
           ),
-          const SizedBox(height: 16),
         ],
       ),
     );
@@ -564,15 +486,15 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
             title: 'Pengaturan Akun',
             iconAsset: Assets.svgsIcPengaturanAkun,
             subtitle: 'Ubah profil & lokasi',
-            color: const Color(0xFF10B981),
+            color: const Color(0xFF6B7280),
             onTap: () => CusNav.nPush(context, SettingsView()),
           ),
           _divider(),
           _menuTile(
             title: 'Logout',
             iconAsset: Assets.svgsIcLogout,
-            subtitle: 'Keluar dari akun',
-            color: _C.primary,
+            subtitle: 'Keluar dari akun Anda',
+            color: AppColors.error,
             isDestructive: true,
             onTap: _handleLogout,
           ),
@@ -596,20 +518,20 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: Row(
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 46,
+              height: 46,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Center(
                 child: SvgPicture.asset(
                   iconAsset,
-                  width: 20,
+                  width: 22,
                   colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
                 ),
               ),
@@ -624,7 +546,7 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: isDestructive ? _C.primary : _C.txt1,
+                      color: isDestructive ? AppColors.error : _C.txt1,
                     ),
                   ),
                   if (subtitle.isNotEmpty) ...[
@@ -637,17 +559,10 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
                 ],
               ),
             ),
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: _C.bg,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                Icons.chevron_right_rounded,
-                color: _C.txt3,
-                size: 18,
-              ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: _C.txt3,
+              size: 22,
             ),
           ],
         ),
@@ -720,7 +635,7 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
                       color: _C.secondary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.admin_panel_settings_rounded,
                       color: _C.secondary,
                     ),
@@ -750,16 +665,16 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
                   leading: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: _C.primary.withValues(alpha: 0.1),
+                      color: AppColors.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.logout_rounded, color: _C.primary),
+                    child: Icon(Icons.logout_rounded, color: AppColors.error),
                   ),
-                  title: const Text(
+                  title: Text(
                     'Logout Total',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.w600,
-                      color: _C.primary,
+                      color: AppColors.error,
                     ),
                   ),
                   subtitle: const Text(
@@ -795,7 +710,65 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
   }
 }
 
-// ─── Status Card Widget ───────────────────────────────────────
+// ─── Action Button (Notification/Cart) ─────────────────────────
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String? badge;
+  final VoidCallback onTap;
+
+  const _ActionButton({required this.icon, this.badge, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.25),
+              ),
+            ),
+            child: Icon(icon, color: Colors.white, size: 22),
+          ),
+          if (badge != null && badge != '0')
+            Positioned(
+              top: -2,
+              right: -2,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                child: Center(
+                  child: Text(
+                    badge!,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      height: 1,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Status Card Widget (Grid layout) ─────────────────────────
 class _StatusCard extends StatelessWidget {
   final String image;
   final String label;
@@ -814,30 +787,31 @@ class _StatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 88,
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.05),
+        color: color.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: Center(child: Image.asset(image, width: 22, fit: BoxFit.contain)),
+            child: Center(
+              child: Image.asset(image, width: 24, fit: BoxFit.contain),
+            ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
             count,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 18,
               fontWeight: FontWeight.w800,
               color: color,
             ),
@@ -847,7 +821,7 @@ class _StatusCard extends StatelessWidget {
             label,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 9.5,
+              fontSize: 10,
               color: _C.txt2,
               fontWeight: FontWeight.w500,
               height: 1.3,

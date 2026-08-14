@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mspeed/common/helper/constant.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:mspeed/common/component/image_network_widget.dart';
+import 'package:mspeed/common/helper/app_colors.dart';
 
 class BuyerProductCard extends StatelessWidget {
   final String imageUrl;
@@ -92,7 +93,7 @@ class BuyerProductCard extends StatelessWidget {
                     child: IconButton(
                       icon: Icon(
                         isWishlisted ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
-                        color: isWishlisted ? Constant.dsSecondary : Constant.dsTextSecondary,
+                        color: isWishlisted ? AppColors.buyerPrimary : Colors.grey.shade400,
                         size: 20,
                       ),
                       onPressed: onWishlistTap,
@@ -192,7 +193,7 @@ class BuyerProductCard extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.all(4.0), // Padding keranjang lebih tipis
                             decoration: BoxDecoration(
-                              color: Constant.dsPrimary, // Cart = Biru
+                              color: AppColors.buyerPrimary, // Cart = Buyer Biru
                               borderRadius: BorderRadius.circular(Constant.radiusXs),
                             ),
                             child: const Icon(

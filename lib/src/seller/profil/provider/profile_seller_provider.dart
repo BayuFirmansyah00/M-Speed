@@ -275,76 +275,36 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var userId = await prefs.getString(Constant.kSetPrefId);
+    var firstName = await prefs.getString(Constant.kSetPrefFirstName) ?? '';
+    var lastName = await prefs.getString(Constant.kSetPrefLastName) ?? '';
+    var email = await prefs.getString(Constant.kSetPrefEmail) ?? '';
+    var phone = await prefs.getString(Constant.kSetPrefPhone) ?? '';
+    var company = await prefs.getString(Constant.kSetPrefCompany) ?? 'Toko Saya';
 
-    int page = 1;
-    bool found = false;
-
-    while (!found) {
-      // GET /api/seller-datas — Laravel ResourceCollection dengan pagination
-      final response = await get(
-        Constant.BASE_API_FULL + '/seller-datas?page=$page',
-      );
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
-        final dataList = decoded['data'] as List;
-
-        for (var item in dataList) {
-          // Cari seller data milik user yang sedang login
-          // Laravel SellerDataResource mengembalikan relasi 'user' dengan field 'id'
-          var itemUserId = item['user']?['id']?.toString()
-              ?? item['user_id']?.toString();
-          if (itemUserId == userId) {
-            // Mapping field dari Laravel SellerDataResource ke ProfileSellerModel
-            // Laravel fields: name, company_name, phone, owner_name, photo, cp_name,
-            //                 cp_phone, kbli, completeness, user, category
-            profileSellerModel = ProfileSellerModel.fromJson({
-              "data": {
-                "getSeller": item,
-                // Mapping URL file dari field Laravel
-                "fotoUrl": item['photo'] ?? '',
-                "ktpUrl": item['ktp'] ?? '',
-                "npwpUrl": item['npwp'] ?? '',
-                "nibUrl": item['nib'] ?? '',
-                "bukuRekeningUrl": item['bank_book_file'] ?? item['buku_rekening'] ?? '',
-                "spPkpUrl": item['sp_pkp_file'] ?? item['sp_pkp'] ?? ''
-              }
-            });
-            sellerDataId = item['id'].toString();
-            found = true;
-            break;
-          }
-        }
-
-        if (found) {
-          notifyListeners();
-          if (withLoading) loading(false);
-          break;
-        }
-
-        // Cek apakah masih ada halaman berikutnya
-        final lastPage = decoded['meta']?['last_page'] ?? 1;
-        if (page >= lastPage) {
-          if (withLoading) loading(false);
-          Utils.showFailed(msg: "Data Profil Seller tidak ditemukan");
-          break;
-        }
-        page++;
-      } else {
-        final decoded = jsonDecode(response.body);
-        final message = decoded["message"] ??
-            decoded["messages"]?["error"] ??
-            'Terjadi kesalahan';
-        loading(false);
-        if (message.toString().contains("Unauthorized")) {
-          Utils.showFailed(msg: "Unauthorized");
-          Future.delayed(Duration(seconds: 1)).then((value) {
-            Navigator.pushReplacementNamed(context, '/login');
-          });
-        }
-        throw Exception(message);
+    // NOTE: Endpoint /seller-datas is currently NOT AVAILABLE in Laravel.
+    // Graceful degradation: Populate UI with local SharedPreferences data.
+    profileSellerModel = ProfileSellerModel.fromJson({
+      "data": {
+        "getSeller": {
+          "id": userId,
+          "name": company,
+          "owner_name": "$firstName $lastName",
+          "email": email,
+          "phone": phone,
+          "category": {"nama": "Umum"}
+        },
+        "fotoUrl": "",
+        "ktpUrl": "",
+        "npwpUrl": "",
+        "nibUrl": "",
+        "bukuRekeningUrl": "",
+        "spPkpUrl": ""
       }
-    }
+    });
+    sellerDataId = userId;
+    
+    notifyListeners();
+    if (withLoading) loading(false);
   }
 
   Future<void> editProfileSeller(BuildContext context,

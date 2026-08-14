@@ -15,11 +15,19 @@ class AuthResponseModel {
   String? message;
   String? accessToken;
   String? tokenType;
+  
+  // Data User
+  String? role;
+  String? id;
+  String? email;
 
   AuthResponseModel({
     this.message,
     this.accessToken,
     this.tokenType,
+    this.role,
+    this.id,
+    this.email,
   });
 
   AuthResponseModel.fromJson(Map<String, dynamic> json) {
@@ -31,6 +39,12 @@ class AuthResponseModel {
       message = json['message']?.toString();
       accessToken = json['access_token']?.toString();
       tokenType = json['token_type']?.toString();
+    }
+
+    if (json['data'] != null) {
+      role = json['data']['role']?.toString();
+      id = json['data']['id']?.toString();
+      email = json['data']['email']?.toString();
     }
   }
 

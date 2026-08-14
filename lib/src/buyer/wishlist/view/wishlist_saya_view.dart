@@ -3,6 +3,7 @@ import 'package:mspeed/common/component/buyer_product_card.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/common/helper/constant.dart';
+import 'package:mspeed/common/helper/app_colors.dart';
 import 'package:mspeed/src/buyer/cart/provider/shopping_cart_provider.dart';
 import 'package:mspeed/src/buyer/product/view/detail_product_view.dart';
 import 'package:mspeed/src/buyer/seller/view/seller_home_product_view.dart';
@@ -50,10 +51,10 @@ class _WishlistSayaViewState extends BaseState<WishlistSayaView> with SingleTick
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: Constant.dsPrimary.withValues(alpha: 0.1),
+              color: AppColors.buyerPrimary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.favorite_border_rounded, size: 36, color: Constant.dsPrimary),
+            child: const Icon(Icons.favorite_border_rounded, size: 36, color: AppColors.buyerPrimary),
           ),
           const SizedBox(height: Constant.space16),
           Text(
@@ -83,7 +84,7 @@ class _WishlistSayaViewState extends BaseState<WishlistSayaView> with SingleTick
 
   Widget _buildProductGrid(List<BuyerWishlistModelDataDetail?> products) {
     if (products.isEmpty) {
-      return _buildEmptyState('Wishlist kosong', 'Tambahkan produk yang kamu suka\nke dalam wishlist');
+      return _buildEmptyState('Belum ada produk favorit', 'Tambahkan produk ke favorit\nuntuk melihatnya di sini.');
     }
     return GridView.builder(
       padding: const EdgeInsets.all(Constant.space16),
@@ -150,7 +151,7 @@ class _WishlistSayaViewState extends BaseState<WishlistSayaView> with SingleTick
               color: Constant.dsBackground,
               borderRadius: BorderRadius.circular(Constant.radiusMd),
             ),
-            child: const Icon(Icons.storefront_rounded, color: Constant.dsPrimary, size: 24),
+            child: const Icon(Icons.storefront_rounded, color: AppColors.buyerPrimary, size: 24),
           ),
           const SizedBox(width: Constant.space12),
           Expanded(
@@ -200,7 +201,7 @@ class _WishlistSayaViewState extends BaseState<WishlistSayaView> with SingleTick
               CusNav.nPush(context, SellerHomeProductView(id: seller.SellerID ?? "0"));
             },
             style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Constant.dsPrimary),
+              side: const BorderSide(color: AppColors.buyerPrimary),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Constant.radiusSm)),
               padding: const EdgeInsets.symmetric(horizontal: Constant.space12, vertical: 0),
               minimumSize: const Size(0, 32),
@@ -208,7 +209,7 @@ class _WishlistSayaViewState extends BaseState<WishlistSayaView> with SingleTick
             child: const Text(
               'Kunjungi',
               style: TextStyle(
-                color: Constant.dsPrimary,
+                color: AppColors.buyerPrimary,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
@@ -221,7 +222,7 @@ class _WishlistSayaViewState extends BaseState<WishlistSayaView> with SingleTick
 
   Widget _buildSellerList(List<BuyerWishlistModelData?> sellers) {
     if (sellers.isEmpty) {
-      return _buildEmptyState('Toko favorit kosong', 'Belum ada toko yang kamu ikuti');
+      return _buildEmptyState('Belum ada toko favorit', 'Tambahkan toko ke favorit\nuntuk melihatnya di sini.');
     }
     return ListView.builder(
       padding: const EdgeInsets.all(Constant.space16),
@@ -256,7 +257,7 @@ class _WishlistSayaViewState extends BaseState<WishlistSayaView> with SingleTick
         titleSpacing: Constant.space16,
         centerTitle: false,
         title: const Text(
-          'Wishlist',
+          'Favorit',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -286,7 +287,7 @@ class _WishlistSayaViewState extends BaseState<WishlistSayaView> with SingleTick
                       });
                     },
                     decoration: InputDecoration(
-                      hintText: 'Cari produk wishlist...',
+                      hintText: 'Cari produk favorit...',
                       hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 13),
                       prefixIcon: Icon(Icons.search_rounded, color: Colors.grey.shade500, size: 20),
                       border: InputBorder.none,
@@ -298,14 +299,14 @@ class _WishlistSayaViewState extends BaseState<WishlistSayaView> with SingleTick
               // TabBar
               TabBar(
                 controller: _tabController,
-                labelColor: Constant.dsPrimary,
+                labelColor: AppColors.buyerPrimary,
                 unselectedLabelColor: Constant.dsTextSecondary,
-                indicatorColor: Constant.dsPrimary,
+                indicatorColor: AppColors.buyerPrimary,
                 indicatorWeight: 3,
                 labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
                 tabs: const [
-                  Tab(text: 'Produk'),
+                  Tab(text: 'Produk Favorit'),
                   Tab(text: 'Toko Favorit'),
                 ],
               ),
@@ -317,14 +318,14 @@ class _WishlistSayaViewState extends BaseState<WishlistSayaView> with SingleTick
         controller: _tabController,
         children: [
           RefreshIndicator(
-            color: Constant.dsPrimary,
+            color: AppColors.buyerPrimary,
             onRefresh: () async {
               context.read<WishlistProvider>().fetchWishlist(withLoading: true);
             },
             child: _buildProductGrid(allProducts),
           ),
           RefreshIndicator(
-            color: Constant.dsPrimary,
+            color: AppColors.buyerPrimary,
             onRefresh: () async {
               context.read<WishlistProvider>().fetchWishlist(withLoading: true);
             },

@@ -10,11 +10,12 @@ import 'package:mspeed/src/seller/produk/view/produk_add_seller_view.dart';
 import 'package:mspeed/src/seller/produk/view/produk_detail_seller_view.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
+import 'package:mspeed/common/helper/app_colors.dart';
 
 // ═══════════════════════════════════════════════════════════════════
 // M-SPEED Brand Color Palette — Solid Colors Only
 // ═══════════════════════════════════════════════════════════════════
-const Color _kPrimaryBlue = Color(0xFF1565C0);
+const Color _kPrimary = AppColors.primary;
 const Color _kDanger = Color(0xFFE53935);
 const Color _kBackground = Color(0xFFF7F8FA);
 const Color _kSurface = Color(0xFFFFFFFF);
@@ -92,10 +93,10 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: _kPrimaryBlue.withValues(alpha: 0.1),
+                color: _kPrimary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.add_rounded, size: 24, color: _kPrimaryBlue),
+              child: const Icon(Icons.add_rounded, size: 24, color: _kPrimary),
             ),
           ),
         ),
@@ -255,7 +256,7 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: _kPrimaryBlue,
+                            color: _kPrimary,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -329,7 +330,7 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
                         );
                       },
                       contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                      color: _kPrimaryBlue,
+                      color: _kPrimary,
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -358,7 +359,7 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
             _buildSearchBar(p),
             Expanded(
               child: RefreshIndicator(
-                color: _kPrimaryBlue,
+                color: _kPrimary,
                 onRefresh: refresh,
                 child: listProdukModel.isEmpty
                     ? ListView(
