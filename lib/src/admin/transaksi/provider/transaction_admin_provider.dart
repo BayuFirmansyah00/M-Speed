@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'dart:convert';
+
 
 import 'package:mspeed/common/base/base_controller.dart';
 import 'package:mspeed/common/helper/constant.dart';
 // import 'package:mspeed/src/admin/home/model/dashboard_admin_model.dart';
 import 'package:mspeed/src/admin/transaksi/model/dpp_admin_model.dart';
-import 'package:mspeed/src/admin/transaksi/model/order_admin_model.dart';
+import 'package:mspeed/src/buyer/transaction/model/detail_tansaction_buyer_model.dart';
 import 'package:flutter/material.dart';
 
 class TransactionAdminProvider extends BaseController with ChangeNotifier {
@@ -19,8 +19,23 @@ class TransactionAdminProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     try {
-      // API endpoint /admin/dpp TIDAK TERSEDIA DI LARAVEL
-      throw Exception('BACKEND API NOT AVAILABLE');
+      final queryParams = <String, String>{};
+      if (search.isNotEmpty) {
+        queryParams['search'] = search;
+      }
+
+      final parsed = await getRest(
+        '${Constant.BASE_API_FULL}/audit/v1/admin/dpp',
+        body: queryParams,
+      );
+      if (parsed == null) {
+        loading(false);
+        return;
+      }
+
+      dpp = DppAdminModel.fromJson(parsed);
+
+      loading(false);
     } catch (e) {
       loading(false);
       throw Exception(e.toString());
@@ -28,7 +43,7 @@ class TransactionAdminProvider extends BaseController with ChangeNotifier {
   }
 
   final searchOrderC = TextEditingController();
-  OrderAdminModel order = OrderAdminModel();
+  List<DetailTransaksiBuyerModelDataParentOrderModel> orders = [];
 
   Future<void> fetchList2(
       {bool withLoading = false,
@@ -36,8 +51,37 @@ class TransactionAdminProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     try {
-      // API endpoint /admin/orders TIDAK TERSEDIA DI LARAVEL
-      throw Exception('BACKEND API NOT AVAILABLE');
+      final queryParams = <String, String>{
+        'search': search,
+      };
+
+      final parsed = await getRest(
+        '${Constant.BASE_API_FULL}/audit/v1/admin/transactions',
+        body: queryParams,
+      );
+      if (parsed == null) {
+        loading(false);
+        return;
+      }
+
+      orders.clear();
+
+      if (parsed['data'] != null) {
+        for (var item in parsed['data']) {
+          orders.add(DetailTransaksiBuyerModelDataParentOrderModel(
+            ID: item['id']?.toString(),
+            nomorOrder: item['order_number']?.toString(),
+            status: item['payment_status']?.toString(),
+            SellerNama: item['seller_snapshot']?['name']?.toString(),
+            nama: item['actors_snapshot']?['buyer']?['name']?.toString(),
+            PenerimaNama: item['actors_snapshot']?['recipient']?['name']?.toString(),
+            total: item['payment_summary']?['grand_total']?.toString() ?? '0',
+            Created: item['created_at']?.toString(),
+          ));
+        }
+      }
+
+      loading(false);
     } catch (e) {
       loading(false);
       throw Exception(e.toString());

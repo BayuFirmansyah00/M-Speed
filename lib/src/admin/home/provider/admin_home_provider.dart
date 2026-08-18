@@ -8,7 +8,7 @@ import 'package:mspeed/common/base/base_controller.dart';
 import 'package:mspeed/common/helper/constant.dart';
 import 'package:mspeed/src/admin/home/model/buyer_admin_model.dart';
 import 'package:mspeed/src/admin/home/model/home_admin_model.dart';
-import 'package:mspeed/src/admin/home/model/seller_admin_model.dart';
+import 'package:mspeed/src/admin/user/model/seller_admin_model.dart';
 import 'package:mspeed/src/admin/user/view/user_data_admin_view.dart';
 import 'package:mspeed/src/buyer/home/model/buyer_product_model.dart';
 import 'package:mspeed/src/buyer/home/model/home_model.dart';
@@ -332,9 +332,47 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
       {bool withLoading = false, String search = ''}) async {
     if (withLoading) loading(true);
 
+    Map<String, dynamic> param = {};
+    if (search.isNotEmpty) param['search'] = search;
+
     try {
-      // GET /api/users?role=seller (API TIDAK TERSEDIA DI LARAVEL)
-      throw Exception('BACKEND API NOT AVAILABLE');
+      final response = await ApiClient().dio.get(
+        '/audit/v1/admin/sellers',
+        queryParameters: param,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        userData.clear();
+        final parsed = SellerAdminModel.fromJson(response.data as Map<String, dynamic>);
+        sellerAdminModel = parsed;
+        final dataList = parsed.data ?? [];
+    
+        for (var item in dataList) {
+          final sellerData = item.sellerData;
+          final sellerAddress = item.sellerAddress;
+          
+          userData.add(
+            UserData(
+              name1: sellerData?.companyName ?? sellerData?.name ?? '',
+              name2: sellerData?.ownerName ?? '',
+              email: item.email ?? '',
+              id: item.id?.toString() ?? '',
+              alamat: sellerAddress?.fullAddress ?? sellerAddress?.cityName ?? '',
+              status: 'Aktif',
+              rawModel: item,
+            ),
+          );
+        }
+
+        notifyListeners();
+        if (withLoading) loading(false);
+      } else {
+        throw Exception("Gagal memuat data seller");
+      }
+    } on DioException catch (e) {
+      final message = e.response?.data['message'] ?? 'Terjadi kesalahan';
+      loading(false);
+      throw Exception(message);
     } catch (e) {
       loading(false);
       throw Exception(e.toString());

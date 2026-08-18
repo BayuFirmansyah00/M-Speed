@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/common/helper/Constant.dart';
-import 'package:mspeed/src/admin/transaksi/model/order_admin_model.dart';
+import 'package:mspeed/src/buyer/transaction/model/detail_tansaction_buyer_model.dart';
 import 'package:mspeed/src/admin/transaksi/provider/transaction_admin_provider.dart';
 import 'package:mspeed/src/admin/transaksi/view/detail_pesanan_admin_view.dart';
 import 'package:mspeed/src/buyer/transaction/provider/transaction_status.dart';
@@ -26,17 +26,18 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
     p.searchOrderC.clear();
   }
 
-  OrderAdminModel data = OrderAdminModel();
+  List<DetailTransaksiBuyerModelDataParentOrderModel> orders = [];
 
   void refresh({String q = ''}) {
-    context
-        .read<TransactionAdminProvider>()
-        .fetchList2(withLoading: true, search: q);
+    context.read<TransactionAdminProvider>().fetchList2(
+      withLoading: true,
+      search: q,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    data = context.watch<TransactionAdminProvider>().order;
+    orders = context.watch<TransactionAdminProvider>().orders;
     final searchC = context.read<TransactionAdminProvider>().searchOrderC;
 
     return Scaffold(
@@ -81,7 +82,12 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 60, 20, 16),
+                        padding: EdgeInsets.fromLTRB(
+                          20,
+                          MediaQuery.of(context).padding.top + 60,
+                          20,
+                          16,
+                        ),
                         child: Row(
                           children: [
                             Container(
@@ -90,8 +96,11 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
                                 color: Colors.white.withOpacity(0.18),
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(Icons.assignment_rounded,
-                                  color: Colors.white, size: 22),
+                              child: const Icon(
+                                Icons.assignment_rounded,
+                                color: Colors.white,
+                                size: 22,
+                              ),
                             ),
                             const SizedBox(width: 12),
                             const Column(
@@ -101,15 +110,18 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
                                 Text(
                                   'Data Order',
                                   style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.white),
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
                                 ),
                                 SizedBox(height: 2),
                                 Text(
                                   'Riwayat dan status semua pesanan masuk',
                                   style: TextStyle(
-                                      fontSize: 12, color: Colors.white70),
+                                    fontSize: 12,
+                                    color: Colors.white70,
+                                  ),
                                 ),
                               ],
                             ),
@@ -147,23 +159,33 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
                     style: const TextStyle(fontSize: 14),
                     decoration: InputDecoration(
                       hintText: 'Cari berdasarkan no order atau nama...',
-                      hintStyle:
-                          const TextStyle(color: Color(0xffA0AEC0), fontSize: 13),
-                      prefixIcon: const Icon(Icons.search_rounded,
-                          color: Color(0xffA0AEC0), size: 20),
+                      hintStyle: const TextStyle(
+                        color: Color(0xffA0AEC0),
+                        fontSize: 13,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.search_rounded,
+                        color: Color(0xffA0AEC0),
+                        size: 20,
+                      ),
                       suffixIcon: searchC.text.isNotEmpty
                           ? GestureDetector(
                               onTap: () {
                                 searchC.clear();
                                 refresh();
                               },
-                              child: const Icon(Icons.close_rounded,
-                                  color: Color(0xffA0AEC0), size: 18),
+                              child: const Icon(
+                                Icons.close_rounded,
+                                color: Color(0xffA0AEC0),
+                                size: 18,
+                              ),
                             )
                           : null,
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                     ),
                   ),
                 ),
@@ -173,7 +195,7 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
             // ── Data List ──
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              sliver: (data.data?.isEmpty ?? true)
+              sliver: (orders.isEmpty)
                   ? const SliverFillRemaining(
                       child: Center(
                         child: Text(
@@ -183,24 +205,20 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
                       ),
                     )
                   : SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final model = data.data?[index];
-                          if (model == null) return const SizedBox.shrink();
-                          return _OrderCard(
-                            model: model,
-                            onTap: () {
-                              CusNav.nPush(
-                                context,
-                                DetailPesananAdminView(
-                                  transaction_id: model.ID ?? "",
-                                ),
-                              );
-                            },
-                          );
-                        },
-                        childCount: data.data?.length ?? 0,
-                      ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final model = orders[index];
+                        return _OrderCard(
+                          model: model,
+                          onTap: () {
+                            CusNav.nPush(
+                              context,
+                              DetailPesananAdminView(
+                                transaction_id: model.ID ?? "",
+                              ),
+                            );
+                          },
+                        );
+                      }, childCount: orders.length),
                     ),
             ),
           ],
@@ -212,7 +230,7 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
 
 // ── Order Card Widget ────────────────────────────────────────────────────────
 class _OrderCard extends StatelessWidget {
-  final OrderAdminModelData model;
+  final DetailTransaksiBuyerModelDataParentOrderModel model;
   final VoidCallback onTap;
 
   const _OrderCard({required this.model, required this.onTap});
@@ -252,8 +270,11 @@ class _OrderCard extends StatelessWidget {
                             color: const Color(0xffF97316).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.assignment_rounded,
-                              color: Color(0xffF97316), size: 16),
+                          child: const Icon(
+                            Icons.assignment_rounded,
+                            color: Color(0xffF97316),
+                            size: 16,
+                          ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
@@ -263,19 +284,21 @@ class _OrderCard extends StatelessWidget {
                               Text(
                                 model.nomorOrder ?? '-',
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 13,
-                                    color: Color(0xff100629)),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                  color: Color(0xff100629),
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                model.tglTtdSuratPesanan ?? '-',
+                                model.Created ?? '-',
                                 style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w500,
-                                    color: Color(0xff8A93A3)),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xff8A93A3),
+                                ),
                               ),
                             ],
                           ),
@@ -294,11 +317,19 @@ class _OrderCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      _buildInfoIcon(Icons.person_outline_rounded,
-                          Colors.blue, 'Buyer', model.BuyerName ?? '-'),
+                      _buildInfoIcon(
+                        Icons.person_outline_rounded,
+                        Colors.blue,
+                        'Buyer',
+                        model.nama ?? '-',
+                      ),
                       const SizedBox(width: 16),
-                      _buildInfoIcon(Icons.storefront_rounded,
-                          Colors.green, 'Seller', model.SellerName ?? '-'),
+                      _buildInfoIcon(
+                        Icons.storefront_rounded,
+                        Colors.green,
+                        'Seller',
+                        model.SellerNama ?? '-',
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -306,8 +337,12 @@ class _OrderCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: _buildInfoIcon(Icons.person_pin_rounded,
-                            Colors.purple, 'Penerima', model.PenerimaName ?? '-'),
+                        child: _buildInfoIcon(
+                          Icons.person_pin_rounded,
+                          Colors.purple,
+                          'Penerima',
+                          model.PenerimaNama ?? '-',
+                        ),
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -315,19 +350,18 @@ class _OrderCard extends StatelessWidget {
                           const Text(
                             'Total Pembayaran',
                             style: TextStyle(
-                                fontSize: 11, color: Color(0xff8A93A3)),
+                              fontSize: 11,
+                              color: Color(0xff8A93A3),
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Rp ${Utils.thousandSeparator(
-                              int.parse(
-                                  model.total?.split('.').firstOrNull ?? '0'),
-                              symbol: '',
-                            )}',
+                            'Rp ${Utils.thousandSeparator(int.parse(model.total?.split('.').isNotEmpty == true ? model.total!.split('.').first : '0'), symbol: '')}',
                             style: const TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 15,
-                                color: Color(0xffEA580C)),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                              color: Color(0xffEA580C),
+                            ),
                           ),
                         ],
                       ),
@@ -343,9 +377,14 @@ class _OrderCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: Constant.statusColor(model.status ?? 'PESANAN_BARU').withOpacity(0.1),
+                      color: Constant.statusColor(
+                        model.status ?? 'PESANAN_BARU',
+                      ).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -355,30 +394,41 @@ class _OrderCard extends StatelessWidget {
                           width: 6,
                           height: 6,
                           decoration: BoxDecoration(
-                            color: Constant.statusColor(model.status ?? 'PESANAN_BARU'),
+                            color: Constant.statusColor(
+                              model.status ?? 'PESANAN_BARU',
+                            ),
                             shape: BoxShape.circle,
                           ),
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          TransactionStatus.fromString(model.status ?? 'PESANAN_BARU')
+                          TransactionStatus.fromString(
+                                model.status ?? 'PESANAN_BARU',
+                              )
                               .statusName()
                               .split(' ')
-                              .map((str) => str.isNotEmpty
-                                  ? '${str[0].toUpperCase()}${str.substring(1).toLowerCase()}'
-                                  : '')
+                              .map(
+                                (str) => str.isNotEmpty
+                                    ? '${str[0].toUpperCase()}${str.substring(1).toLowerCase()}'
+                                    : '',
+                              )
                               .join(' '),
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: Constant.statusColor(model.status ?? 'PESANAN_BARU'),
+                            color: Constant.statusColor(
+                              model.status ?? 'PESANAN_BARU',
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xffEA580C).withOpacity(0.08),
                       borderRadius: BorderRadius.circular(8),
@@ -413,7 +463,11 @@ class _OrderCard extends StatelessWidget {
   }
 
   Widget _buildInfoIcon(
-      IconData icon, Color iconColor, String label, String value) {
+    IconData icon,
+    Color iconColor,
+    String label,
+    String value,
+  ) {
     return Expanded(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -433,16 +487,19 @@ class _OrderCard extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style:
-                      const TextStyle(fontSize: 10, color: Color(0xff8A93A3)),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Color(0xff8A93A3),
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   value,
                   style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xff100629)),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xff100629),
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

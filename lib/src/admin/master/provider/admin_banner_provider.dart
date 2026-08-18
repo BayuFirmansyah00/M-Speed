@@ -4,8 +4,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mspeed/common/base/base_controller.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/src/admin/master/model/banner_admin_model.dart';
-import 'package:mspeed/src/admin/master/view/data_banner_admin_view.dart';
 import 'package:mspeed/utils/utils.dart';
+import 'package:dio/dio.dart';
+import 'package:mspeed/core/network/api_client.dart';
 
 class AdminBannerProvider extends BaseController with ChangeNotifier {
   List<BannerAdminModelData> bannerList = [];
@@ -22,10 +23,29 @@ class AdminBannerProvider extends BaseController with ChangeNotifier {
   }
 
   Future<void> fetchBanners({bool withLoading = false}) async {
-    if (withLoading) loading(false);
-    Utils.showFailed(msg: 'Fitur Banner belum tersedia pada API backend.');
-    bannerList = [];
-    notifyListeners();
+    if (withLoading) loading(true);
+    try {
+      final response = await ApiClient().dio.get('/audit/v1/admin/banners');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final model = BannerAdminModel.fromJson(response.data);
+        final List<BannerAdminModelData> list = [];
+        if (model.data != null) {
+          for (var item in model.data!) {
+            if (item != null) list.add(item);
+          }
+        }
+        bannerList = list;
+        notifyListeners();
+      }
+      if (withLoading) loading(false);
+    } on DioException catch (e) {
+      final message = e.response?.data["message"] ?? 'Terjadi kesalahan saat memuat banner';
+      loading(false);
+      throw Exception(message);
+    } catch (e) {
+      loading(false);
+      throw Exception(e.toString());
+    }
   }
 
   void setData(BannerAdminModelData? banner) {
@@ -71,10 +91,72 @@ class AdminBannerProvider extends BaseController with ChangeNotifier {
   }
 
   Future<void> saveBanner(BuildContext context, {String? id}) async {
-    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
+    if (judulC.text.isEmpty || deskripsiC.text.isEmpty) {
+      Utils.showFailed(msg: 'Judul dan deskripsi harus diisi');
+      return;
+    }
+    if (id == null && selectedImage == null) {
+      Utils.showFailed(msg: 'Gambar harus dipilih');
+      return;
+    }
+
+    loading(true);
+    try {
+      FormData formData = FormData.fromMap({
+        'title': judulC.text,
+        'caption': deskripsiC.text,
+      });
+
+      if (selectedImage != null) {
+        formData.files.add(MapEntry(
+          'image',
+          await MultipartFile.fromFile(selectedImage!.path),
+        ));
+      }
+
+      // For PUT method with multipart form data in Laravel, we need to send POST with _method=PUT
+      if (id != null) {
+        formData.fields.add(MapEntry('_method', 'PUT'));
+      }
+
+      final response = await ApiClient().dio.post(
+        id != null ? '/audit/v1/admin/banners/$id' : '/audit/v1/admin/banners',
+        data: formData,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        await Utils.showSuccess(msg: 'Berhasil menyimpan banner');
+        await fetchBanners();
+        clearData();
+        CusNav.nPop(context);
+      }
+      loading(false);
+    } on DioException catch (e) {
+      loading(false);
+      final message = e.response?.data["message"] ?? 'Terjadi kesalahan saat menyimpan banner';
+      Utils.showFailed(msg: message);
+    } catch (e) {
+      loading(false);
+      Utils.showFailed(msg: e.toString());
+    }
   }
 
   Future<void> deleteBanner(String id) async {
-    Utils.showFailed(msg: 'Fitur ini belum tersedia pada API backend.');
+    loading(true);
+    try {
+      final response = await ApiClient().dio.delete('/audit/v1/admin/banners/$id');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        await Utils.showSuccess(msg: 'Berhasil menghapus banner');
+        await fetchBanners();
+      }
+      loading(false);
+    } on DioException catch (e) {
+      loading(false);
+      final message = e.response?.data["message"] ?? 'Terjadi kesalahan saat menghapus banner';
+      Utils.showFailed(msg: message);
+    } catch (e) {
+      loading(false);
+      Utils.showFailed(msg: e.toString());
+    }
   }
 }
