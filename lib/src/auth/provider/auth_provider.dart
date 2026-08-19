@@ -117,6 +117,12 @@ class AuthProvider extends BaseController with ChangeNotifier {
 
           await prefs.setString(Constant.kSetPrefId, userId);
           await prefs.setString(Constant.kSetPrefRoles, role);
+          if (authResponse.sellerDataId != null && authResponse.sellerDataId!.isNotEmpty) {
+            await prefs.setString('seller_data_id', authResponse.sellerDataId!);
+          }
+          if (authResponse.completeness != null) {
+            await prefs.setString('completeness', authResponse.completeness!);
+          }
           await prefs.setBool(Constant.kSetPrefIsAdmin, isAdmin);
           await prefs.setString(Constant.kSetPrefEmail, email);
           
@@ -215,6 +221,7 @@ class AuthProvider extends BaseController with ChangeNotifier {
     await prefs.remove(Constant.kSetPrefFirstName);
     await prefs.remove(Constant.kSetPrefLastName);
     await prefs.remove(Constant.kSetPrefRoles);
+    await prefs.remove('seller_data_id');
     await prefs.remove(Constant.kSetPrefEmail);
     await prefs.remove(Constant.kSetPrefPhone);
     await prefs.clear();

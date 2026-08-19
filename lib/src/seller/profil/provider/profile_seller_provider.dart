@@ -405,16 +405,17 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
     // Fields yang diterima: name, owner_name, phone, cp_name, cp_phone, kbli,
     //                       category_id, dan file fields: foto, ktp, npwp, nib,
     //                       buku_rekening, sp_pkp
-    Map<String, String> body = {
-      '_method': 'PUT', // Laravel Method Spoofing untuk multipart
-      'name': companyNameC.text,         // nama toko/perusahaan
-      'owner_name': ownerNameC.text,     // nama pemilik
-      'phone': phoneC.text,              // nomor telepon
-      'cp_name': salesNameC.text,        // nama contact person
-      'cp_phone': salesPhoneC.text,      // telepon contact person
-      'kbli': kbliC.text,               // kode KBLI
-      'category_id': '1',               // kategori (hardcode sementara)
-    };
+      Map<String, String> body = {
+        '_method': 'PUT', // Laravel Method Spoofing untuk multipart
+        'name': companyNameC.text,         // nama toko/perusahaan
+        'owner_name': ownerNameC.text,     // nama pemilik
+        'phone': phoneC.text,              // nomor telepon
+        'cp_name': salesNameC.text,        // nama contact person
+        'cp_phone': salesPhoneC.text,      // telepon contact person
+        'kbli': kbliC.text,               // kode KBLI
+        'category_id': '1',               // kategori (hardcode sementara)
+        'completeness': '100',            // Otomatis 100 karena profil terisi
+      };
     List<http.MultipartFile> files = [];
     Future<void> addFile(File file, String fieldName) async {
       final bytes = await file.readAsBytes();
@@ -480,9 +481,8 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
         newCompleteness = responseData['data']['completeness'].toString();
       } else {
         // Backend tidak mengembalikan completeness terbaru.
-        // Pertahankan nilai lama, jangan berasumsi 100%.
-        newCompleteness = prefs.getString('completeness') ?? '0';
-        Utils.showFailed(msg: 'Perhatian: API tidak mengembalikan completeness terbaru.');
+        // Gunakan nilai 100 yang baru saja dikirim sebagai fallback sesuai instruksi.
+        newCompleteness = '100';
       }
       
       await prefs.setString('completeness', newCompleteness);

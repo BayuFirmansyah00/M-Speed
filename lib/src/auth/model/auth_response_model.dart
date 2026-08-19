@@ -20,6 +20,8 @@ class AuthResponseModel {
   String? role;
   String? id;
   String? email;
+  String? sellerDataId;
+  String? completeness;
 
   AuthResponseModel({
     this.message,
@@ -45,6 +47,8 @@ class AuthResponseModel {
       role = json['data']['role']?.toString();
       id = json['data']['id']?.toString();
       email = json['data']['email']?.toString();
+      sellerDataId = json['data']['seller_data_id']?.toString();
+      completeness = json['data']['completeness']?.toString();
     }
   }
 
