@@ -8,6 +8,8 @@ import 'package:mspeed/src/seller/pesanan/view/pesanan_seller_view.dart';
 import 'package:mspeed/src/seller/produk/view/produk_seller_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../common/helper/constant.dart';
+import '../../../../common/component/custom_navigator.dart';
+import '../../profil/view/profile_edit_seller_view.dart';
 
 class _NavItem {
   final IconData icon;
@@ -30,6 +32,7 @@ class _SellerMainHomeState extends State<SellerMainHome> with SingleTickerProvid
   late AnimationController _indicatorController;
   late Animation<double> _indicatorAnim;
   int _prevIndex = 0;
+  bool isProfileIncomplete = false;
 
   static const _navItems = [
     _NavItem(icon: Icons.home_outlined,         activeIcon: Icons.home_rounded,            label: 'Beranda'),
@@ -47,6 +50,88 @@ class _SellerMainHomeState extends State<SellerMainHome> with SingleTickerProvid
     );
     if (widget.index != null) currentIndex = widget.index ?? 0;
     getData();
+    _checkCompleteness();
+  }
+
+  Future<void> _checkCompleteness() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    // Gunakan mekanisme SharedPreferences sesuai instruksi jika endpoint me belum ada
+    String? compStr = prefs.getString('completeness');
+    int completeness = int.tryParse(compStr ?? '0') ?? 0;
+
+    if (completeness < 100) {
+      setState(() {
+        isProfileIncomplete = true;
+      });
+      _showIncompleteProfileModal();
+    } else {
+      setState(() {
+        isProfileIncomplete = false;
+      });
+    }
+  }
+
+  void _showIncompleteProfileModal() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return WillPopScope(
+            onWillPop: () async => false, // Cegah ditutup dengan tombol back
+            child: Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.warning_rounded, color: Colors.orange, size: 60),
+                    const SizedBox(height: 16),
+                    const Text(
+                      "Lengkapi Profil Seller",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      "Untuk mulai menggunakan semua fitur Seller, Anda diwajibkan melengkapi profil terlebih dahulu.",
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Constant.primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: () {
+                          // Arahkan ke halaman edit profil
+                          Navigator.pop(context); // Tutup dialog
+                          _navigateToProfile();
+                        },
+                        child: const Text("Lengkapi Profil", style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    });
+  }
+
+  void _navigateToProfile() async {
+    // Navigasi ke Edit Profile dan tunggu kembali
+    await CusNav.nPush(context, const ProfileEditSellerView());
+    // Setelah kembali dari edit profile, cek ulang completeness
+    _checkCompleteness();
   }
 
   @override
@@ -65,6 +150,10 @@ class _SellerMainHomeState extends State<SellerMainHome> with SingleTickerProvid
   void jumpToProfile() => _onTap(roles == 'agen' ? 4 : 3);
 
   void _onTap(int index) {
+    if (isProfileIncomplete) {
+      _showIncompleteProfileModal();
+      return;
+    }
     if (index == currentIndex) return;
     _prevIndex = currentIndex;
     _indicatorAnim = Tween<double>(begin: _prevIndex.toDouble(), end: index.toDouble())
@@ -81,7 +170,14 @@ class _SellerMainHomeState extends State<SellerMainHome> with SingleTickerProvid
       body: SafeArea(
         bottom: false,
         child: WillPopScope(
-          onWillPop: () async { if (currentIndex != 0) { _onTap(0); return false; } return true; },
+          onWillPop: () async { 
+            if (isProfileIncomplete) {
+               _showIncompleteProfileModal();
+               return false;
+            }
+            if (currentIndex != 0) { _onTap(0); return false; } 
+            return true; 
+          },
           child: [
             HomeSellerView(jumpToPesanan: () => _onTap(2)),
             ProdukSellerView(),
@@ -127,10 +223,10 @@ class _SellerMainHomeState extends State<SellerMainHome> with SingleTickerProvid
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [primary, primary.withOpacity(0.82)],
+                        colors: [isProfileIncomplete ? Colors.grey : primary, isProfileIncomplete ? Colors.grey : primary.withOpacity(0.82)],
                       ),
                       borderRadius: BorderRadius.circular(22),
-                      boxShadow: [BoxShadow(color: primary.withOpacity(0.4), blurRadius: 14, offset: const Offset(0, 6))],
+                      boxShadow: [BoxShadow(color: isProfileIncomplete ? Colors.grey.withOpacity(0.4) : primary.withOpacity(0.4), blurRadius: 14, offset: const Offset(0, 6))],
                     ),
                   ),
                 ),

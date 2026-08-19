@@ -293,6 +293,7 @@ class ProfileSellerModelData {
   String? nibUrl;
   String? bukuRekeningUrl;
   String? spPkpUrl;
+  String? signatureUrl;
 
   ProfileSellerModelData({
     this.title,
@@ -306,6 +307,7 @@ class ProfileSellerModelData {
     this.nibUrl,
     this.bukuRekeningUrl,
     this.spPkpUrl,
+    this.signatureUrl,
   });
   ProfileSellerModelData.fromJson(Map<String, dynamic> json) {
     title = json['title']?.toString();
@@ -319,6 +321,7 @@ class ProfileSellerModelData {
     nibUrl = json['nibUrl']?.toString();
     bukuRekeningUrl = json['bukuRekeningUrl']?.toString();
     spPkpUrl = json['spPkpUrl']?.toString();
+    signatureUrl = json['signatureUrl']?.toString();
   }
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
@@ -339,6 +342,7 @@ class ProfileSellerModelData {
     data['nibUrl'] = nibUrl;
     data['bukuRekeningUrl'] = bukuRekeningUrl;
     data['spPkpUrl'] = spPkpUrl;
+    data['signatureUrl'] = signatureUrl;
     return data;
   }
 }

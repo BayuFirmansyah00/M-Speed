@@ -18,6 +18,7 @@ import 'package:mspeed/src/seller/profil/model/profile_seller_model.dart';
 import 'package:mspeed/src/seller/profil/model/provinsi_model.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mspeed/main.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:path/path.dart';
 
@@ -281,27 +282,101 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
     var phone = await prefs.getString(Constant.kSetPrefPhone) ?? '';
     var company = await prefs.getString(Constant.kSetPrefCompany) ?? 'Toko Saya';
 
-    // NOTE: Endpoint /seller-datas is currently NOT AVAILABLE in Laravel.
-    // Graceful degradation: Populate UI with local SharedPreferences data.
-    profileSellerModel = ProfileSellerModel.fromJson({
-      "data": {
-        "getSeller": {
-          "id": userId,
-          "name": company,
-          "owner_name": "$firstName $lastName",
-          "email": email,
-          "phone": phone,
-          "category": {"nama": "Umum"}
-        },
-        "fotoUrl": "",
-        "ktpUrl": "",
-        "npwpUrl": "",
-        "nibUrl": "",
-        "bukuRekeningUrl": "",
-        "spPkpUrl": ""
+    sellerDataId = await prefs.getString('seller_data_id') ?? userId;
+    var sellerAddressId = await prefs.getString('seller_address_id') ?? userId;
+
+    try {
+      final response = await get(Constant.BASE_API_FULL + '/seller-datas/$sellerDataId');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decoded = jsonDecode(response.body);
+        
+        // address dipanggil terpisah
+        String addressDetail = '';
+        String lat = '';
+        String lng = '';
+        String city = '';
+        String province = '';
+        try {
+          final addrResponse = await get(Constant.BASE_API_FULL + '/seller-addresses/$sellerAddressId');
+          if (addrResponse.statusCode == 200 || addrResponse.statusCode == 201) {
+             final addrDecoded = jsonDecode(addrResponse.body);
+             if (addrDecoded['data'] != null) {
+                addressDetail = addrDecoded['data']['detail'] ?? '';
+                lat = addrDecoded['data']['latitude'] ?? '';
+                lng = addrDecoded['data']['longitude'] ?? '';
+                if (addrDecoded['data']['city'] != null) {
+                  city = addrDecoded['data']['city']['name'] ?? '';
+                  province = addrDecoded['data']['city']['province'] ?? '';
+                }
+             }
+          }
+        } catch(e) {
+          debugPrint('Error fetch address: $e');
+        }
+
+        // Map response to model
+        final sellerData = decoded['data'];
+        profileSellerModel = ProfileSellerModel.fromJson({
+          "data": {
+            "getSeller": {
+              "id": sellerData['id']?.toString() ?? userId,
+              "name": sellerData['company_name'] ?? company,
+              "owner_name": sellerData['owner_name'] ?? "$firstName $lastName",
+              "email": sellerData['user']?['email'] ?? email,
+              "phone": sellerData['phone'] ?? phone,
+              "nama_cp": sellerData['cp_name'] ?? '',
+              "telp_cp": sellerData['cp_phone'] ?? '',
+              "kbli": sellerData['kbli'] ?? '',
+              "alamat": addressDetail,
+              "kota": city,
+              "prov": province,
+              "lattitude": lat,
+              "longitude": lng,
+              "no_ktp": "",
+              "no_npwp": "",
+              "no_nib": "",
+              "no_rek": "",
+              "an_rek": "",
+              "bank": "",
+              "kelengkapan_npwp": sellerData['completeness']?.toString() ?? "0",
+              "category": sellerData['category'] != null ? {"nama": sellerData['category']['name']} : {"nama": "Umum"}
+            },
+            "fotoUrl": sellerData['photo'] ?? "",
+            "signatureUrl": sellerData['signature_file'] ?? "",
+            "ktpUrl": "",
+            "npwpUrl": "",
+            "nibUrl": "",
+            "bukuRekeningUrl": "",
+            "spPkpUrl": ""
+          }
+        });
+        
+        await prefs.setString('completeness', sellerData['completeness']?.toString() ?? "0");
+      } else {
+        throw Exception('Failed to load profile');
       }
-    });
-    sellerDataId = userId;
+    } catch(e) {
+       debugPrint('Error API profile: $e');
+       // Fallback
+       profileSellerModel = ProfileSellerModel.fromJson({
+         "data": {
+           "getSeller": {
+             "id": userId,
+             "name": company,
+             "owner_name": "$firstName $lastName",
+             "email": email,
+             "phone": phone,
+             "category": {"nama": "Umum"}
+           },
+           "fotoUrl": "",
+           "ktpUrl": "",
+           "npwpUrl": "",
+           "nibUrl": "",
+           "bukuRekeningUrl": "",
+           "spPkpUrl": ""
+         }
+       });
+    }
     
     notifyListeners();
     if (withLoading) loading(false);
@@ -395,6 +470,23 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       Utils.showSuccess(msg: 'Sukses Edit Profile Seller');
+      
+      // Update completeness dari response API (jika tersedia)
+      final Map<String, dynamic> responseData = jsonDecode(response.body);
+      String newCompleteness = '0'; // default fallback
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      if (responseData['data'] != null && responseData['data']['completeness'] != null) {
+        newCompleteness = responseData['data']['completeness'].toString();
+      } else {
+        // Backend tidak mengembalikan completeness terbaru.
+        // Pertahankan nilai lama, jangan berasumsi 100%.
+        newCompleteness = prefs.getString('completeness') ?? '0';
+        Utils.showFailed(msg: 'Perhatian: API tidak mengembalikan completeness terbaru.');
+      }
+      
+      await prefs.setString('completeness', newCompleteness);
+      
       notifyListeners();
       if (withLoading) loading(false);
 
@@ -421,7 +513,52 @@ class ProfileSellerProvider extends BaseController with ChangeNotifier {
   }
 
   Future<bool> addTtdNonPkpSeller({bool withLoading = false}) async {
-    Utils.showFailed(msg: 'Fitur belum tersedia (BACKEND API NOT AVAILABLE)');
-    return false;
+    if (ttd == null) {
+      Utils.showFailed(msg: 'Tanda tangan belum dibuat');
+      return false;
+    }
+    if (sellerDataId == null) {
+      Utils.showFailed(msg: 'ID Profil Seller tidak ditemukan');
+      return false;
+    }
+
+    if (withLoading) loading(true);
+
+    try {
+      final bytes = await ttd!.readAsBytes();
+      
+      Map<String, String> body = {
+        '_method': 'PUT',
+      };
+      
+      List<http.MultipartFile> files = [
+        http.MultipartFile.fromBytes(
+          'signature_file',
+          bytes,
+          filename: 'signature.png',
+          contentType: MediaType('image', 'png'),
+        )
+      ];
+
+      final response = await post(
+        Constant.BASE_API_FULL + '/seller-datas/$sellerDataId',
+        body: body,
+        files: files,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Utils.showSuccess(msg: 'Tanda tangan berhasil disimpan');
+        await fetchProfile(NavigationService.navigatorKey.currentContext!, withLoading: false);
+        if (withLoading) loading(false);
+        return true;
+      } else {
+        throw Exception('Gagal menyimpan tanda tangan');
+      }
+    } catch (e) {
+      debugPrint('Error upload signature: $e');
+      Utils.showFailed(msg: 'Gagal menyimpan tanda tangan');
+      if (withLoading) loading(false);
+      return false;
+    }
   }
 }

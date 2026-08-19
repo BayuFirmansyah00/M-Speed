@@ -768,6 +768,28 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
                   },
                 ),
                 const SizedBox(height: 12),
+                // Signature Preview
+                if (p.profileSellerModel.data?.signatureUrl != null &&
+                    p.profileSellerModel.data!.signatureUrl!.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    width: double.infinity,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xffE2E8F0)),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: SafeNetworkImage(
+                        url: p.profileSellerModel.data!.signatureUrl!,
+                        width: double.infinity,
+                        height: 150,
+                        boxFit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
                 Row(
                   children: [
                     Expanded(

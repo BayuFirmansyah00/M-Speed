@@ -127,8 +127,9 @@ class AuthProvider extends BaseController with ChangeNotifier {
 
           log("ROLE USER: $role, IS_ADMIN: $isAdmin");
 
-          // Default completeness aman ke '100' agar seller baru bisa masuk beranda tanpa force-edit.
-          final completeness = '100'; 
+          // Cek completeness dari local storage, default ke 0 agar dashboard terkunci
+          // jika tidak ada. Idealnya backend mengirim completeness saat login.
+          final completeness = prefs.getString('completeness') ?? '0';
           
           usernameC.clear();
           passC.clear();
@@ -160,10 +161,7 @@ class AuthProvider extends BaseController with ChangeNotifier {
       case 'SELLER':
         debugPrint('NAVIGATING TO SELLER');
         CusNav.nPushReplace(context, SellerMainHome());
-        // Jika profil belum lengkap, arahkan ke halaman edit profil
-        if (completeness == '0') {
-          CusNav.nPush(context, ProfileEditSellerView());
-        }
+        // Note: Pengecekan completeness dan popup sekarang ditangani langsung di SellerMainHome
         break;
       case 'PENERIMA':
       case 'RECEIVER':
