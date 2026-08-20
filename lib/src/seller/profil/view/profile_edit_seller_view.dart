@@ -99,30 +99,54 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
   getData() async {
     log("GET DATA PROFIL");
     final p = context.read<ProfileSellerProvider>();
+    debugPrint('[TRACE PROVIDER INSTANCE] providerHash = ${identityHashCode(p)}');
     p.mapController = MapController();
     loading(true);
     await p.fetchKota();
+    debugPrint("Kota fetched");
     await p.fetchProvinsi();
-    // p.locationCoordinate = LatLng(-7.1144282, 112.4069792);
-    // await p.setMapLocation(PickedData(LatLng(-7.1144282, 112.4069792), ''));
+    debugPrint("Provinsi fetched");
+    // Fetch full profile data
+    await p.fetchProfile(context, withLoading: false);
+    debugPrint("Profile fetched");
+    // Initialize controllers with fetched data
     await p.initEditProfile();
+    debugPrint("Edit profile initialized");
     // p.geolocatorSubscription =
     //     Geolocator.getPositionStream().listen(await p.geolocatorListener);
+    
+    debugPrint('\n[DEBUG FINAL PROFILE]');
+    debugPrint('sellerDataId = ${p.sellerDataId}');
+    debugPrint('KTP = ${p.ktpNumberC.text}');
+    debugPrint('NPWP = ${p.npwpC.text}');
+    debugPrint('NIB = ${p.nibC.text}');
+    debugPrint('Bank = ${p.bankTypeC.text}');
+    debugPrint('No Rekening = ${p.bankNumberC.text}');
+    debugPrint('Atas Nama = ${p.bankNameC.text}\n');
+    
     setState(() {});
     loading(false);
   }
 
   @override
   void dispose() {
-    final p = context.read<ProfileSellerProvider>();
-    p.geolocatorSubscription.cancel();
-    // p.mapController = Completer();
+    context.read<ProfileSellerProvider>().resetProfileState();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final p = context.watch<ProfileSellerProvider>();
+    debugPrint('[TRACE PROVIDER INSTANCE] providerHash = ${identityHashCode(p)}');
+    
+    debugPrint('[TRACE UI FIELD]');
+    debugPrint('KTP controller = ${p.ktpNumberC.text}');
+    debugPrint('NPWP controller = ${p.npwpC.text}');
+    debugPrint('NIB controller = ${p.nibC.text}');
+    debugPrint('Bank controller = ${p.bankTypeC.text}');
+    debugPrint('Rekening controller = ${p.bankNumberC.text}');
+    debugPrint('AtasNama controller = ${p.bankNameC.text}');
+    
     PreferredSizeWidget appBar() {
       return AppBar(
         title: const Text(
@@ -136,7 +160,7 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () {
-            p.disposeEditProfile();
+            p.resetProfileState();
             CusNav.nPop(context);
           },
         ),
@@ -783,7 +807,33 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: SafeNetworkImage(
-                        url: p.profileSellerModel.data!.signatureUrl!,
+                        key: ValueKey(p.profileSellerModel.data!.signatureUrl!),
+                        url: p.profileSellerModel.data!.signatureUrl!.replaceAll('localhost', Constant.DOMAIN_LOCAL) + '?v=${DateTime.now().millisecondsSinceEpoch}',
+                        width: double.infinity,
+                        height: 150,
+                        boxFit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                // Bank Passbook Preview
+                if (p.profileSellerModel.data?.bukuRekeningUrl != null &&
+                    p.profileSellerModel.data!.bukuRekeningUrl!.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    width: double.infinity,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xffE2E8F0)),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: SafeNetworkImage(
+                        key: ValueKey(p.profileSellerModel.data!.bukuRekeningUrl!),
+                        url: p.profileSellerModel.data!.bukuRekeningUrl!
+                            .replaceAll('localhost', Constant.DOMAIN_LOCAL) +
+                            '?v=${DateTime.now().millisecondsSinceEpoch}',
                         width: double.infinity,
                         height: 150,
                         boxFit: BoxFit.contain,

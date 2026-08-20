@@ -18,6 +18,9 @@ import '../../../common/base/base_controller.dart';
 import '../../../common/base/base_response.dart';
 import '../../../common/helper/constant.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:mspeed/main.dart';
+import 'package:mspeed/src/seller/profil/provider/profile_seller_provider.dart';
 
 class AuthProvider extends BaseController with ChangeNotifier {
   TextEditingController usernameC = TextEditingController();
@@ -117,9 +120,20 @@ class AuthProvider extends BaseController with ChangeNotifier {
 
           await prefs.setString(Constant.kSetPrefId, userId);
           await prefs.setString(Constant.kSetPrefRoles, role);
+          debugPrint('\n================================');
+          debugPrint('[AUTH DEBUG] user_id = $userId');
+          debugPrint('[AUTH DEBUG] seller_data_id = ${authResponse.sellerDataId}');
+          debugPrint('[AUTH DEBUG] company_name = ${authResponse.email}'); // Company name isn't in AuthResponseModel right now
+          debugPrint('================================\n');
+          
           if (authResponse.sellerDataId != null && authResponse.sellerDataId!.isNotEmpty) {
-            await prefs.setString('seller_data_id', authResponse.sellerDataId!);
+            await prefs.setString('seller_data_id', authResponse.sellerDataId.toString());
+            debugPrint('[AUTH DEBUG] saved seller_data_id = ${authResponse.sellerDataId}');
+          } else {
+            await prefs.remove('seller_data_id');
+            debugPrint('[AUTH DEBUG] saved seller_data_id = NULL (removed from prefs)');
           }
+
           if (authResponse.completeness != null) {
             await prefs.setString('completeness', authResponse.completeness!);
           }
@@ -225,6 +239,15 @@ class AuthProvider extends BaseController with ChangeNotifier {
     await prefs.remove(Constant.kSetPrefEmail);
     await prefs.remove(Constant.kSetPrefPhone);
     await prefs.clear();
+
+    final context = NavigationService.navigatorKey.currentContext;
+    if (context != null) {
+      try {
+        Provider.of<ProfileSellerProvider>(context, listen: false).resetProfileState();
+      } catch (e) {
+        debugPrint('Gagal reset ProfileSellerProvider saat logout: $e');
+      }
+    }
 
     loading(false);
   }

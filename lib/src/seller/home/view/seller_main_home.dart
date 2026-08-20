@@ -63,68 +63,11 @@ class _SellerMainHomeState extends State<SellerMainHome> with SingleTickerProvid
       setState(() {
         isProfileIncomplete = true;
       });
-      _showIncompleteProfileModal();
     } else {
       setState(() {
         isProfileIncomplete = false;
       });
     }
-  }
-
-  void _showIncompleteProfileModal() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return WillPopScope(
-            onWillPop: () async => false, // Cegah ditutup dengan tombol back
-            child: Dialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.warning_rounded, color: Colors.orange, size: 60),
-                    const SizedBox(height: 16),
-                    const Text(
-                      "Lengkapi Profil Seller",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      "Untuk mulai menggunakan semua fitur Seller, Anda diwajibkan melengkapi profil terlebih dahulu.",
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Constant.primaryColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: () {
-                          // Arahkan ke halaman edit profil
-                          Navigator.pop(context); // Tutup dialog
-                          _navigateToProfile();
-                        },
-                        child: const Text("Lengkapi Profil", style: TextStyle(fontWeight: FontWeight.bold)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      );
-    });
   }
 
   void _navigateToProfile() async {
@@ -151,7 +94,6 @@ class _SellerMainHomeState extends State<SellerMainHome> with SingleTickerProvid
 
   void _onTap(int index) {
     if (isProfileIncomplete) {
-      _showIncompleteProfileModal();
       return;
     }
     if (index == currentIndex) return;
@@ -164,6 +106,9 @@ class _SellerMainHomeState extends State<SellerMainHome> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
+    final bottomPad = Platform.isIOS ? 20.0 : 12.0;
+    final navHeight = 68.0 + bottomPad;
+
     return Scaffold(
       extendBody: true,
       bottomNavigationBar: _buildNav(),
@@ -172,18 +117,83 @@ class _SellerMainHomeState extends State<SellerMainHome> with SingleTickerProvid
         child: WillPopScope(
           onWillPop: () async { 
             if (isProfileIncomplete) {
-               _showIncompleteProfileModal();
                return false;
             }
             if (currentIndex != 0) { _onTap(0); return false; } 
             return true; 
           },
-          child: [
-            HomeSellerView(jumpToPesanan: () => _onTap(2)),
-            ProdukSellerView(),
-            PesananSellerView(),
-            NegoSellerView(),
-          ][currentIndex],
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: [
+                  HomeSellerView(jumpToPesanan: () => _onTap(2)),
+                  ProdukSellerView(),
+                  PesananSellerView(),
+                  NegoSellerView(),
+                ][currentIndex],
+              ),
+              if (isProfileIncomplete)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(24),
+                        topRight: Radius.circular(24),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, -2),
+                        ),
+                      ],
+                    ),
+                    padding: EdgeInsets.only(
+                      top: 24,
+                      left: 24,
+                      right: 24,
+                      bottom: navHeight + 12,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.warning_rounded, color: Colors.orange, size: 40),
+                        const SizedBox(height: 12),
+                        const Text(
+                          "Lengkapi Profil Seller",
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          "Untuk mulai menggunakan semua fitur Seller, Anda diwajibkan melengkapi profil terlebih dahulu.",
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            onPressed: _navigateToProfile,
+                            child: const Text("Lengkapi Profil", style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
