@@ -321,13 +321,16 @@ class _ProdukSellerViewState extends BaseState<ProdukSellerView> {
                     child: CustomButton.mainButton(
                       'Ubah',
                       () async {
-                        await CusNav.nPush(
+                        final result = await CusNav.nPush(
                           context,
                           ProdukAddSellerView(
                             isEdit: true,
                             productId: data.id?.toString(),
                           ),
                         );
+                        if (result == true) {
+                          refresh();
+                        }
                       },
                       contentPadding: const EdgeInsets.symmetric(vertical: 8),
                       color: _kPrimary,

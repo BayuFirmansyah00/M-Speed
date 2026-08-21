@@ -46,22 +46,17 @@ class SellerHomeProvider extends BaseController with ChangeNotifier {
   Future<void> fetchHome({bool withLoading = false}) async {
     if (withLoading) loading(true);
 
-    // GET /api/dashboard
-    final response = await get(Constant.BASE_API_FULL + '/dashboard');
+    // WAIT BACKEND: Dashboard API belum tersedia di MSpeed.
+    // Jangan request ke /dashboard untuk mencegah error 404/500
+    
+    // Simulate empty success
+    setHomeModel = HomeModel(
+      data: null,
+      message: 'Dashboard belum tersedia'
+    );
+    notifyListeners();
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      setHomeModel = HomeModel.fromJson(jsonDecode(response.body));
-      notifyListeners();
-      if (withLoading) loading(false);
-    } else {
-      final decoded = jsonDecode(response.body);
-      final message =
-          decoded['message'] ??
-          decoded['messages']?['error'] ??
-          'Terjadi kesalahan';
-      loading(false);
-      throw Exception(message);
-    }
+    if (withLoading) loading(false);
   }
 
   BuyerProductModel _buyerProductModel = BuyerProductModel();

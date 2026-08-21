@@ -8,6 +8,7 @@ import 'package:mspeed/generated/assets.dart';
 import 'package:mspeed/src/seller/produk/provider/produk_seller_provider.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
+import 'package:mspeed/src/seller/produk/view/produk_add_seller_view.dart';
 
 class ProdukDetailSellerView extends StatefulWidget {
   ProdukDetailSellerView({super.key, required this.productId});
@@ -189,7 +190,20 @@ class _ProdukDetailSellerViewState extends BaseState<ProdukDetailSellerView> {
         backgroundColor: Color(0xffF6F6F6),
         splashColor: Color(0xffF6F6F6),
         foregroundColor: Constant.greenColor,
-        onPressed: () async {},
+        onPressed: () async {
+          final result = await CusNav.nPush(
+            context,
+            ProdukAddSellerView(
+              isEdit: true,
+              productId: widget.productId,
+            ),
+          );
+          if (result == true) {
+            context
+                .read<ProdukSellerProvider>()
+                .fetchDetailProduct(productId: widget.productId, withLoading: true);
+          }
+        },
         label: Text(
           "Ubah Produk",
           style: TextStyle(color: Constant.greenColor),

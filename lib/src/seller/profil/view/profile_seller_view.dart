@@ -67,7 +67,8 @@ class _ProfileSellerViewState extends BaseState<ProfileSellerView> {
     }
 
     Widget header() {
-      final data = p.profileSellerModel.data?.getSeller;
+      final profile = p.profileSellerModel.data?.profile;
+      final email = p.profileSellerModel.data?.email;
       return Container(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
         decoration: const BoxDecoration(
@@ -94,7 +95,7 @@ class _ProfileSellerViewState extends BaseState<ProfileSellerView> {
                 child: SafeNetworkImage(
                   width: 100,
                   height: 100,
-                  url: p.profileSellerModel.data?.fotoUrl ?? '-',
+                  url: profile?.photoUrl ?? '-',
                   boxFit: BoxFit.cover,
                   errorBuilder: ClipRRect(
                     borderRadius: BorderRadius.circular(120),
@@ -105,7 +106,7 @@ class _ProfileSellerViewState extends BaseState<ProfileSellerView> {
             ),
             Constant.xSizedBox16,
             Text(
-              data?.nama ?? '-',
+              profile?.companyName ?? profile?.name ?? '-',
               style: const TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 20,
@@ -114,7 +115,7 @@ class _ProfileSellerViewState extends BaseState<ProfileSellerView> {
             ),
             Constant.xSizedBox4,
             Text(
-              data?.email ?? '-',
+              email ?? '-',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.white.withOpacity(0.9),
@@ -183,7 +184,7 @@ class _ProfileSellerViewState extends BaseState<ProfileSellerView> {
     }
 
     Widget contact() {
-      final data = p.profileSellerModel.data?.getSeller;
+      final profile = p.profileSellerModel.data?.profile;
       return Container(
         margin: const EdgeInsets.fromLTRB(20, 24, 20, 0),
         decoration: BoxDecoration(
@@ -213,22 +214,22 @@ class _ProfileSellerViewState extends BaseState<ProfileSellerView> {
             ),
           ),
           children: [
-            contentItem(title: 'Nama Pemilik', description: data?.namaPemilik ?? '-', isBoxDecoration: true),
+            contentItem(title: 'Nama Pemilik', description: profile?.ownerName ?? '-', isBoxDecoration: true),
             Constant.xSizedBox8,
-            contentItem(title: 'Nama Contact Person', description: data?.namaCp ?? '-'),
+            contentItem(title: 'Nama Contact Person', description: profile?.cpName ?? '-'),
             Constant.xSizedBox8,
-            contentItem(title: 'Telp Contact Person', description: data?.telpCp ?? '-'),
+            contentItem(title: 'Telp Contact Person', description: profile?.cpPhone ?? '-'),
             Constant.xSizedBox8,
-            contentItem(title: 'No Telepon Perusahaan', description: data?.telp ?? '-'),
+            contentItem(title: 'No Telepon Perusahaan', description: profile?.phone ?? '-'),
             Constant.xSizedBox8,
-            contentItem(title: 'KBLI', description: data?.kbli ?? '-'),
+            contentItem(title: 'KBLI', description: profile?.kbli ?? '-'),
           ],
         ),
       );
     }
 
     Widget alamat() {
-      final data = p.profileSellerModel.data?.getSeller;
+      final profile = p.profileSellerModel.data?.profile;
       return Container(
         margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
         decoration: BoxDecoration(
@@ -258,13 +259,13 @@ class _ProfileSellerViewState extends BaseState<ProfileSellerView> {
             ),
           ),
           children: [
-            contentItem(title: 'Alamat Perusahaan', description: data?.alamat ?? '-', isBoxDecoration: true),
+            contentItem(title: 'Alamat Perusahaan', description: profile?.detailAddress ?? '-', isBoxDecoration: true),
             Constant.xSizedBox8,
-            contentItem(title: 'Kota', description: data?.kota ?? '-'),
+            contentItem(title: 'Kota', description: profile?.cityName ?? '-'),
             Constant.xSizedBox8,
-            contentItem(title: 'Lokasi', description: data?.lokasi ?? '-'),
+            contentItem(title: 'Provinsi', description: profile?.provinceName ?? '-'),
             Constant.xSizedBox8,
-            contentItem(title: 'Koordinat', description: '${data?.lattitude ?? '-'}, ${data?.longitude ?? '-'}'),
+            contentItem(title: 'Koordinat', description: '${profile?.latitude ?? '-'}, ${profile?.longitude ?? '-'}'),
             Constant.xSizedBox8,
           ],
         ),
@@ -287,8 +288,31 @@ class _ProfileSellerViewState extends BaseState<ProfileSellerView> {
     }
 
     Widget lain() {
-      final data = p.profileSellerModel.data?.getSeller;
-      final attachment = p.profileSellerModel.data;
+      final bank = (p.profileSellerModel.data?.bankAccounts != null && p.profileSellerModel.data!.bankAccounts!.isNotEmpty)
+          ? p.profileSellerModel.data!.bankAccounts!.first
+          : null;
+      final legalities = p.profileSellerModel.data?.legalities ?? [];
+      
+      String npwp = '-'; String npwpUrl = '';
+      String ktp = '-'; String ktpUrl = '';
+      String nib = '-'; String nibUrl = '';
+      for (var leg in legalities) {
+        final type = leg.type?.toUpperCase() ?? '';
+        if (type == 'NPWP') {
+          npwp = leg.legalityNum ?? '-';
+          npwpUrl = leg.fileUrl ?? '';
+        } else if (type == 'KTP') {
+          ktp = leg.legalityNum ?? '-';
+          ktpUrl = leg.fileUrl ?? '';
+        } else if (type == 'NIB') {
+          nib = leg.legalityNum ?? '-';
+          nibUrl = leg.fileUrl ?? '';
+        }
+      }
+      
+      final bankInfo = bank != null ? '${bank.bankName ?? ''} - ${bank.rekNum ?? ''}' : '-';
+      final passbookUrl = bank?.passbookImgUrl ?? '';
+
       return Container(
         margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
         decoration: BoxDecoration(
@@ -319,23 +343,22 @@ class _ProfileSellerViewState extends BaseState<ProfileSellerView> {
           ),
           expandedCrossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            contentItem(title: 'No. NPWP', description: data?.noNpwp ?? '-', isBoxDecoration: true),
+            contentItem(title: 'No. NPWP', description: npwp, isBoxDecoration: true),
             Constant.xSizedBox8,
-            contentItem(title: 'No. KTP / Identitas', description: data?.ktp ?? '-'),
+            contentItem(title: 'No. KTP / Identitas', description: ktp),
             Constant.xSizedBox8,
-            contentItem(title: 'Bank Account', description: data?.bank ?? '-'),
+            contentItem(title: 'No. NIB', description: nib),
             Constant.xSizedBox8,
-            if (attachment?.npwpUrl != null) textDownload(text: 'NPWP', url: attachment?.npwpUrl ?? '-'),
-            if (attachment?.npwpUrl != null) Constant.xSizedBox8,
-            if (attachment?.bukuRekeningUrl != null)
-              textDownload(text: 'Buku Rekening', url: attachment?.bukuRekeningUrl ?? '-'),
-            if (attachment?.bukuRekeningUrl != null) Constant.xSizedBox8,
-            if (attachment?.ktpUrl != null)
-              textDownload(text: 'No. KTP / Identitas', url: attachment?.ktpUrl ?? '-'),
-            if (attachment?.ktpUrl != null) Constant.xSizedBox8,
-            if (attachment?.spPkpUrl != null)
-              textDownload(text: 'SP PKP', url: attachment?.spPkpUrl ?? '-'),
-            if (attachment?.spPkpUrl != null) Constant.xSizedBox24,
+            contentItem(title: 'Bank Account', description: bankInfo),
+            Constant.xSizedBox8,
+            if (npwpUrl.isNotEmpty) textDownload(text: 'NPWP', url: npwpUrl),
+            if (npwpUrl.isNotEmpty) Constant.xSizedBox8,
+            if (ktpUrl.isNotEmpty) textDownload(text: 'KTP / Identitas', url: ktpUrl),
+            if (ktpUrl.isNotEmpty) Constant.xSizedBox8,
+            if (nibUrl.isNotEmpty) textDownload(text: 'NIB', url: nibUrl),
+            if (nibUrl.isNotEmpty) Constant.xSizedBox8,
+            if (passbookUrl.isNotEmpty) textDownload(text: 'Buku Rekening', url: passbookUrl),
+            if (passbookUrl.isNotEmpty) Constant.xSizedBox24,
           ],
         ),
       );

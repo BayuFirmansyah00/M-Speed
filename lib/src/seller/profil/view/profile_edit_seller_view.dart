@@ -793,8 +793,8 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
                 ),
                 const SizedBox(height: 12),
                 // Signature Preview
-                if (p.profileSellerModel.data?.signatureUrl != null &&
-                    p.profileSellerModel.data!.signatureUrl!.isNotEmpty)
+                if (p.profileSellerModel.data?.profile?.signatureUrl != null &&
+                    p.profileSellerModel.data!.profile!.signatureUrl!.isNotEmpty)
                   Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     width: double.infinity,
@@ -807,8 +807,8 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: SafeNetworkImage(
-                        key: ValueKey(p.profileSellerModel.data!.signatureUrl!),
-                        url: p.profileSellerModel.data!.signatureUrl!.replaceAll('localhost', Constant.DOMAIN_LOCAL) + '?v=${DateTime.now().millisecondsSinceEpoch}',
+                        key: ValueKey(p.profileSellerModel.data!.profile!.signatureUrl!),
+                        url: p.profileSellerModel.data!.profile!.signatureUrl!.replaceAll('localhost', Constant.DOMAIN_LOCAL) + '?v=${DateTime.now().millisecondsSinceEpoch}',
                         width: double.infinity,
                         height: 150,
                         boxFit: BoxFit.contain,
@@ -816,8 +816,10 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
                     ),
                   ),
                 // Bank Passbook Preview
-                if (p.profileSellerModel.data?.bukuRekeningUrl != null &&
-                    p.profileSellerModel.data!.bukuRekeningUrl!.isNotEmpty)
+                if (p.profileSellerModel.data?.bankAccounts != null &&
+                    p.profileSellerModel.data!.bankAccounts!.isNotEmpty &&
+                    p.profileSellerModel.data!.bankAccounts!.first.passbookImgUrl != null &&
+                    p.profileSellerModel.data!.bankAccounts!.first.passbookImgUrl!.isNotEmpty)
                   Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     width: double.infinity,
@@ -830,8 +832,8 @@ class _ProfileEditSellerViewState extends BaseState<ProfileEditSellerView> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: SafeNetworkImage(
-                        key: ValueKey(p.profileSellerModel.data!.bukuRekeningUrl!),
-                        url: p.profileSellerModel.data!.bukuRekeningUrl!
+                        key: ValueKey(p.profileSellerModel.data!.bankAccounts!.first.passbookImgUrl!),
+                        url: p.profileSellerModel.data!.bankAccounts!.first.passbookImgUrl!
                             .replaceAll('localhost', Constant.DOMAIN_LOCAL) +
                             '?v=${DateTime.now().millisecondsSinceEpoch}',
                         width: double.infinity,

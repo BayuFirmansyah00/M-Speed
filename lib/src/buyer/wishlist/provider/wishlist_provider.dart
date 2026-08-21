@@ -108,8 +108,8 @@ class WishlistProvider extends BaseController with ChangeNotifier {
       {bool withLoading = false, required String sellerId}) async {
     if (withLoading) loading(true);
 
-    // GET /api/seller-datas/{id} — detail seller berdasarkan ID
-    final response = await get(Constant.BASE_API_FULL + '/seller-datas/$sellerId');
+    // GET /api/buyer/v1/buyer/sellers/{id} — detail seller berdasarkan ID (NOTE: GAP di backend MSpeed)
+    final response = await get(Constant.BASE_API_FULL + '/buyer/v1/buyer/sellers/$sellerId');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       detailSellerBuyer = DetailSellerBuyer.fromJson(jsonDecode(response.body));

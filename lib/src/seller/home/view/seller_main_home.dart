@@ -10,6 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../common/helper/constant.dart';
 import '../../../../common/component/custom_navigator.dart';
 import '../../profil/view/profile_edit_seller_view.dart';
+import 'package:provider/provider.dart';
+import '../../profil/provider/profile_seller_provider.dart';
 
 class _NavItem {
   final IconData icon;
@@ -93,7 +95,15 @@ class _SellerMainHomeState extends State<SellerMainHome> with SingleTickerProvid
   void jumpToProfile() => _onTap(roles == 'agen' ? 4 : 3);
 
   void _onTap(int index) {
-    if (isProfileIncomplete) {
+    bool localIncomplete = isProfileIncomplete;
+    final prov = context.read<ProfileSellerProvider>();
+    final provCompStr = prov.profileSellerModel.data?.profile?.completeness;
+    if (provCompStr != null) {
+      final comp = int.tryParse(provCompStr.toString()) ?? 0;
+      if (comp >= 100) localIncomplete = false;
+    }
+
+    if (localIncomplete) {
       return;
     }
     if (index == currentIndex) return;
@@ -106,17 +116,28 @@ class _SellerMainHomeState extends State<SellerMainHome> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
+    final prov = context.watch<ProfileSellerProvider>();
+    final provCompStr = prov.profileSellerModel.data?.profile?.completeness;
+    
+    bool dynamicIsProfileIncomplete = isProfileIncomplete;
+    if (provCompStr != null) {
+      final comp = int.tryParse(provCompStr.toString()) ?? 0;
+      if (comp >= 100) {
+        dynamicIsProfileIncomplete = false;
+      }
+    }
+
     final bottomPad = Platform.isIOS ? 20.0 : 12.0;
     final navHeight = 68.0 + bottomPad;
 
     return Scaffold(
       extendBody: true,
-      bottomNavigationBar: _buildNav(),
+      bottomNavigationBar: _buildNav(dynamicIsProfileIncomplete),
       body: SafeArea(
         bottom: false,
         child: WillPopScope(
           onWillPop: () async { 
-            if (isProfileIncomplete) {
+            if (dynamicIsProfileIncomplete) {
                return false;
             }
             if (currentIndex != 0) { _onTap(0); return false; } 
@@ -132,7 +153,7 @@ class _SellerMainHomeState extends State<SellerMainHome> with SingleTickerProvid
                   NegoSellerView(),
                 ][currentIndex],
               ),
-              if (isProfileIncomplete)
+              if (dynamicIsProfileIncomplete)
                 Positioned(
                   left: 0,
                   right: 0,
@@ -199,7 +220,7 @@ class _SellerMainHomeState extends State<SellerMainHome> with SingleTickerProvid
     );
   }
 
-  Widget _buildNav() {
+  Widget _buildNav(bool dynamicIsProfileIncomplete) {
     final primary = const Color(0xff059669); // Emerald Green
     final bottomPad = Platform.isIOS ? 20.0 : 12.0;
     return Padding(
@@ -233,10 +254,10 @@ class _SellerMainHomeState extends State<SellerMainHome> with SingleTickerProvid
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [isProfileIncomplete ? Colors.grey : primary, isProfileIncomplete ? Colors.grey : primary.withOpacity(0.82)],
+                        colors: [dynamicIsProfileIncomplete ? Colors.grey : primary, dynamicIsProfileIncomplete ? Colors.grey : primary.withOpacity(0.82)],
                       ),
                       borderRadius: BorderRadius.circular(22),
-                      boxShadow: [BoxShadow(color: isProfileIncomplete ? Colors.grey.withOpacity(0.4) : primary.withOpacity(0.4), blurRadius: 14, offset: const Offset(0, 6))],
+                      boxShadow: [BoxShadow(color: dynamicIsProfileIncomplete ? Colors.grey.withOpacity(0.4) : primary.withOpacity(0.4), blurRadius: 14, offset: const Offset(0, 6))],
                     ),
                   ),
                 ),

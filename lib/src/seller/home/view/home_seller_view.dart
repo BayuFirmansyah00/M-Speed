@@ -1105,7 +1105,7 @@ class _HomeSellerViewState extends BaseState<HomeSellerView> {
     }
 
     Widget customHeader() {
-      final data = profileP.profileSellerModel.data?.getSeller;
+      final data = profileP.profileSellerModel.data?.profile;
       return Container(
         color: Colors.white,
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
@@ -1127,7 +1127,7 @@ class _HomeSellerViewState extends BaseState<HomeSellerView> {
                     child: SafeNetworkImage(
                       width: 48,
                       height: 48,
-                      url: profileP.profileSellerModel.data?.fotoUrl ?? '',
+                      url: data?.photoUrl ?? '',
                       boxFit: BoxFit.cover,
                       errorBuilder: Image.asset(
                         Assets.iconsIcSellerProfile,
@@ -1153,7 +1153,7 @@ class _HomeSellerViewState extends BaseState<HomeSellerView> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        data?.nama ?? 'Seller',
+                        data?.companyName ?? data?.name ?? '-',
                         style: const TextStyle(
                           color: Color(0xff100629),
                           fontSize: 18,
@@ -1166,62 +1166,8 @@ class _HomeSellerViewState extends BaseState<HomeSellerView> {
                     ],
                   ),
                 ),
-                IconButton(
-                  style: IconButton.styleFrom(
-                    backgroundColor: const Color(0xffF5F6FA),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => NotificationSellerView(),
-                      ),
-                    );
-                  },
-                  icon: Badge(
-                    isLabelVisible: notifP.unreadCount.toString() != '0',
-                    label: Text(notifP.unreadCount.toString()),
-                    offset: const Offset(6, -2),
-                    backgroundColor: const Color(0xffF59E0B),
-                    child: const Icon(
-                      Icons.notifications_outlined,
-                      color: Color(0xff100629),
-                      size: 22,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                IconButton(
-                  style: IconButton.styleFrom(
-                    backgroundColor: const Color(0xffF5F6FA),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ChatListSellerView(),
-                      ),
-                    );
-                  },
-                  icon: Badge(
-                    isLabelVisible: true,
-                    label: const Text("2"),
-                    offset: const Offset(6, -2),
-                    backgroundColor: const Color(0xffF59E0B),
-                    child: const Icon(
-                      Icons.chat_bubble_outline_rounded,
-                      color: Color(0xff100629),
-                      size: 20,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
+                // WAIT BACKEND: Notifikasi & Chat belum tersedia di MSpeed
+                // Icon Notifikasi dan Chat disembunyikan sementara
                 IconButton(
                   style: IconButton.styleFrom(
                     backgroundColor: const Color(0xffF5F6FA),
@@ -1245,67 +1191,58 @@ class _HomeSellerViewState extends BaseState<HomeSellerView> {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                const Text(
-                  'Ringkasan Bisnis',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xff100629),
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xffF0FDF4),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xffBBF7D0)),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      isDense: true,
-                      value: p.selectedPeriodeData,
-                      icon: const Padding(
-                        padding: EdgeInsets.only(left: 4),
-                        child: Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          color: Color(0xff059669),
-                          size: 18,
-                        ),
-                      ),
-                      style: const TextStyle(
-                        color: Color(0xff059669),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      dropdownColor: Colors.white,
-                      items:
-                          p.periodeData
-                              .map(
-                                (e) =>
-                                    DropdownMenuItem(value: e, child: Text(e)),
-                              )
-                              .toList(),
-                      onChanged: (v) async {
-                        if (v == null) return;
-                        if (v == 'Harian') await harian();
-                        if (v == 'Bulanan') await bulanan();
-                        if (v == 'Tahunan') await tahunan();
-                        p.selectedPeriodeData = v;
-                        await getData();
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              // Ringkasan Bisnis dropdown removed because dashboard is not available
           ],
+        ),
+      );
+    }
+
+    Widget _buildShortcutButton({
+      required IconData icon,
+      required String label,
+      required Color color,
+      required VoidCallback onTap,
+    }) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: MediaQuery.of(context).size.width / 2 - 28,
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xffE2E8F0)),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 28),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xff100629),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -1323,12 +1260,65 @@ class _HomeSellerViewState extends BaseState<HomeSellerView> {
               physics: const AlwaysScrollableScrollPhysics(),
               children: [
                 customHeader(),
-                headerInfo(),
-                headerInfo2(),
-                Constant.xSizedBox12,
-                productSellingGraph(),
-                mostBuyedProducts(),
-                newestOrder(),
+                const SizedBox(height: 32),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    'Kelola Toko Anda',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xff100629),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    children: [
+                      _buildShortcutButton(
+                        icon: Icons.inventory_2_rounded,
+                        label: 'Produk',
+                        color: const Color(0xff059669),
+                        onTap: () {
+                          // Jump to Produk is handled by BottomNav in Main, but here we can just show a toast or wait, the tab index logic is managed by SellerMainHome
+                          // For simplicity, do nothing or show toast
+                          Utils.showFailed(msg: 'Gunakan navigasi bawah untuk membuka Produk');
+                        }
+                      ),
+                      _buildShortcutButton(
+                        icon: Icons.receipt_long_rounded,
+                        label: 'Pesanan',
+                        color: const Color(0xffF59E0B),
+                        onTap: widget.jumpToPesanan,
+                      ),
+                      _buildShortcutButton(
+                        icon: Icons.handshake_rounded,
+                        label: 'Negosiasi',
+                        color: const Color(0xff3B82F6),
+                        onTap: () {
+                          Utils.showFailed(msg: 'Gunakan navigasi bawah untuk membuka Negosiasi');
+                        }
+                      ),
+                      _buildShortcutButton(
+                        icon: Icons.person_rounded,
+                        label: 'Profil',
+                        color: const Color(0xff8B5CF6),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ProfileSellerView(),
+                            ),
+                          );
+                        }
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 80),
               ],
             ),
