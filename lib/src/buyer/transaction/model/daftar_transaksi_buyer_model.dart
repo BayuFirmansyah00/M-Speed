@@ -40,13 +40,13 @@ class DaftarTransaksiBuyerModelDataDetail {
   });
 
   DaftarTransaksiBuyerModelDataDetail.fromJson(Map<String, dynamic> json) {
-    if (json.containsKey('product_snapshot')) {
-      // Format Baru (Laravel REST API - ChildOrder)
+    if (json.containsKey('product_name') || json.containsKey('product_snapshot')) {
+      // Format Baru (Laravel REST API - BuyerTransactionResource / ChildOrder)
       ID = json['id']?.toString();
-      nama = json['product_snapshot']?['name']?.toString();
-      harga = json['product_snapshot']?['price']?.toString();
-      qty = json['quantity']?.toString();
-      hargaAkhir = json['subtotal']?.toString();
+      nama = json['product_name']?.toString() ?? json['product_snapshot']?['name']?.toString();
+      harga = json['initial_price']?.toString() ?? json['product_snapshot']?['price']?.toString();
+      qty = json['qty']?.toString() ?? json['quantity']?.toString();
+      hargaAkhir = json['final_price']?.toString() ?? json['subtotal']?.toString();
       IDOrder = json['parent_order_id']?.toString();
       foto = json['product_snapshot']?['photo']?.toString() ?? json['product_snapshot']?['image']?.toString();
       deskripsi = json['product_snapshot']?['description']?.toString();
@@ -172,21 +172,21 @@ class DaftarTransaksiBuyerModelData {
   });
 
   DaftarTransaksiBuyerModelData.fromJson(Map<String, dynamic> json) {
-    if (json.containsKey('order_number')) {
-      // Format Baru (Laravel REST API - ParentOrderResource)
+    if (json.containsKey('order_num') || json.containsKey('order_number')) {
+      // Format Baru (Laravel REST API - BuyerTransactionResource / ParentOrderResource)
       ID = json['id']?.toString();
       Created = json['created_at']?.toString();
       Updated = json['updated_at']?.toString();
-      nomorOrder = json['order_number']?.toString();
-      nomorInvoice = json['receipt_number']?.toString();
+      nomorOrder = json['order_num']?.toString() ?? json['order_number']?.toString();
+      nomorInvoice = json['receipt_num']?.toString() ?? json['receipt_number']?.toString();
       status = json['payment_status']?.toString(); // TODO: Mapped ke status UI
       
       ongkir = json['shipping']?['cost']?.toString() ?? "0";
       estPengiriman = json['shipping']?['estimated_start']?.toString();
       estPengiriman2 = json['shipping']?['estimated_end']?.toString();
       
-      SellerID = json['seller_snapshot']?['id']?.toString();
-      SellerNama = json['seller_snapshot']?['name']?.toString();
+      SellerID = json['seller']?['id']?.toString() ?? json['seller_snapshot']?['id']?.toString();
+      SellerNama = json['seller']?['company_name']?.toString() ?? json['seller_snapshot']?['name']?.toString();
       
       BuyerID = json['actors_snapshot']?['buyer']?['id']?.toString();
       
@@ -199,7 +199,14 @@ class DaftarTransaksiBuyerModelData {
       keuanganID = json['actors_snapshot']?['finance']?['id']?.toString();
       keuanganStr = json['actors_snapshot']?['finance']?['name']?.toString();
 
-      if (json['children'] != null) {
+      if (json['items'] != null) {
+        final v = json['items'];
+        final arr0 = <DaftarTransaksiBuyerModelDataDetail>[];
+        v.forEach((v) {
+          arr0.add(DaftarTransaksiBuyerModelDataDetail.fromJson(v));
+        });
+        detail = arr0;
+      } else if (json['children'] != null) {
         final v = json['children'];
         final arr0 = <DaftarTransaksiBuyerModelDataDetail>[];
         v.forEach((v) {

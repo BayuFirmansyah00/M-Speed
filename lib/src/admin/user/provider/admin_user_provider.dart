@@ -27,7 +27,9 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
 
       // Simpan token admin asli sebelum impersonate
       final currentToken = prefs.getString(Constant.kSetPrefToken) ?? '';
+      final currentEmail = prefs.getString(Constant.kSetPrefEmail) ?? '';
       await prefs.setString('admin_original_token', currentToken);
+      await prefs.setString('admin_original_email', currentEmail);
 
       // POST /api/aimpersonate/{id} — Laravel Sanctum Impersonate
       final response = await ApiClient().dio.post('/aimpersonate/$id');
@@ -111,8 +113,15 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
         }
       }
       
+      final adminEmail = prefs.getString('admin_original_email') ?? '';
+      if (adminEmail.isNotEmpty) {
+        await prefs.setString(Constant.kSetPrefEmail, adminEmail);
+      }
+      await prefs.setString(Constant.kSetPrefId, adminId);
+      
       await prefs.remove('admin_original_token');
       await prefs.remove('admin_original_id');
+      await prefs.remove('admin_original_email');
 
       // Set kembali ke role admin
       await prefs.setString(Constant.kSetPrefRoles, 'ADMIN');
@@ -174,7 +183,7 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
               email: item['email']?.toString() ?? '',
               id: item['id']?.toString() ?? '',
               alamat: item['full_address']?.toString() ?? '',
-              status: item['status']?.toString() == 'active' ? '1' : '0',
+              status: item['status']?.toString() == 'active' ? '1' : '0', telp: uData['phone']?.toString() ?? '',
             ),
           );
         }
@@ -365,7 +374,7 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
               email: item['email']?.toString() ?? '',
               id: item['id']?.toString() ?? '',
               alamat: alamatDept,
-              status: item['status']?.toString() == 'active' ? '1' : '0',
+              status: item['status']?.toString() == 'active' ? '1' : '0', telp: uData['phone']?.toString() ?? '',
             ),
           );
         }
@@ -544,7 +553,7 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
               email: item['email']?.toString() ?? '',
               id: item['id']?.toString() ?? '',
               alamat: profile['phone']?.toString() ?? '',
-              status: item['status']?.toString() == 'active' ? '1' : '0',
+              status: item['status']?.toString() == 'active' ? '1' : '0', telp: profile['phone']?.toString() ?? '',
             ),
           );
         }

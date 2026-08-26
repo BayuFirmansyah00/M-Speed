@@ -61,17 +61,19 @@ class TransactionProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     try {
-      // GET /api/parent-orders?status={status} — auth via token (tanpa buyer_id)
-      // ParentOrderResource: { id, order_number, payment_status, seller_snapshot, shipping, actors_snapshot }
+      // GET /api/buyer/v1/buyer/transactions — auth via token (Catatan: Saat ini backend memiliki bug TYPE_ERROR pada parameter search)
       final parsed = await getRest(
-          Constant.BASE_API_FULL + '/parent-orders?status=$status');
+          Constant.BASE_API_FULL + '/buyer/v1/buyer/transactions');
 
-      List<DaftarTransaksiBuyerModelData> mappedData = (parsed as List).map((item) {
+      // Backend membalikkan pagination object { data: [], links: {}, meta: {} }
+      List dataArray = (parsed is Map && parsed.containsKey('data')) ? parsed['data'] : parsed;
+
+      List<DaftarTransaksiBuyerModelData> mappedData = dataArray.map((item) {
         return DaftarTransaksiBuyerModelData(
           ID: item['id']?.toString(),
-          nomorOrder: item['order_number']?.toString(),
+          nomorOrder: item['order_num']?.toString() ?? item['order_number']?.toString(),
           status: item['payment_status']?.toString(),
-          SellerNama: item['seller_snapshot']?['name']?.toString(),
+          SellerNama: item['seller']?['company_name']?.toString() ?? item['seller_snapshot']?['name']?.toString(),
           total: item['shipping']?['cost']?.toString() ?? '0',
           Created: item['created_at']?.toString(),
           detail: [],
@@ -117,18 +119,18 @@ class TransactionProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     try {
-      // GET /api/parent-orders/{id} — auth via token (tanpa user_id di query)
+      // GET /api/buyer/v1/buyer/transactions/{id}
       final parsed = await getRest(
-          Constant.BASE_API_FULL + '/parent-orders/$transaction_id');
+          Constant.BASE_API_FULL + '/buyer/v1/buyer/transactions/$transaction_id');
 
-      Map<String, dynamic>? dataItem = parsed;
+      Map<String, dynamic>? dataItem = parsed is Map && parsed.containsKey('data') ? parsed['data'] : parsed;
 
       if (dataItem != null) {
         var parentOrder = DetailTransaksiBuyerModelDataParentOrderModel(
           ID: dataItem['id']?.toString(),
-          nomorOrder: dataItem['order_number']?.toString(),
+          nomorOrder: dataItem['order_num']?.toString() ?? dataItem['order_number']?.toString(),
           status: dataItem['payment_status']?.toString(),
-          SellerNama: dataItem['seller_snapshot']?['name']?.toString(),
+          SellerNama: dataItem['seller']?['company_name']?.toString() ?? dataItem['seller_snapshot']?['name']?.toString(),
           total: dataItem['shipping']?['cost']?.toString() ?? '0',
           Created: dataItem['created_at']?.toString(),
         );

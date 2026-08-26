@@ -39,19 +39,29 @@ class AdminFormKeuanganProvider extends BaseController with ChangeNotifier {
 
   Future<void> fetchMasterData() async {
     try {
-      final response = await ApiClient().dio.get('/audit/v1/admin/finances/create');
-      if (response.data['status'] == 'success') {
-        final data = response.data['data'];
-        
-        subdirektorates = List<Map<String, dynamic>>.from(data['sub_direktorates'] ?? []);
-        allDepartments = List<Map<String, dynamic>>.from(data['departments'] ?? []);
-        allManagers = List<Map<String, dynamic>>.from(data['managers'] ?? []);
-        
-        notifyListeners();
+      // Fetch sub-direktorates
+      final subditRes = await ApiClient().dio.get('/audit/v1/admin/sub-direktorates');
+      if (subditRes.statusCode == 200 || subditRes.statusCode == 201) {
+        subdirektorates = List<Map<String, dynamic>>.from(subditRes.data['data'] ?? []);
       }
+
+      // Fetch departments (WAIT BACKEND)
+      allDepartments = [];
+
+      // Fetch managers
+      final managerRes = await ApiClient().dio.get('/audit/v1/admin/managers');
+      if (managerRes.statusCode == 200 || managerRes.statusCode == 201) {
+        final data = managerRes.data['data'] as List<dynamic>? ?? [];
+        allManagers = List<Map<String, dynamic>>.from(data.map((e) => {
+          'id': e['id'],
+          'first_name': e['profile']?['first_name'],
+          'last_name': e['profile']?['last_name'],
+        }));
+      }
+      
+      notifyListeners();
     } catch (e) {
       debugPrint("Failed to fetch finance master data: $e");
-      Utils.showFailed(msg: "Maaf, data master belum bisa dimuat (Endpoint Backend belum siap).");
     }
   }
 
@@ -60,14 +70,14 @@ class AdminFormKeuanganProvider extends BaseController with ChangeNotifier {
     await fetchMasterData();
 
     if (keuangan != null) {
-      firstNameC.text = keuangan.firstname ?? '';
-      lastNameC.text = keuangan.lastname ?? '';
+      firstNameC.text = keuangan.userData?.firstName ?? '';
+      lastNameC.text = keuangan.userData?.lastName ?? '';
       emailC.text = keuangan.email ?? '';
-      phoneNumberC.text = keuangan.telp ?? '';
+      phoneNumberC.text = keuangan.userData?.phone ?? '';
       
       // Mapping old model to new structure
-      if (keuangan.subditId != null && keuangan.subditId != 'null') {
-        selectedSubditId = keuangan.subditId;
+      if (keuangan.userData?.department?.id != null) {
+        selectedSubditId = keuangan.userData?.department?.id?.toString();
         final subdit = subdirektorates.firstWhere(
             (e) => e['id'].toString() == selectedSubditId,
             orElse: () => {});

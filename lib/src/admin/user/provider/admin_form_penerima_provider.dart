@@ -38,10 +38,10 @@ class AdminFormPenerimaProvider extends BaseController with ChangeNotifier {
     clearData();
     await fetchMasterData();
     if (penerima != null) {
-      firstNameC.text = penerima.firstname ?? '';
-      lastNameC.text = penerima.lastname ?? '';
+      firstNameC.text = penerima.userData?.firstName ?? '';
+      lastNameC.text = penerima.userData?.lastName ?? '';
       emailC.text = penerima.email ?? '';
-      phoneNumberC.text = penerima.telp ?? '';
+      phoneNumberC.text = penerima.userData?.phone ?? '';
 
       if (penerima.ID != null) {
         try {
@@ -138,15 +138,18 @@ class AdminFormPenerimaProvider extends BaseController with ChangeNotifier {
 
   Future<void> fetchMasterData() async {
     try {
-      final response = await ApiClient().dio.get('/audit/v1/admin/receivers/create');
-      if (response.data['status'] == 'success') {
-        final data = response.data['data'];
-        allManagers = List<Map<String, dynamic>>.from(data['managers'] ?? []);
+      final response = await ApiClient().dio.get('/audit/v1/admin/managers');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data['data'] as List<dynamic>? ?? [];
+        allManagers = List<Map<String, dynamic>>.from(data.map((e) => {
+          'id': e['id'],
+          'first_name': e['profile']?['first_name'],
+          'last_name': e['profile']?['last_name'],
+        }));
         notifyListeners();
       }
     } catch (e) {
       debugPrint("Failed to fetch receiver master data: $e");
-      Utils.showFailed(msg: "Maaf, data master belum bisa dimuat (Endpoint Backend belum siap).");
     }
   }
 

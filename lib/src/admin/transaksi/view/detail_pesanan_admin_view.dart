@@ -5,6 +5,7 @@ import 'package:mspeed/common/component/custom_appbar.dart';
 import 'package:mspeed/common/component/image_network_widget.dart';
 import 'package:mspeed/common/helper/constant.dart';
 import 'package:mspeed/src/buyer/transaction/model/detail_tansaction_buyer_model.dart';
+import 'package:mspeed/src/admin/transaksi/provider/transaction_admin_provider.dart';
 import 'package:mspeed/src/buyer/transaction/provider/transaction_provider.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
@@ -357,47 +358,51 @@ class _DetailPesananAdminViewState extends BaseState<DetailPesananAdminView> {
         border: const Border(top: BorderSide(color: Color(0xffE2E4E9), width: 1)),
       ),
       child: SafeArea(
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  if (data.ParentOrderModel?.tglTtdSuratPesanan == null) {
-                    // Logika awal Anda
-                  } else {}
-                },
-                icon: const Icon(Icons.close_rounded, size: 18),
-                label: const Text('Tolak'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Constant.primaryColor,
-                  side: BorderSide(color: Constant.primaryColor, width: 1.5),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        child: Consumer<TransactionAdminProvider>(
+          builder: (context, p, _) {
+            return Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      if (data.ParentOrderModel?.ID != null) {
+                        p.verifyOrder(context, data.ParentOrderModel!.ID!);
+                      }
+                    },
+                    icon: const Icon(Icons.verified_user_rounded, size: 18),
+                    label: const Text('Verifikasi'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Constant.primaryColor,
+                      side: BorderSide(color: Constant.primaryColor, width: 1.5),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  if (data.ParentOrderModel?.tglTtdSuratPesanan == null) {
-                    // Logika awal Anda
-                  } else {}
-                },
-                icon: const Icon(Icons.check_rounded, size: 18),
-                label: const Text('Terima'),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: const Color(0xFF1ABC62), // Hijau konfirmasi yang standar & aman
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      if (data.ParentOrderModel?.ID != null) {
+                        p.payOrder(context, data.ParentOrderModel!.ID!);
+                      }
+                    },
+                    icon: const Icon(Icons.payment_rounded, size: 18),
+                    label: const Text('Bayar'),
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: const Color(0xFF1ABC62),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ],
+              ],
+            );
+          }
         ),
       ),
     );

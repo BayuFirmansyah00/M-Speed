@@ -28,10 +28,10 @@ class AdminFormAuditProvider extends BaseController with ChangeNotifier {
   setData(BasicUserAdminModelData? audit) async {
     clearData();
     if (audit != null) {
-      firstNameC.text = audit.firstname ?? '';
-      lastNameC.text = audit.lastname ?? '';
+      firstNameC.text = audit.userData?.firstName ?? '';
+      lastNameC.text = audit.userData?.lastName ?? '';
       emailC.text = audit.email ?? '';
-      phoneNumberC.text = audit.telp ?? '';
+      phoneNumberC.text = audit.userData?.phone ?? '';
 
       if (audit.ID != null) {
         try {

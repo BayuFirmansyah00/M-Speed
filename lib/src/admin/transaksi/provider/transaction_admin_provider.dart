@@ -7,6 +7,10 @@ import 'package:mspeed/common/helper/constant.dart';
 import 'package:mspeed/src/admin/transaksi/model/dpp_admin_model.dart';
 import 'package:mspeed/src/buyer/transaction/model/detail_tansaction_buyer_model.dart';
 import 'package:flutter/material.dart';
+import 'package:mspeed/core/network/api_client.dart';
+import 'package:dio/dio.dart';
+import 'package:mspeed/utils/utils.dart';
+import 'package:mspeed/common/component/custom_navigator.dart';
 
 class TransactionAdminProvider extends BaseController with ChangeNotifier {
   final searchC = TextEditingController();
@@ -85,6 +89,48 @@ class TransactionAdminProvider extends BaseController with ChangeNotifier {
     } catch (e) {
       loading(false);
       throw Exception(e.toString());
+    }
+  }
+
+  Future<void> verifyOrder(BuildContext context, String orderId) async {
+    try {
+      loading(true);
+      final response = await ApiClient().dio.post('/finance/v1/finance/orders/$orderId/verify');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final message = response.data['message'] ?? 'Order berhasil diverifikasi';
+        await Utils.showSuccess(msg: message);
+        await fetchList2(withLoading: true); // Refresh list order
+        CusNav.nPop(context);
+      }
+      loading(false);
+    } on DioException catch (e) {
+      loading(false);
+      final message = e.response?.data['message'] ?? 'Gagal verifikasi order';
+      Utils.showFailed(msg: message);
+    } catch (e) {
+      loading(false);
+      Utils.showFailed(msg: 'Terjadi kesalahan: $e');
+    }
+  }
+
+  Future<void> payOrder(BuildContext context, String orderId) async {
+    try {
+      loading(true);
+      final response = await ApiClient().dio.post('/finance/v1/finance/orders/$orderId/pay');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final message = response.data['message'] ?? 'Order berhasil dibayar';
+        await Utils.showSuccess(msg: message);
+        await fetchList2(withLoading: true); // Refresh list order
+        CusNav.nPop(context);
+      }
+      loading(false);
+    } on DioException catch (e) {
+      loading(false);
+      final message = e.response?.data['message'] ?? 'Gagal membayar order';
+      Utils.showFailed(msg: message);
+    } catch (e) {
+      loading(false);
+      Utils.showFailed(msg: 'Terjadi kesalahan: $e');
     }
   }
 }

@@ -43,9 +43,9 @@ enum UserDataType {
 }
 
 class UserData {
-  final String? name1, name2, email, alamat, id, status;
+  final String? name1, name2, email, alamat, id, status, telp, kabkota;
   final dynamic rawModel;
-  UserData({this.name1, this.name2, this.email, this.alamat, this.id, this.status, this.rawModel});
+  UserData({this.name1, this.name2, this.email, this.alamat, this.id, this.status, this.telp, this.kabkota, this.rawModel});
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -329,7 +329,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                 ['No', 'Nama', 'Email', 'No HP', 'Alamat', 'Kab/Kota'],
                 ...dataList.asMap().entries.map((e) => [
                       '${e.key + 1}',
-                      '${e.value?.firstname ?? ''} ${e.value?.lastname ?? ''}',
+                      '${e.value?.name1 ?? ''} ${e.value?.name2 ?? ''}',
                       e.value?.email ?? '',
                       e.value?.telp ?? '',
                       e.value?.alamat ?? '',
@@ -384,7 +384,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
         final item = dataList[i];
         sheetObject.appendRow([
           IntCellValue(i + 1),
-          TextCellValue('${item?.firstname ?? ''} ${item?.lastname ?? ''}'),
+          TextCellValue('${item?.name1 ?? ''} ${item?.name2 ?? ''}'),
           TextCellValue(item?.email ?? ''),
           TextCellValue(item?.telp ?? ''),
           TextCellValue(item?.alamat ?? ''),

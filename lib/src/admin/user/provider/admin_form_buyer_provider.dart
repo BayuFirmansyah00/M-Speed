@@ -71,25 +71,25 @@ class AdminFormBuyerProvider extends BaseController with ChangeNotifier {
     await fetchMasterData();
     final subdit = subditAdminModel.data ?? [];
     if (buyer != null) {
-      firstNameC.text = buyer.firstname ?? '';
-      lastNameC.text = buyer.lastname ?? '';
+      firstNameC.text = buyer.userData?.firstName ?? '';
+      lastNameC.text = buyer.userData?.lastName ?? '';
       emailC.text = buyer.email ?? '';
       if (subdit.isNotEmpty) {
-        selectedSubdit = buyer.subditId ?? '';
+        selectedSubdit = null; // No direct mapping in nested model yet
         bool exists = subdit.any((e) => e?.id == selectedSubdit);
         if (!exists) selectedSubdit = null;
         subditC.text =
             subdit
-                .firstWhere((e) => e?.id == buyer.subditId, orElse: () => null)
+                .firstWhere((e) => e?.id == selectedSubdit, orElse: () => null)
                 ?.subditName ??
             '';
       }
-      phoneNumberC.text = buyer.telp ?? '';
-      alamatC.text = buyer.alamat ?? '';
+      phoneNumberC.text = buyer.userData?.phone ?? '';
+      alamatC.text = buyer.fullAddress ?? '';
       accessC.text = buyer.userData?.access?.toString() ?? '';
       isActive = buyer.status == 'active' ? true : (buyer.status != null ? false : true);
 
-      selectedDepartment = buyer.departmentId;
+      selectedDepartment = buyer.userData?.department?.id?.toString();
       bool deptExists = allDepartments.any(
         (e) => e['id'].toString() == selectedDepartment,
       );
@@ -126,7 +126,7 @@ class AdminFormBuyerProvider extends BaseController with ChangeNotifier {
         }
       }
       // city mapping is not perfect yet since backend expects city_id
-      cityC.text = buyer.kabkota ?? '1';
+      cityC.text = (buyer.addresses?.isNotEmpty == true ? buyer.addresses!.first.cityId?.toString() : null) ?? '1';
     }
   }
 
@@ -307,20 +307,28 @@ class AdminFormBuyerProvider extends BaseController with ChangeNotifier {
 
   Future<void> fetchMasterData() async {
     try {
-      final response = await ApiClient().dio.get(
-        '/audit/v1/admin/buyers/create',
-      );
-      if (response.data['status'] == 'success') {
-        final data = response.data['data'];
-        
-        // Populate all master data dropdowns
-        allDepartments = List<Map<String, dynamic>>.from(data['departments']);
-        provinsiModel = ProvinsiModel.fromJson({'data': data['provinces']});
-        kotaModel = KotaModel.fromJson({'data': data['cities']});
-        subditAdminModel = SubditAdminModel.fromJson({'data': data['sub_direktorates']});
-        
-        notifyListeners();
+      // 1. Fetch Provinces
+      final provRes = await ApiClient().dio.get('/provinces');
+      if (provRes.statusCode == 200) {
+        provinsiModel = ProvinsiModel.fromJson(provRes.data);
       }
+
+      // 2. Fetch Cities
+      final cityRes = await ApiClient().dio.get('/cities');
+      if (cityRes.statusCode == 200) {
+        kotaModel = KotaModel.fromJson(cityRes.data);
+      }
+
+      // 3. Fetch Sub-Direktorates
+      final subditRes = await ApiClient().dio.get('/audit/v1/admin/sub-direktorates');
+      if (subditRes.statusCode == 200) {
+        subditAdminModel = SubditAdminModel.fromJson(subditRes.data);
+      }
+
+      // 4. Fetch Departments (WAIT BACKEND)
+      allDepartments = [];
+      
+      notifyListeners();
     } catch (e) {
       debugPrint("Failed to fetch buyer master data: $e");
     }

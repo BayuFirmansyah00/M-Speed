@@ -20,6 +20,7 @@ class ProfileProvider extends BaseController with ChangeNotifier {
   final TextEditingController firstNameC = TextEditingController();
   final TextEditingController lastNameC = TextEditingController();
   final TextEditingController passwordC = TextEditingController();
+  final TextEditingController passwordConfirmationC = TextEditingController();
   
   // Tipe data diubah menjadi LatLng agar aman saat Type Checking
   LatLng? locationCoordinate; 
@@ -90,13 +91,11 @@ class ProfileProvider extends BaseController with ChangeNotifier {
 
     if (selectedPeriodeData == 'Tahunan' && selectedYear != null) {
       body.addAll({
-        'user_id': idBuyer,
-        'status': '3',
         'year': selectedYear!,
       });
     }
 
-    final response = await get(Constant.BASE_API_FULL + '/getakunsayabuyer', body: body);
+    final response = await get(Constant.BASE_API_FULL + '/buyer/v1/buyer/orders', body: body);
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       akunBuyerModel = AkunSayaBuyerModel.fromJson(jsonDecode(response.body));
@@ -118,7 +117,7 @@ class ProfileProvider extends BaseController with ChangeNotifier {
   Future<void> fetchBuyer(BuildContext context, {bool withLoading = true, required String idBuyer}) async {
     if (withLoading) loading(true);
 
-    final response = await get(Constant.BASE_API_FULL + '/getakunsayabuyer', body: {'user_id': idBuyer});
+    final response = await get(Constant.BASE_API_FULL + '/buyer/v1/buyer/profile');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       akunBuyerModel = AkunSayaBuyerModel.fromJson(jsonDecode(response.body));
@@ -134,6 +133,47 @@ class ProfileProvider extends BaseController with ChangeNotifier {
         });
       }
       throw Exception(message);
+    }
+  }
+
+  Future<void> updateProfile(BuildContext context, {required String email}) async {
+    loading(true);
+    try {
+      final body = {
+        'first_name': firstNameC.text,
+        'last_name': lastNameC.text,
+        'email': email,
+      };
+
+      if (passwordC.text.isNotEmpty) {
+        body['new_password'] = passwordC.text;
+        body['new_password_confirmation'] = passwordConfirmationC.text;
+      }
+
+      final response = await put(Constant.BASE_API_FULL + '/buyer/v1/buyer/profile', body: body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Utils.showSuccess(msg: 'Profil berhasil diperbarui');
+        await fetchBuyer(context, idBuyer: '', withLoading: false);
+      } else {
+        final decoded = jsonDecode(response.body);
+        String errorMsg = 'Gagal memperbarui profil';
+        
+        if (decoded['errors'] != null && decoded['errors'] is Map) {
+          final errors = decoded['errors'] as Map;
+          errorMsg = errors.values.first.first.toString();
+        } else if (decoded['message'] != null) {
+          errorMsg = decoded['message'];
+        } else if (decoded['messages'] != null && decoded['messages']['error'] != null) {
+          errorMsg = decoded['messages']['error'];
+        }
+
+        Utils.showFailed(msg: errorMsg);
+      }
+    } catch (e) {
+      Utils.showFailed(msg: e.toString());
+    } finally {
+      loading(false);
     }
   }
 }

@@ -48,6 +48,10 @@ class AkunSayaBuyerModelData {
   String? telahDibayar;
   int? telahDibayarPrice;
 
+  // Format Baru
+  Map<String, dynamic>? userData;
+  List<dynamic>? addresses;
+
   AkunSayaBuyerModelData({
     this.totalPesanan,
     this.totalPesananPrice,
@@ -69,6 +73,8 @@ class AkunSayaBuyerModelData {
     this.prosesPembayaranPrice,
     this.telahDibayar,
     this.telahDibayarPrice,
+    this.userData,
+    this.addresses,
   });
   AkunSayaBuyerModelData.fromJson(Map<String, dynamic> json) {
     totalPesanan = json['total_pesanan']?.toString();
@@ -91,6 +97,20 @@ class AkunSayaBuyerModelData {
     prosesPembayaranPrice = json['proses_pembayaran_price']?.toInt();
     telahDibayar = json['telah_dibayar']?.toString();
     telahDibayarPrice = json['telah_dibayar_price']?.toInt();
+    
+    // Default to '0' to avoid null error on UI since new API doesn't return these stats
+    pesananBaru = pesananBaru ?? '0';
+    pesananDiterima = pesananDiterima ?? '0';
+    pesananDikirim = pesananDikirim ?? '0';
+    barangDiterima = barangDiterima ?? 0;
+
+    // Parse format baru
+    if (json.containsKey('user_data')) {
+      userData = json['user_data'];
+    }
+    if (json.containsKey('addresses')) {
+      addresses = json['addresses'];
+    }
   }
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
@@ -155,8 +175,16 @@ class AkunSayaBuyerModel {
     this.data,
   });
   AkunSayaBuyerModel.fromJson(Map<String, dynamic> json) {
-    result = json['result']?.toString();
-    data = (json['data'] != null) ? AkunSayaBuyerModelData.fromJson(json['data']) : null;
+    result = json['result']?.toString() ?? 'success';
+    
+    // Backend baru menggunakan wrapper object { "data": { ... } }
+    // Backend lama langsung root properties, tapi di class ini sudah ditangani dengan ngecek json['data']
+    if (json.containsKey('data')) {
+      data = AkunSayaBuyerModelData.fromJson(json['data']);
+    } else {
+      // Jika resource backend secara langsung return field (seperti id, email, user_data), kita parsing root json
+      data = AkunSayaBuyerModelData.fromJson(json);
+    }
   }
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};

@@ -28,10 +28,10 @@ class AdminFormDireksiProvider extends BaseController with ChangeNotifier {
   setData(BasicUserAdminModelData? direksi) async {
     clearData();
     if (direksi != null) {
-      firstNameC.text = direksi.firstname ?? '';
-      lastNameC.text = direksi.lastname ?? '';
+      firstNameC.text = direksi.userData?.firstName ?? '';
+      lastNameC.text = direksi.userData?.lastName ?? '';
       emailC.text = direksi.email ?? '';
-      phoneNumberC.text = direksi.telp ?? '';
+      phoneNumberC.text = direksi.userData?.phone ?? '';
 
       if (direksi.ID != null) {
         try {

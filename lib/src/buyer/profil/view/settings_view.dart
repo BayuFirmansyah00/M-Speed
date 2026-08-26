@@ -181,13 +181,26 @@ class _SettingsViewState extends BaseState<SettingsView> {
               iconColor: _SC.green,
               title: 'Keamanan',
               subtitle: 'Ubah password akun',
-              child: CustomTextField.borderTextField(
-                controller: profileP.passwordC,
-                obscureText: true,
-                textInputType: TextInputType.visiblePassword,
-                required: false,
-                labelText: 'Password Baru',
-                hintText: 'Masukkan password baru',
+              child: Column(
+                children: [
+                  CustomTextField.borderTextField(
+                    controller: profileP.passwordC,
+                    obscureText: true,
+                    textInputType: TextInputType.visiblePassword,
+                    required: false,
+                    labelText: 'Password Baru',
+                    hintText: 'Masukkan password baru',
+                  ),
+                  const SizedBox(height: 14),
+                  CustomTextField.borderTextField(
+                    controller: profileP.passwordConfirmationC,
+                    obscureText: true,
+                    textInputType: TextInputType.visiblePassword,
+                    required: false,
+                    labelText: 'Konfirmasi Password',
+                    hintText: 'Masukkan kembali password baru',
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 14),
@@ -291,11 +304,29 @@ class _SettingsViewState extends BaseState<SettingsView> {
             height: 52,
             child: CustomButton.mainButton(
               'Simpan Pengaturan',
-              borderRadius: BorderRadius.circular(14),
               () async {
                 FocusManager.instance.primaryFocus?.unfocus();
-                Utils.showSuccess(msg: 'Pengaturan berhasil disimpan');
+
+                final email = profileP.akunBuyerModel.data?.userData?['email']?.toString() ?? '';
+                if (email.isEmpty) {
+                  Utils.showFailed(msg: 'Gagal mendapatkan email pengguna');
+                  return;
+                }
+
+                if (profileP.passwordC.text.isNotEmpty) {
+                  if (profileP.passwordConfirmationC.text.isEmpty) {
+                    Utils.showFailed(msg: 'Konfirmasi password tidak boleh kosong');
+                    return;
+                  }
+                  if (profileP.passwordC.text != profileP.passwordConfirmationC.text) {
+                    Utils.showFailed(msg: 'Konfirmasi password tidak cocok');
+                    return;
+                  }
+                }
+
+                await profileP.updateProfile(context, email: email);
               },
+              borderRadius: BorderRadius.circular(14),
             ),
           ),
         ),

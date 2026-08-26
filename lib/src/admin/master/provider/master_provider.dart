@@ -170,7 +170,7 @@ class MasterProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
     try {
       final response = await ApiClient().dio.get(
-        '/audit/v1/admin/buyer-addresses',
+        '/buyer-addresses',
         queryParameters: search.isNotEmpty ? {"search": search} : {},
       );
 
@@ -531,12 +531,12 @@ class MasterProvider extends BaseController with ChangeNotifier {
       dynamic response;
       if (alamatId != null) {
         response = await ApiClient().dio.put(
-          '/audit/v1/admin/buyer-addresses/$alamatId',
+          '/buyer-addresses/$alamatId',
           data: param,
         );
       } else {
         response = await ApiClient().dio.post(
-          '/audit/v1/admin/buyer-addresses',
+          '/buyer-addresses',
           data: param,
         );
       }
@@ -564,7 +564,7 @@ class MasterProvider extends BaseController with ChangeNotifier {
   }) async {
     if (withLoading) loading(true);
     try {
-      final response = await ApiClient().dio.delete('/audit/v1/admin/buyer-addresses/$alamatId');
+      final response = await ApiClient().dio.delete('/buyer-addresses/$alamatId');
       if (response.statusCode == 201 || response.statusCode == 200) {
         await Utils.showSuccess(msg: 'Berhasil menghapus alamat');
         await fetchAlamatAdmin(withLoading: true);

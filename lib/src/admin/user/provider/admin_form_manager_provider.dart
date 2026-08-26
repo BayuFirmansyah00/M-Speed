@@ -28,10 +28,10 @@ class AdminFormManagerProvider extends BaseController with ChangeNotifier {
   setData(BasicUserAdminModelData? manager) async {
     clearData();
     if (manager != null) {
-      firstNameC.text = manager.firstname ?? '';
-      lastNameC.text = manager.lastname ?? '';
+      firstNameC.text = manager.userData?.firstName ?? '';
+      lastNameC.text = manager.userData?.lastName ?? '';
       emailC.text = manager.email ?? '';
-      phoneNumberC.text = manager.telp ?? '';
+      phoneNumberC.text = manager.userData?.phone ?? '';
 
       if (manager.ID != null) {
         try {

@@ -149,12 +149,7 @@ class PenerimaAdminModelData {
 
   // Polyfills for old code that is tightly coupled to previous model structure.
   String? get ID => id?.toString();
-  String? get firstname => userData?.firstName;
-  String? get lastname => userData?.lastName;
   String? get subditId => userData?.department?.id?.toString();
-  String? get telp => userData?.phone;
-  String? get alamat => fullAddress;
-  String? get kabkota => addresses?.isNotEmpty == true ? addresses!.first.city : null;
 
   PenerimaAdminModelData({
     this.id,

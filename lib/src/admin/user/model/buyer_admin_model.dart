@@ -120,15 +120,6 @@ class BuyerAdminModelData {
   String? createdAt;
   String? updatedAt;
 
-  // Polyfills for old code that is tightly coupled to previous model structure.
-  String? get firstname => userData?.firstName;
-  String? get lastname => userData?.lastName;
-  String? get subditId => userData?.department?.id?.toString(); // fallback mapping for old provider
-  String? get telp => userData?.phone;
-  String? get alamat => fullAddress;
-  String? get kabkota => addresses?.isNotEmpty == true ? addresses!.first.cityId?.toString() : null;
-  String? get departmentId => userData?.department?.id?.toString();
-
   BuyerAdminModelData({
     this.id,
     this.email,
