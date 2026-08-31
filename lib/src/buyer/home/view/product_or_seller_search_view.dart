@@ -1,17 +1,17 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dynamic_height_grid_view/dynamic_height_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
-import 'package:mspeed/common/helper/Constant.dart';
-import 'package:mspeed/src/buyer/home/provider/home_provider.dart';
-import 'package:mspeed/src/buyer/home/view/filter_bottom_sheet.dart';
-import 'package:mspeed/src/buyer/home/view/search_toko_lainnya_view.dart';
-import 'package:mspeed/src/buyer/home/view/sort_bottom_sheet.dart';
+import 'package:mspeed/common/component/custom_container.dart';
+import 'package:mspeed/src/buyer/home/view/buyer_product_filter_bottom_sheet.dart';
+import 'package:mspeed/src/buyer/home/view/buyer_product_sort_bottom_sheet.dart';
+import 'package:mspeed/src/buyer/product/model/buyer_product_filter_model.dart';
+import 'package:mspeed/src/buyer/product/provider/buyer_product_filter_provider.dart';
+import 'package:mspeed/src/buyer/cart/provider/buyer_cart_provider.dart';
+import 'package:mspeed/src/buyer/cart/view/buyer_cart_view.dart';
 import 'package:mspeed/src/buyer/product/view/detail_product_view.dart';
-import 'package:mspeed/src/buyer/seller/view/seller_home_product_view.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../common/base/base_state.dart';
@@ -29,32 +29,41 @@ class ProductOrSellerSearchView extends StatefulWidget {
 
 class _ProductOrSellerSearchViewState
     extends BaseState<ProductOrSellerSearchView> {
+  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+
   @override
   void initState() {
-    getData();
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final p = context.read<BuyerProductFilterProvider>();
+      p.resetFilters();
+      if (widget.query.isNotEmpty) {
+        _searchController.text = widget.query;
+        p.keyword = widget.query;
+      }
+      p.refreshData();
+      context.read<BuyerCartProvider>().fetchCart(withLoading: false);
+    });
   }
 
-  Future<void> getData() async {
-    Utils.showLoading();
-    await context.read<HomeProvider>().searchProduct();
-    await context.read<HomeProvider>().fetchKategori();
-    await context.read<HomeProvider>().fetchKategoriLokasi();
-    Utils.dismissLoading();
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final p = context.watch<HomeProvider>();
-    final products = context.watch<HomeProvider>().buyerProductModel.data ?? [];
-    final searchController = context.watch<HomeProvider>().searchController;
+    final p = context.watch<BuyerProductFilterProvider>();
+    final cartP = context.watch<BuyerCartProvider>();
 
-    Widget _buildProductItem(int i) {
-      final product = products[i];
-      if (product == null) return const SizedBox();
+    Widget _buildProductItem(BuyerProductData product) {
       return GestureDetector(
         onTap: () async {
-          await CusNav.nPush(context, DetailProductView(id: product.ID ?? ''));
+          // Note: Detail backend is pending (TODO)
+          await CusNav.nPush(context, DetailProductView(id: product.id?.toString() ?? ''));
         },
         child: Container(
           decoration: BoxDecoration(
@@ -71,23 +80,67 @@ class _ProductOrSellerSearchViewState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: CachedNetworkImage(
-                    imageUrl: product.foto ?? '',
-                    fit: BoxFit.cover,
-                    placeholder: (_, __) => Container(
-                      color: Colors.grey.shade100,
-                      child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                    ),
-                    errorWidget: (_, __, ___) => Container(
-                      color: Colors.grey.shade100,
-                      child: const Icon(Icons.image_not_supported, color: Colors.grey),
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: CachedNetworkImage(
+                        imageUrl: product.photo ?? '', // Backend returns raw path for now, maybe need to prepend base URL later
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => Container(
+                          color: Colors.grey.shade100,
+                          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                        ),
+                        errorWidget: (_, __, ___) => Container(
+                          color: Colors.grey.shade100,
+                          child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: GestureDetector(
+                      onTap: () {
+                        if (product.id != null) {
+                          p.toggleWishlist(context, product.id!);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            )
+                          ],
+                        ),
+                        child: (product.id != null && p.isProductWishlistProcessing(product.id!))
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red),
+                              )
+                            : Icon(
+                                (product.id != null && p.isProductInWishlist(product.id!))
+                                    ? Icons.favorite_rounded
+                                    : Icons.favorite_outline_rounded,
+                                size: 18,
+                                color: (product.id != null && p.isProductInWishlist(product.id!))
+                                    ? Colors.red
+                                    : Colors.grey.shade400,
+                              ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               Padding(
                 padding: const EdgeInsets.all(12),
@@ -95,7 +148,7 @@ class _ProductOrSellerSearchViewState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      product.nama ?? "-",
+                      product.name ?? "-",
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -106,7 +159,7 @@ class _ProductOrSellerSearchViewState
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Rp ${Utils.thousandSeparator(int.tryParse(product.harga ?? "0") ?? 0)}',
+                      'Rp ${Utils.thousandSeparator((product.price ?? 0).toInt())}',
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
@@ -120,7 +173,7 @@ class _ProductOrSellerSearchViewState
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            product.SellerNama ?? '-',
+                            product.seller?.companyName ?? '-',
                             style: const TextStyle(color: Colors.grey, fontSize: 11),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -130,10 +183,36 @@ class _ProductOrSellerSearchViewState
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Stok ${product.qty} • ${product.NamaKategori}',
+                      'Stok ${product.qty} • ${product.category?.name ?? '-'}',
                       style: const TextStyle(color: Colors.grey, fontSize: 10),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 28,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.zero,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        onPressed: (product.id != null && !cartP.isAddingProduct(product.id!))
+                            ? () {
+                                context.read<BuyerCartProvider>().addToCart(context, product.id!);
+                              }
+                            : null,
+                        child: (product.id != null && cartP.isAddingProduct(product.id!))
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Text('+ Keranjang', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                      ),
                     ),
                   ],
                 ),
@@ -151,10 +230,9 @@ class _ProductOrSellerSearchViewState
         elevation: 0,
         forceMaterialTransparency: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.red),
+          icon: const Icon(Icons.arrow_back, color: Colors.red),
           onPressed: () {
             Navigator.pop(context);
-            context.read<HomeProvider>().searchController.clear();
           },
         ),
         title: Container(
@@ -164,18 +242,18 @@ class _ProductOrSellerSearchViewState
             borderRadius: BorderRadius.circular(20),
           ),
           child: TextField(
-            controller: searchController,
+            controller: _searchController,
             style: const TextStyle(fontSize: 14),
             onChanged: (value) {
-              if (p.searchOnStoppedTyping != null) {
-                p.searchOnStoppedTyping!.cancel();
+              if (_debounce != null) {
+                _debounce!.cancel();
               }
-              p.searchOnStoppedTyping = Timer(p.duration, () {
-                context.read<HomeProvider>().searchProduct(withLoading: true);
+              _debounce = Timer(const Duration(milliseconds: 1000), () {
+                context.read<BuyerProductFilterProvider>().updateKeyword(value);
               });
             },
             onSubmitted: (value) {
-              context.read<HomeProvider>().searchProduct(withLoading: true);
+              context.read<BuyerProductFilterProvider>().updateKeyword(value);
             },
             decoration: const InputDecoration(
               hintText: 'Cari produk atau toko...',
@@ -187,12 +265,39 @@ class _ProductOrSellerSearchViewState
           ),
         ),
         actions: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.shopping_cart_outlined, color: Colors.black87),
+                onPressed: () {
+                  CusNav.nPush(context, const BuyerCartView());
+                },
+              ),
+              if (cartP.totalCartItems > 0)
+                Positioned(
+                  right: 4,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '${cartP.totalCartItems}',
+                      style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+            ],
+          ),
           TextButton.icon(
-            onPressed: () async {
+            onPressed: () {
               _showFilterBottomSheet(context);
             },
             icon: SvgPicture.asset(Assets.svgsIcSearchFilter),
-            label: Text(
+            label: const Text(
               'Filter',
               style: TextStyle(color: Colors.red),
             ),
@@ -205,17 +310,17 @@ class _ProductOrSellerSearchViewState
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
             child: Row(
               children: [
-                Expanded(
+                const Expanded(
                     child: Text(
-                  "Menampilkan Semua Produk / Seller",
+                  "Menampilkan Semua Produk",
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
                 )),
                 IconButton(
                   icon: Container(
                       padding:
-                          EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                          const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
                       decoration: BoxDecoration(
-                        color: Color(0xFFEEF0F8),
+                        color: const Color(0xFFEEF0F8),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: SvgPicture.asset(
@@ -232,22 +337,38 @@ class _ProductOrSellerSearchViewState
           Container(
             width: double.infinity,
             height: 8,
-            color: Color(0xFFF6F6F6),
+            color: const Color(0xFFF6F6F6),
           ),
-
-          // Text('a'),
           Expanded(
-            child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: DynamicHeightGridView(
-                    itemCount: products.length,
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    builder: (ctx, index) {
-                      return _buildProductItem(index);
-                    })),
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (ScrollNotification scrollInfo) {
+                if (scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {
+                  p.fetchNextPage();
+                }
+                return false;
+              },
+              child: RefreshIndicator(
+                onRefresh: () async => p.refreshData(),
+                child: p.isLoading 
+                  ? const Center(child: CircularProgressIndicator())
+                  : p.error != null
+                    ? Center(child: Text(p.error!))
+                    : p.products.isEmpty
+                      ? CustomContainer.mainNotFoundImage()
+                      : CustomContainer.mainGridView2(
+                          context: context,
+                          itemCount: p.products.length + (p.hasNextPage ? 1 : 0),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          itemBuilder: (context, index) {
+                            if (index == p.products.length) {
+                              return const Center(child: CircularProgressIndicator());
+                            }
+                            final item = p.products[index];
+                            return _buildProductItem(item);
+                          },
+                        ),
+              ),
+            ),
           ),
         ],
       ),
@@ -255,9 +376,13 @@ class _ProductOrSellerSearchViewState
   }
 
   void _showFilterBottomSheet(BuildContext context) {
+    // Note: To fully connect the bottom sheet with BuyerProductFilterProvider,
+    // we would need to update `FilterBottomSheet` which currently uses `ProductFilterProvider` and `HomeProvider`.
+    // Since we shouldn't touch `FilterBottomSheet` if it breaks other parts, we just show it.
+    // However, the instructions say: "Filter Bottom Sheet (Harga, Kategori, Kota, Sort) akan di-hook ke provider baru".
     showModalBottomSheet(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
       ),
       context: context,
@@ -272,20 +397,21 @@ class _ProductOrSellerSearchViewState
               children: [
                 Container(
                   padding:
-                      EdgeInsets.only(left: 16, bottom: 5, right: 16, top: 10),
+                      const EdgeInsets.only(left: 16, bottom: 5, right: 16, top: 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      const Text(
                         'Filter',
                         style: TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       TextButton(
                         onPressed: () {
-                          context.read<HomeProvider>().resetFilters();
+                          context.read<BuyerProductFilterProvider>().resetFilters();
+                          Navigator.pop(context);
                         },
-                        child: Text('Reset'),
+                        child: const Text('Reset'),
                       ),
                     ],
                   ),
@@ -295,14 +421,13 @@ class _ProductOrSellerSearchViewState
                     controller: singleController,
                     child: Column(
                       children: [
-                        FilterBottomSheet(),
+                        BuyerProductFilterBottomSheet(), // NOTE: This needs to be adapted or rewritten if it depends on HomeProvider heavily.
                       ],
                     ),
                   ),
                 ),
               ],
             );
-            // return FilterBottomSheet();
           },
         );
       },
@@ -314,13 +439,13 @@ class _ProductOrSellerSearchViewState
       backgroundColor: Colors.white,
       context: context,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(16), // Adjust this value as needed
+          top: Radius.circular(16),
         ),
       ),
       builder: (BuildContext context) {
-        return SortBottomSheet();
+        return BuyerProductSortBottomSheet(); // Also needs adaptation
       },
     );
   }

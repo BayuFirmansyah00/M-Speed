@@ -5,6 +5,7 @@ import 'package:mspeed/common/base/base_controller.dart';
 import 'package:mspeed/common/helper/constant.dart';
 import 'package:mspeed/src/buyer/home/model/buyer_product_model.dart';
 import 'package:mspeed/src/buyer/home/model/home_model.dart';
+import 'package:mspeed/src/buyer/home/model/buyer_dashboard_model.dart';
 import 'package:flutter/material.dart';
 import 'package:mspeed/src/buyer/home/model/kategori_lokasi_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -39,6 +40,31 @@ class HomeProvider extends BaseController with ChangeNotifier {
   set setHomeModel(HomeModel homeModel) => this.homeModel = homeModel;
 
   set setIsSubAgent(String isSubAgent) => this.isSubAgent = isSubAgent;
+
+  BuyerDashboardModel? _buyerDashboardModel;
+  BuyerDashboardModel? get buyerDashboardModel => _buyerDashboardModel;
+
+  Future<void> fetchBuyerDashboard({bool withLoading = false}) async {
+    if (withLoading) loading(true);
+
+    final response = await get(Constant.BASE_API_FULL + '/buyer/v1/buyer/dashboard');
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      final decoded = jsonDecode(response.body);
+      // Backend returns directly the object or inside 'data'?
+      // From BuyerDashboardResource.php, it returns directly or inside 'data' if wrapped by Resource. 
+      // Resource usually wraps in 'data' object. Wait, JsonResource wraps in 'data' by default. Let's handle both.
+      final data = decoded['data'] ?? decoded;
+      _buyerDashboardModel = BuyerDashboardModel.fromJson(data);
+      notifyListeners();
+      if (withLoading) loading(false);
+    } else {
+      final decoded = jsonDecode(response.body);
+      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
+      loading(false);
+      throw Exception(message);
+    }
+  }
 
   Future<void> fetchHome({bool withLoading = false}) async {
     if (withLoading) loading(true);

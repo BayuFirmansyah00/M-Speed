@@ -92,8 +92,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
 
 
   Future<void> _loadData() async {
-    await context.read<HomeProvider>().getHomeProducts(withLoading: false);
-    await context.read<HomeProvider>().fetchKategori(withLoading: false);
+    await context.read<HomeProvider>().fetchBuyerDashboard(withLoading: false);
     context.read<ShoppingCartProvider>().fetchShoppingCart(
       context,
       withLoading: false,
@@ -124,8 +123,8 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
   @override
   Widget build(BuildContext context) {
     final homeP = context.watch<HomeProvider>();
-    final products = homeP.buyerHomeProductModel.data ?? [];
-    final categories = homeP.kategoriModel?.data ?? [];
+    final products = homeP.buyerDashboardModel?.products ?? [];
+    final categories = homeP.buyerDashboardModel?.categories ?? [];
     final cartTotal = context.watch<ShoppingCartProvider>().countQtyCartItem();
 
     return Scaffold(
@@ -135,10 +134,9 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
         strokeWidth: 2.5,
         displacement: 40,
         onRefresh: () async {
-          await context.read<HomeProvider>().getHomeProducts(
+          await context.read<HomeProvider>().fetchBuyerDashboard(
             withLoading: false,
           );
-          await context.read<HomeProvider>().fetchKategori(withLoading: false);
           await context.read<ShoppingCartProvider>().fetchShoppingCart(
             context,
             withLoading: false,
@@ -367,11 +365,12 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
   // BANNER CAROUSEL — Modern rounded with overlay
   // ═══════════════════════════════════════════════════════════
   Widget _buildBanner(HomeProvider p) {
-    final banners = [
-      Assets.imagesHomeHeader,
-      Assets.imagesHomeHeader,
-      Assets.imagesHomeHeader,
-    ];
+    final banners = p.buyerDashboardModel?.banners ?? [];
+    
+    if (banners.isEmpty) {
+      return const SizedBox(height: 16);
+    }
+
     return Column(
       children: [
         const SizedBox(height: 16),
@@ -388,6 +387,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
             onPageChanged: (i, _) => setState(() => p.currentIndex = i),
           ),
           itemBuilder: (ctx, i, realIdx) {
+            final bannerUrl = banners[i].imgUrl;
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 4),
               decoration: BoxDecoration(
@@ -405,11 +405,15 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.asset(
-                      banners[i],
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                    ),
+                    bannerUrl != null && bannerUrl.isNotEmpty
+                        ? Image.network(
+                            bannerUrl,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Image.asset(Assets.imagesHomeHeader, fit: BoxFit.cover),
+                          )
+                        : Image.asset(Assets.imagesHomeHeader, fit: BoxFit.cover),
                     // Gradient overlay for text readability
                     Positioned(
                       bottom: 0,
@@ -596,10 +600,10 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
                 child: Opacity(opacity: t.value.clamp(0.0, 1.0), child: child),
               );
             },
-            child: GestureDetector(
+              child: GestureDetector(
               onTap: () async {
                 final map = context.read<HomeProvider>().kategoriMap;
-                final name = cat?.nama ?? '';
+                final name = cat.name ?? '';
                 if (map.containsKey(name)) {
                   map.updateAll((k, v) => false);
                   map[name] = true;
@@ -634,7 +638,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      cat?.nama ?? '',
+                      cat.name ?? '',
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -679,15 +683,15 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
         );
       },
       child: BuyerProductCard(
-        imageUrl: item?.foto ?? '',
-        title: item?.nama ?? '-',
-        sellerName: item?.SellerNama ?? '-',
-        category: item?.NamaKategori ?? '-',
+        imageUrl: item.images != null && item.images!.isNotEmpty ? item.images![0].imgUrl ?? '' : '',
+        title: item.name ?? '-',
+        sellerName: item.seller?.name ?? '-',
+        category: item.category?.name ?? '-',
         rating: 4.9, // Default for now
-        soldCount: int.tryParse(item?.terjual ?? '0') ?? 0,
-        price: double.tryParse(item?.harga ?? '0') ?? 0,
+        soldCount: item.qty ?? 0,
+        price: item.price ?? 0,
         isNew: i < 3, // Just a visual mock for new items
-        onTap: () => CusNav.nPush(context, DetailProductView(id: item?.ID ?? '')),
+        onTap: () => CusNav.nPush(context, DetailProductView(id: item.id?.toString() ?? '')),
         onWishlistTap: () {
           // wishlist logic
         },

@@ -26,6 +26,8 @@ import 'package:mspeed/src/buyer/address/provider/address_provider.dart';
 import 'package:mspeed/src/buyer/address/provider/custom_map_provider.dart';
 import 'package:mspeed/src/buyer/address/view/address_view.dart';
 import 'package:mspeed/src/buyer/cart/provider/shopping_cart_provider.dart';
+import 'package:mspeed/src/buyer/cart/provider/buyer_cart_provider.dart';
+import 'package:mspeed/src/buyer/cart/provider/buyer_nego_provider.dart';
 import 'package:mspeed/src/buyer/chat/provider/chat_provider.dart';
 import 'package:mspeed/src/buyer/chat/view/chat_list_view.dart';
 import 'package:mspeed/src/buyer/checkout/provider/checkout_provider.dart';
@@ -46,6 +48,7 @@ import 'dart:developer';
 
 import 'package:mspeed/common/helper/constant.dart';
 import 'package:mspeed/src/buyer/home/provider/home_provider.dart';
+import 'package:mspeed/src/buyer/product/provider/buyer_product_filter_provider.dart';
 import 'package:mspeed/src/buyer/home/view/main_home.dart';
 
 import 'package:mspeed/src/buyer/region/provider/region_provider.dart';
@@ -354,6 +357,8 @@ class MyApp extends StatelessWidget {
                   create: (context) => RegisterProvider()),
               ChangeNotifierProvider<HomeProvider>(
                   create: (context) => HomeProvider()),
+              ChangeNotifierProvider<BuyerProductFilterProvider>(
+                  create: (context) => BuyerProductFilterProvider()),
               ChangeNotifierProvider<SellerHomeProvider>(
                   create: (context) => SellerHomeProvider()),
               ChangeNotifierProvider<AdminHomeProvider>(
@@ -376,6 +381,10 @@ class MyApp extends StatelessWidget {
                   create: (context) => AddressProvider()),
               ChangeNotifierProvider<ShoppingCartProvider>(
                   create: (context) => ShoppingCartProvider()),
+              ChangeNotifierProvider<BuyerCartProvider>(
+                  create: (context) => BuyerCartProvider()),
+              ChangeNotifierProvider<BuyerNegoProvider>(
+                  create: (context) => BuyerNegoProvider()),
               ChangeNotifierProvider<CheckOutProvider>(
                   create: (context) => CheckOutProvider()),
               ChangeNotifierProvider<ChatProvider>(
