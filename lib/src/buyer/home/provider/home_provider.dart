@@ -51,14 +51,18 @@ class HomeProvider extends BaseController with ChangeNotifier {
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
-      // Backend returns directly the object or inside 'data'?
-      // From BuyerDashboardResource.php, it returns directly or inside 'data' if wrapped by Resource. 
-      // Resource usually wraps in 'data' object. Wait, JsonResource wraps in 'data' by default. Let's handle both.
       final data = decoded['data'] ?? decoded;
-      _buyerDashboardModel = BuyerDashboardModel.fromJson(data);
+      try {
+        _buyerDashboardModel = BuyerDashboardModel.fromJson(data);
+        print("DEBUG_BUYER_DASHBOARD: parsed successfully, products: ${_buyerDashboardModel?.products?.length}");
+      } catch (e, stacktrace) {
+        print("DEBUG_BUYER_DASHBOARD_ERROR_PARSING: $e");
+        print(stacktrace);
+      }
       notifyListeners();
       if (withLoading) loading(false);
     } else {
+      print("DEBUG_BUYER_DASHBOARD_ERROR_HTTP: ${response.statusCode} - ${response.body}");
       final decoded = jsonDecode(response.body);
       final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
       loading(false);
@@ -66,23 +70,7 @@ class HomeProvider extends BaseController with ChangeNotifier {
     }
   }
 
-  Future<void> fetchHome({bool withLoading = false}) async {
-    if (withLoading) loading(true);
 
-    // GET /api/dashboard — endpoint dashboard baru Laravel
-    final response = await get(Constant.BASE_API_FULL + '/dashboard');
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      setHomeModel = HomeModel.fromJson(jsonDecode(response.body));
-      notifyListeners();
-      if (withLoading) loading(false);
-    } else {
-      final decoded = jsonDecode(response.body);
-      final message = decoded['message'] ?? decoded['messages']?['error'] ?? 'Terjadi kesalahan';
-      loading(false);
-      throw Exception(message);
-    }
-  }
 
   BuyerProductModel _buyerProductModel = BuyerProductModel();
 

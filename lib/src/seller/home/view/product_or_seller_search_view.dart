@@ -14,6 +14,7 @@ import 'package:mspeed/src/buyer/home/view/sort_bottom_sheet.dart';
 import 'package:mspeed/src/buyer/product/view/detail_product_view.dart';
 import 'package:mspeed/src/buyer/seller/view/seller_home_product_view.dart';
 import 'package:provider/provider.dart';
+import 'package:mspeed/src/buyer/home/model/buyer_dashboard_model.dart';
 
 import '../../../../common/base/base_state.dart';
 import '../../../../generated/assets.dart';
@@ -52,8 +53,21 @@ class _ProductOrSellerSearchViewState
     Widget _buildProductItem(int i) {
       return InkWell(
         onTap: () async {
+          final prod = products[i];
+          final mappedProduct = DashboardProductModel(
+            id: int.tryParse(prod?.ID ?? ''),
+            name: prod?.nama,
+            price: double.tryParse(prod?.harga ?? '0'),
+            qty: int.tryParse(prod?.qty ?? '0'),
+            description: prod?.deskripsi,
+            size: prod?.size,
+            productCode: prod?.kodeProduk,
+            images: prod?.foto != null ? [ProductImageModel(imgUrl: prod!.foto)] : [],
+            category: ProductCategoryModel(name: prod?.NamaKategori ?? prod?.IDKategori),
+            seller: ProductSellerModel(id: int.tryParse(prod?.SellerID ?? ''), companyName: prod?.SellerNama),
+          );
           await CusNav.nPush(
-              context, DetailProductView(id: products[i]?.ID ?? ''));
+              context, DetailProductView(product: mappedProduct));
         },
         child: Card(
           color: Colors.white,

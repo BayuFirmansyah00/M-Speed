@@ -32,7 +32,7 @@
 //     context
 //         .read<WishlistProvider>()
 //         .fetchWishlistDetail(id: widget.id, withLoading: false);
-//     context.read<ShoppingCartProvider>().fetchShoppingCart(context, withLoading: true);
+//     context.read<BuyerCartProvider>().fetchShoppingCart(context, withLoading: true);
 //     super.initState();
 //   }
 //
@@ -44,7 +44,7 @@
 //
 //   @override
 //   Widget build(BuildContext context) {
-//     final cartP = context.watch<ShoppingCartProvider>();
+//     final cartP = context.watch<BuyerCartProvider>();
 //     final wDetailP = WishlistDetailModel().data;
 //         // context.watch<WishlistProvider>().getWishListDetailModel.data;
 //     final wishP = context.watch<WishlistProvider>();
@@ -318,7 +318,7 @@
 //                     Navigator.push(
 //                         context,
 //                         MaterialPageRoute(
-//                             builder: (context) => ShoppingCartView()));
+//                             builder: (context) => BuyerCartView()));
 //                   });
 //                 },
 //                 child: Container(

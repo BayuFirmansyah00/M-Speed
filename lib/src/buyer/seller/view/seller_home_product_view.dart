@@ -16,6 +16,7 @@ import 'package:mspeed/src/buyer/transaction/view/detail_transaction_view.dart';
 import 'package:mspeed/src/buyer/wishlist/provider/wishlist_provider.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
+import 'package:mspeed/src/buyer/home/model/buyer_dashboard_model.dart';
 
 import '../../../../generated/assets.dart';
 import '../../../admin/home/view/product_or_seller_search_view.dart';
@@ -68,7 +69,15 @@ class _SellerHomeProductViewState extends State<SellerHomeProductView> {
       final prodP = data?.dataProduk?[index];
       return InkWell(
         onTap: () {
-          CusNav.nPush(context, DetailProductView(id: prodP?.ID ?? ""));
+          final product = DashboardProductModel(
+            id: int.tryParse(prodP?.ID ?? ''),
+            name: prodP?.nama,
+            price: double.tryParse(prodP?.harga ?? '0'),
+            images: prodP?.foto != null ? [ProductImageModel(imgUrl: prodP!.foto)] : [],
+            category: ProductCategoryModel(name: prodP?.IDKategori),
+            seller: ProductSellerModel(name: data?.getSeller?.nama),
+          );
+          CusNav.nPush(context, DetailProductView(product: product));
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

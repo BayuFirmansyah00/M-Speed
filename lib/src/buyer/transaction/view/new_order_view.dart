@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
-import 'package:mspeed/common/helper/Constant.dart';
 import 'package:mspeed/src/buyer/transaction/provider/transaction_provider.dart';
 import 'package:mspeed/src/buyer/transaction/provider/transaction_status.dart';
 import 'package:mspeed/src/buyer/transaction/view/detail_transaction_view.dart';
 import 'package:mspeed/src/buyer/transaction/widget/order_item_widget.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 // ─── Warna lokal ──────────────────────────────────────────────
 const _kBg = Color(0xFFF4F6FB);
@@ -21,7 +19,6 @@ class NewOrderView extends StatefulWidget {
 }
 
 class _NewOrderViewState extends State<NewOrderView> {
-  String userId = '';
 
   @override
   void initState() {
@@ -30,16 +27,13 @@ class _NewOrderViewState extends State<NewOrderView> {
   }
 
   Future<void> _initData() async {
-    final prefs = await SharedPreferences.getInstance();
-    userId = prefs.getString(Constant.kSetPrefId) ?? '';
-    userId = '148'; // TODO: remove hardcode after API fix
     await _refresh();
   }
 
   Future<void> _refresh() async {
     await context
         .read<TransactionProvider>()
-        .fetchTransaction(withLoading: false, status: widget.status.indexStatus);
+        .fetchTransaction(withLoading: true, status: widget.status.indexStatus);
   }
 
   @override

@@ -11,9 +11,10 @@ import 'package:mspeed/src/auth/view/login_view.dart';
 import 'package:mspeed/src/buyer/profil/model/akun_saya_buyer_model.dart';
 import 'package:mspeed/src/buyer/profil/provider/profile_provider.dart';
 import 'package:mspeed/src/buyer/profil/view/settings_view.dart';
-import 'package:mspeed/src/buyer/cart/view/shopping_cart_view.dart';
+import 'package:mspeed/src/buyer/cart/view/buyer_cart_view.dart';
 import 'package:mspeed/src/buyer/chat/view/chat_list_view.dart';
-import 'package:mspeed/src/buyer/cart/provider/shopping_cart_provider.dart';
+import 'package:mspeed/src/buyer/cart/provider/buyer_cart_provider.dart';
+import 'package:mspeed/src/buyer/transaction/provider/transaction_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -102,6 +103,12 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
           idBuyer: userId,
         );
       }
+      // Fetch semua tab transaksi untuk menghitung summary counter
+      // Tab 1-6: Pesanan Baru, Diterima, Dikirim, Barang Diterima, Proses Pembayaran, Telah Dibayar
+      final txP = context.read<TransactionProvider>();
+      for (int i = 1; i <= 6; i++) {
+        txP.fetchTransaction(withLoading: false, status: i);
+      }
       final p = context.read<ProfileProvider>();
       List<String> years = List.generate(
         2024 - 1900 + 1,
@@ -135,7 +142,7 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
   @override
   Widget build(BuildContext context) {
     userModel = context.watch<ProfileProvider>().akunBuyerModel;
-    final cartTotal = context.watch<ShoppingCartProvider>().countQtyCartItem();
+    final cartTotal = context.watch<BuyerCartProvider>().totalCartItems;
 
     return Scaffold(
       backgroundColor: _C.bg,
@@ -257,7 +264,7 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
                         badge: cartTotal > 0 ? '$cartTotal' : null,
                         onTap: () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => ShoppingCartView()),
+                          MaterialPageRoute(builder: (_) => BuyerCartView()),
                         ),
                       ),
                     ],
@@ -373,11 +380,14 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
 
   // ─── Ringkasan Transaksi (4 items, grid layout) ──────────────
   Widget _buildOrderStats() {
-    List<String> statusCount = [
-      userModel.data?.pesananBaru ?? '0',
-      userModel.data?.pesananDiterima ?? '0',
-      userModel.data?.pesananDikirim ?? '0',
-      userModel.data?.barangDiterima?.toString() ?? '0',
+    // Hitung counter dari TransactionProvider (data aktual dari Laravel)
+    // Tab index: 1=Pesanan Baru, 2=Diterima, 3=Dikirim, 4=Barang Diterima
+    final txP = context.watch<TransactionProvider>();
+    final List<String> statusCount = [
+      (txP.daftarTransaksi[0].data?.length ?? 0).toString(), // Ps. Baru
+      (txP.daftarTransaksi[1].data?.length ?? 0).toString(), // Diterima
+      (txP.daftarTransaksi[2].data?.length ?? 0).toString(), // Dikirim
+      (txP.daftarTransaksi[3].data?.length ?? 0).toString(), // Brg. Diterima
     ];
 
     return Container(

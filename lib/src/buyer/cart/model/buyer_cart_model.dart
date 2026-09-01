@@ -1,3 +1,5 @@
+import 'package:mspeed/src/buyer/cart/model/buyer_nego_model.dart';
+
 class BuyerCartResponse {
   final BuyerCartData? data;
 
@@ -75,8 +77,10 @@ class BuyerCartItem {
   final String? initialPrice;
   final String? finalPrice;
   final String? buyerNote;
+  final String? sellerNote;
   final String? negoStatus;
   final BuyerCartProduct? product;
+  final List<BuyerNegoModel> negos;
 
   BuyerCartItem({
     this.id,
@@ -84,8 +88,10 @@ class BuyerCartItem {
     this.initialPrice,
     this.finalPrice,
     this.buyerNote,
+    this.sellerNote,
     this.negoStatus,
     this.product,
+    this.negos = const [],
   });
 
   factory BuyerCartItem.fromJson(Map<String, dynamic> json) {
@@ -95,9 +101,28 @@ class BuyerCartItem {
       initialPrice: json['initial_price']?.toString(),
       finalPrice: json['final_price']?.toString(),
       buyerNote: json['buyer_note'],
+      sellerNote: json['seller_note'],
       negoStatus: json['nego_status'],
       product: json['product'] != null ? BuyerCartProduct.fromJson(json['product']) : null,
+      negos: json['negos'] != null
+          ? (json['negos'] as List).map((i) => BuyerNegoModel.fromJson(i)).toList()
+          : [],
     );
+  }
+
+  BuyerNegoModel? get latestNego => negos.isNotEmpty ? negos.first : null;
+  double? get latestNegoValue => latestNego?.parsedValue;
+
+  /// Harga satuan yang efektif (menggunakan harga deal jika status DEAL)
+  double get effectiveUnitPrice {
+    if (negoStatus == 'DEAL' && latestNegoValue != null && latestNegoValue! > 0) {
+      return latestNegoValue!;
+    }
+    final ip = double.tryParse(initialPrice ?? '');
+    if (ip != null && ip > 0) return ip;
+    final pp = double.tryParse(product?.price?.toString() ?? '');
+    if (pp != null && pp > 0) return pp;
+    return double.tryParse(finalPrice ?? '0') ?? 0;
   }
 }
 

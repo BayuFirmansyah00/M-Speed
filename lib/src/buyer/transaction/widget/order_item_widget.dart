@@ -43,7 +43,9 @@ class OrderItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final detail    = data?.detail?.firstOrNull;
-    final sellerName = detail?.SellerNama ?? '-';
+    final sellerName = (data?.SellerNama != null && data!.SellerNama!.isNotEmpty)
+        ? data!.SellerNama!
+        : (detail?.SellerNama ?? '-');
     final nomorOrder = data?.nomorOrder ?? '';
     final produkNama = detail?.nama ?? '-';
     final fotoUrl    = detail?.foto ?? '';

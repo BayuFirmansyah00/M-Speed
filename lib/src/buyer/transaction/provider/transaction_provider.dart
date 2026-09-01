@@ -11,7 +11,6 @@ import 'package:mspeed/src/buyer/transaction/model/riwayat_nego_transaksi_model.
 import 'package:mspeed/src/buyer/transaction/model/transaction_model.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 class TransactionProvider extends BaseController with ChangeNotifier {
@@ -56,32 +55,110 @@ class TransactionProvider extends BaseController with ChangeNotifier {
 
   bool showMore = false;
 
+  /// Mapping status log Laravel → index tab Flutter (1-6)
+  /// Tab: 1=Pesanan Baru, 2=Pesanan Diterima, 3=Pesanan Dikirim,
+  ///      4=Barang Diterima, 5=Proses Pembayaran, 6=Telah Dibayar
+  static int _logStatusToTabIndex(List logs) {
+    if (logs.isEmpty) return 1;
+    // Gunakan log terakhir (latest, urutan terbaru dari backend)
+    final latestStatus = (logs.first['status'] ?? '').toString().toLowerCase();
+    if (latestStatus.contains('siap tagih') ||
+        latestStatus.contains('sudah dibayar') ||
+        latestStatus.contains('paid') ||
+        latestStatus.contains('selesai') ||
+        latestStatus.contains('telah dibayar')) {
+      return 6;
+    } else if (latestStatus.contains('tagihan') ||
+        latestStatus.contains('proses pembayaran') ||
+        latestStatus.contains('invoice')) {
+      return 5;
+    } else if (latestStatus.contains('diterima penerima') ||
+        latestStatus.contains('barang diterima') ||
+        latestStatus.contains('diterima receiver')) {
+      return 4;
+    } else if (latestStatus.contains('dikirim') ||
+        latestStatus.contains('pengiriman')) {
+      return 3;
+    } else if (latestStatus.contains('approve') ||
+        latestStatus.contains('disetujui') ||
+        latestStatus.contains('pesanan diterima')) {
+      return 2;
+    } else {
+      // Default: pesanan baru / not approve / dll
+      return 1;
+    }
+  }
+
   Future<void> fetchTransaction(
       {bool withLoading = false, required int status}) async {
     if (withLoading) loading(true);
 
     try {
-      // GET /api/buyer/v1/buyer/transactions — auth via token (Catatan: Saat ini backend memiliki bug TYPE_ERROR pada parameter search)
+      // GET /api/buyer/v1/buyer/transactions
+      // Response: { data: [...ParentOrder], links: {}, meta: {} }
       final parsed = await getRest(
           Constant.BASE_API_FULL + '/buyer/v1/buyer/transactions');
 
-      // Backend membalikkan pagination object { data: [], links: {}, meta: {} }
-      List dataArray = (parsed is Map && parsed.containsKey('data')) ? parsed['data'] : parsed;
+      // Laravel returns pagination: { data: [...], meta: {}, links: {} }
+      final List dataArray =
+          (parsed is Map && parsed.containsKey('data')) ? parsed['data'] : [];
 
-      List<DaftarTransaksiBuyerModelData> mappedData = dataArray.map((item) {
-        return DaftarTransaksiBuyerModelData(
+      // Reset semua tab
+      final List<List<DaftarTransaksiBuyerModelData>> tabBuckets = [
+        [], [], [], [], [], []
+      ];
+
+      for (final item in dataArray) {
+        // Tentukan tab berdasarkan log status terbaru
+        final List logs = (item['logs'] is List) ? item['logs'] : [];
+        final int tabIndex = _logStatusToTabIndex(logs);
+
+        // Hitung total belanja: sum(items.final_price) + shipping_cost
+        double shippingCost = 0;
+        if (item['shipping_cost'] != null) {
+          shippingCost = (item['shipping_cost'] as num).toDouble();
+        }
+        double itemsTotal = 0;
+        final List itemsList = (item['items'] is List) ? item['items'] : [];
+        for (final it in itemsList) {
+          itemsTotal += (it['final_price'] as num? ?? 0).toDouble();
+        }
+        final double grandTotal = itemsTotal + shippingCost;
+
+        // Map items → detail (produk list)
+        final List<DaftarTransaksiBuyerModelDataDetail> detailList =
+            itemsList.map<DaftarTransaksiBuyerModelDataDetail>((it) {
+          return DaftarTransaksiBuyerModelDataDetail(
+            nama: it['product_name']?.toString(),
+            qty: it['qty']?.toString() ?? '1',
+            harga: (it['initial_price'] as num? ?? 0).toStringAsFixed(0),
+            hargaAkhir: (it['final_price'] as num? ?? 0).toStringAsFixed(0),
+            IDOrder: item['id']?.toString(),
+            foto: it['product_image_url']?.toString(), // gambar produk dari backend
+          );
+        }).toList();
+
+        final String sellerNama = item['seller']?['company_name']?.toString() ?? '-';
+        final String sellerID = item['seller']?['id']?.toString() ?? '';
+
+        final mapped = DaftarTransaksiBuyerModelData(
           ID: item['id']?.toString(),
-          nomorOrder: item['order_num']?.toString() ?? item['order_number']?.toString(),
+          nomorOrder: item['order_num']?.toString(),
           status: item['payment_status']?.toString(),
-          SellerNama: item['seller']?['company_name']?.toString() ?? item['seller_snapshot']?['name']?.toString(),
-          total: item['shipping']?['cost']?.toString() ?? '0',
+          SellerID: sellerID,
+          SellerNama: sellerNama,
+          total: grandTotal.toStringAsFixed(0),
+          jum: itemsList.length.toString(),
           Created: item['created_at']?.toString(),
-          detail: [],
+          detail: detailList,
         );
-      }).toList();
 
+        tabBuckets[tabIndex - 1].add(mapped);
+      }
+
+      // Update hanya tab yang diminta
       daftarTransaksi[status - 1] = DaftarTransaksiBuyerModel(
-          result: 'success', data: mappedData);
+          result: 'success', data: tabBuckets[status - 1]);
       notifyListeners();
     } catch (e) {
       throw Exception('Gagal memuat transaksi: $e');
@@ -120,28 +197,73 @@ class TransactionProvider extends BaseController with ChangeNotifier {
 
     try {
       // GET /api/buyer/v1/buyer/transactions/{id}
+      // Response: BuyerTransactionResource { id, order_num, payment_status, seller, items, logs, ... }
       final parsed = await getRest(
           Constant.BASE_API_FULL + '/buyer/v1/buyer/transactions/$transaction_id');
 
-      Map<String, dynamic>? dataItem = parsed is Map && parsed.containsKey('data') ? parsed['data'] : parsed;
+      // Endpoint show() mengembalikan wrapped: { data: {...} } dari JsonResource
+      final Map<String, dynamic>? raw =
+          (parsed is Map && parsed.containsKey('data'))
+              ? (parsed['data'] as Map<String, dynamic>?)
+              : (parsed is Map ? parsed.cast<String, dynamic>() : null);
 
-      if (dataItem != null) {
-        var parentOrder = DetailTransaksiBuyerModelDataParentOrderModel(
-          ID: dataItem['id']?.toString(),
-          nomorOrder: dataItem['order_num']?.toString() ?? dataItem['order_number']?.toString(),
-          status: dataItem['payment_status']?.toString(),
-          SellerNama: dataItem['seller']?['company_name']?.toString() ?? dataItem['seller_snapshot']?['name']?.toString(),
-          total: dataItem['shipping']?['cost']?.toString() ?? '0',
-          Created: dataItem['created_at']?.toString(),
+      if (raw != null) {
+        // --- Hitung total: sum(items.final_price) + shipping_cost ---
+        double shippingCost = (raw['shipping_cost'] as num? ?? 0).toDouble();
+        final List itemsList = (raw['items'] is List) ? raw['items'] : [];
+        double itemsTotal = 0;
+        for (final it in itemsList) {
+          itemsTotal += (it['final_price'] as num? ?? 0).toDouble();
+        }
+        final double grandTotal = itemsTotal + shippingCost;
+
+        // --- Map items → detail list ---
+        final List<DetailTransaksiBuyerModelDataDetail> detailList =
+            itemsList.map<DetailTransaksiBuyerModelDataDetail>((it) {
+          return DetailTransaksiBuyerModelDataDetail(
+            ID: it['id']?.toString(),
+            nama: it['product_name']?.toString(),
+            qty: it['qty']?.toString() ?? '1',
+            harga: (it['initial_price'] as num? ?? 0).toStringAsFixed(0),
+            hargaAkhir: (it['final_price'] as num? ?? 0).toStringAsFixed(0),
+            IDOrder: raw['id']?.toString(),
+            foto: it['product_image_url']?.toString(), // gambar produk dari backend
+          );
+        }).toList();
+
+        // --- Map logs → timeline ---
+        final List logs = (raw['logs'] is List) ? raw['logs'] : [];
+        final List<DetailTransaksiBuyerModelDataTimeline> timelineList =
+            logs.map<DetailTransaksiBuyerModelDataTimeline>((log) {
+          return DetailTransaksiBuyerModelDataTimeline(
+            label: log['status']?.toString(),
+            time: log['created_at']?.toString(),
+            desc: log['note']?.toString(),
+          );
+        }).toList();
+
+        // --- Build parent order model ---
+        final parentOrder = DetailTransaksiBuyerModelDataParentOrderModel(
+          ID: raw['id']?.toString(),
+          nomorOrder: raw['order_num']?.toString(),
+          status: raw['payment_status']?.toString(),
+          SellerID: raw['seller']?['id']?.toString(),
+          SellerNama: raw['seller']?['company_name']?.toString(),
+          SellerAlamat: raw['seller']?['address']?.toString(),
+          Created: raw['created_at']?.toString(),
+          total: grandTotal.toStringAsFixed(0),
+          ongkir: shippingCost.toStringAsFixed(0),
+          estPengiriman: raw['est_delivery_start']?.toString(),
+          estPengiriman2: raw['est_delivery_end']?.toString(),
         );
 
         setDetailTransaksi = DetailTransaksiBuyerModel(
           result: 'success',
           data: DetailTransaksiBuyerModelData(
             ParentOrderModel: parentOrder,
-            detail: [],
-            timeline: [],
-            title: 'Detail Order',
+            detail: detailList,
+            timeline: timelineList,
+            title: 'Detail Pesanan',
           ),
         );
       }

@@ -128,12 +128,10 @@ class BaseController<S extends BaseState> {
     }
     if (response.body.toLowerCase().contains("invalid token") ||
         response.body.toLowerCase().contains("expired token")) {
+      _preferences!.clear();
       BuildContext? context = NavigationService.navigatorKey.currentContext;
       if (context != null) {
-        // await context.read<AuthProvider>().refreshToken();
-        // if (url != 'http://103.59.94.19/turbines')
-        await get(url, body: body);
-        Utils.dismissLoading();
+        CustomAlert.showSnackBar(context, 'Harap Login Ulang', true);
       }
     }
 
@@ -166,14 +164,30 @@ class BaseController<S extends BaseState> {
     if (headers != null) h.addAll(headers);
 
     if (files == null) {
+      Map<String, String>? stringBody;
+      if (body != null) {
+        stringBody = {};
+        body.forEach((key, value) {
+          if (value != null) {
+            if (value is List) {
+              for (int i = 0; i < value.length; i++) {
+                stringBody!['$key[$i]'] = value[i].toString();
+              }
+            } else {
+              stringBody![key] = value.toString();
+            }
+          }
+        });
+      }
+
       log("==== PARAMETERS ====");
       log("URL : $url");
-      log("BODY : $body");
+      log("BODY : $stringBody");
       Response response = await http
           .post(
             Uri.parse(url),
             headers: h,
-            body: body,
+            body: stringBody,
             encoding: Encoding.getByName("utf-8"),
           )
           .timeout(
@@ -190,7 +204,7 @@ class BaseController<S extends BaseState> {
               '\r\n' +
           "URL : $url"
               '\r\n' +
-          "BODY : $body"
+          "BODY : $stringBody"
               '\r\n' +
           "FILES : $files"
               '\r\n' +
@@ -228,11 +242,10 @@ class BaseController<S extends BaseState> {
       }
       if (response.body.contains("invalid token") ||
           response.body.contains("expired token")) {
+        _preferences!.clear();
         BuildContext? context = NavigationService.navigatorKey.currentContext;
         if (context != null) {
-          // await context.read<AuthProvider>().refreshToken();
-          await post(url, body: body);
-          Utils.dismissLoading();
+          CustomAlert.showSnackBar(context, 'Harap Login Ulang', true);
         }
       }
       if (response.body.toLowerCase().contains("unauthorized")) {
@@ -249,10 +262,19 @@ class BaseController<S extends BaseState> {
       var req = http.MultipartRequest("POST", Uri.parse(url));
       h.putIfAbsent("Content-Type", () => 'multipart/form-data');
       req.headers.addAll(h);
-      if (body != null)
-        req.fields.addAll(
-          body.map((key, value) => MapEntry(key, value.toString())),
-        );
+      if (body != null) {
+        body.forEach((key, value) {
+          if (value != null) {
+            if (value is List) {
+              for (int i = 0; i < value.length; i++) {
+                req.fields['$key[$i]'] = value[i].toString();
+              }
+            } else {
+              req.fields[key] = value.toString();
+            }
+          }
+        });
+      }
       req.files.addAll(files);
       log("==== PARAMETERS ====");
       log("URL : $url");
@@ -313,11 +335,10 @@ class BaseController<S extends BaseState> {
       }
       if (response.body.contains("invalid token") ||
           response.body.contains("expired token")) {
+        _preferences!.clear();
         BuildContext? context = NavigationService.navigatorKey.currentContext;
         if (context != null) {
-          // await context.read<AuthProvider>().refreshToken();
-          await post(url, body: body);
-          Utils.dismissLoading();
+          CustomAlert.showSnackBar(context, 'Harap Login Ulang', true);
         }
       }
 
@@ -413,14 +434,30 @@ class BaseController<S extends BaseState> {
     if (headers != null) h.addAll(headers);
 
     if (files == null) {
+      Map<String, String>? stringBody;
+      if (body != null) {
+        stringBody = {};
+        body.forEach((key, value) {
+          if (value != null) {
+            if (value is List) {
+              for (int i = 0; i < value.length; i++) {
+                stringBody!['$key[$i]'] = value[i].toString();
+              }
+            } else {
+              stringBody![key] = value.toString();
+            }
+          }
+        });
+      }
+
       log("==== PARAMETERS ====");
       log("URL : $url");
-      log("BODY : $body");
+      log("BODY : $stringBody");
       Response response = await http
           .put(
             Uri.parse(url),
             headers: h,
-            body: body,
+            body: stringBody,
             encoding: Encoding.getByName("utf-8"),
           )
           .timeout(
@@ -436,7 +473,7 @@ class BaseController<S extends BaseState> {
               '\r\n' +
           "URL : $url"
               '\r\n' +
-          "BODY : $body"
+          "BODY : $stringBody"
               '\r\n' +
           "FILES : $files"
               '\r\n' +
@@ -474,11 +511,10 @@ class BaseController<S extends BaseState> {
       }
       if (response.body.contains("invalid token") ||
           response.body.contains("expired token")) {
+        _preferences!.clear();
         BuildContext? context = NavigationService.navigatorKey.currentContext;
         if (context != null) {
-          // await context.read<AuthProvider>().refreshToken();
-          await post(url, body: body);
-          Utils.dismissLoading();
+          CustomAlert.showSnackBar(context, 'Harap Login Ulang', true);
         }
       }
       if (response.body.toLowerCase().contains("unauthorized")) {
@@ -495,10 +531,19 @@ class BaseController<S extends BaseState> {
       var req = http.MultipartRequest("PUT", Uri.parse(url));
       h.putIfAbsent("Content-Type", () => 'multipart/form-data');
       req.headers.addAll(h);
-      if (body != null)
-        req.fields.addAll(
-          body.map((key, value) => MapEntry(key, value.toString())),
-        );
+      if (body != null) {
+        body.forEach((key, value) {
+          if (value != null) {
+            if (value is List) {
+              for (int i = 0; i < value.length; i++) {
+                req.fields['$key[$i]'] = value[i].toString();
+              }
+            } else {
+              req.fields[key] = value.toString();
+            }
+          }
+        });
+      }
       req.files.addAll(files);
       log("==== PARAMETERS ====");
       log("URL : $url");
@@ -555,11 +600,10 @@ class BaseController<S extends BaseState> {
       }
       if (response.body.contains("invalid token") ||
           response.body.contains("expired token")) {
+        _preferences!.clear();
         BuildContext? context = NavigationService.navigatorKey.currentContext;
         if (context != null) {
-          // await context.read<AuthProvider>().refreshToken();
-          await post(url, body: body);
-          Utils.dismissLoading();
+          CustomAlert.showSnackBar(context, 'Harap Login Ulang', true);
         }
       }
 
@@ -646,11 +690,10 @@ class BaseController<S extends BaseState> {
     }
     if (response.body.toLowerCase().contains("invalid token") ||
         response.body.toLowerCase().contains("expired token")) {
+      _preferences!.clear();
       BuildContext? context = NavigationService.navigatorKey.currentContext;
       if (context != null) {
-        // await context.read<AuthProvider>().refreshToken();
-        await delete(url, body: body);
-        Utils.dismissLoading();
+        CustomAlert.showSnackBar(context, 'Harap Login Ulang', true);
       }
     }
 

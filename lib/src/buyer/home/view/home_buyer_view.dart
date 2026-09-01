@@ -6,19 +6,20 @@ import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/generated/assets.dart';
 
-import 'package:mspeed/src/buyer/cart/view/shopping_cart_view.dart';
+import 'package:mspeed/src/buyer/cart/view/buyer_cart_view.dart';
 import 'package:mspeed/src/buyer/chat/view/chat_list_view.dart';
 import 'package:mspeed/src/buyer/product/view/detail_product_view.dart';
+import 'package:mspeed/src/buyer/wishlist/provider/wishlist_provider.dart';
 import 'package:provider/provider.dart';
 
-import '../../cart/provider/shopping_cart_provider.dart';
+import '../../cart/provider/buyer_cart_provider.dart';
 import 'package:mspeed/common/helper/app_colors.dart';
 import '../provider/home_provider.dart';
 import 'product_or_seller_search_view.dart';
 
-// ═══════════════════════════════════════════════════════════════
-// COLOR TOKENS — Buyer Blue B2B Theme
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// COLOR TOKENS â€” Buyer Blue B2B Theme
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 class _C {
   // Brand
   static Color get primary    => AppColors.buyerPrimary;       // #1565C0
@@ -36,9 +37,9 @@ class _C {
   static Color get divider => const Color(0xFFE5E7EB);
 }
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // KATEGORI PASTEL COLORS (visual variety, not monotone blue)
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const _catPastelBg = [
   Color(0xFFDBEAFE), // Blue pastel  (Consumable)
   Color(0xFFDCFCE7), // Green pastel (APD)
@@ -56,9 +57,9 @@ const _catIconColor = [
   Color(0xFF0EA5E9), // Cyan
 ];
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // MAIN VIEW
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 class HomeBuyerView extends StatefulWidget {
   @override
   State<HomeBuyerView> createState() => _HomeBuyerViewState();
@@ -93,8 +94,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
 
   Future<void> _loadData() async {
     await context.read<HomeProvider>().fetchBuyerDashboard(withLoading: false);
-    context.read<ShoppingCartProvider>().fetchShoppingCart(
-      context,
+    context.read<BuyerCartProvider>().fetchCart(
       withLoading: false,
     );
   }
@@ -107,7 +107,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
     super.dispose();
   }
 
-  // ── Shimmer placeholder ─────────────────────────────────────
+  // â”€â”€ Shimmer placeholder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   Widget _shimBox({double? w, double? h, double r = 12}) => AnimatedBuilder(
     animation: _shimmer,
     builder: (_, __) => Container(
@@ -125,7 +125,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
     final homeP = context.watch<HomeProvider>();
     final products = homeP.buyerDashboardModel?.products ?? [];
     final categories = homeP.buyerDashboardModel?.categories ?? [];
-    final cartTotal = context.watch<ShoppingCartProvider>().countQtyCartItem();
+    final cartTotal = context.watch<BuyerCartProvider>().totalCartItems;
 
     return Scaffold(
       backgroundColor: _C.bg,
@@ -137,24 +137,21 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
           await context.read<HomeProvider>().fetchBuyerDashboard(
             withLoading: false,
           );
-          await context.read<ShoppingCartProvider>().fetchShoppingCart(
-            context,
+          await context.read<BuyerCartProvider>().fetchCart(
             withLoading: false,
           );
         },
         child: CustomScrollView(
           controller: _scroll,
-          physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
-          ),
+          physics: const BouncingScrollPhysics(),
           slivers: [
-            // ── Hero Header ──────────────────────────────────
+            // â”€â”€ Hero Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             _buildHeroHeader(cartTotal),
 
-            // ── Banner Carousel ──────────────────────────────
+            // â”€â”€ Banner Carousel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             SliverToBoxAdapter(child: _buildBanner(homeP)),
 
-            // ── Section: Kategori ────────────────────────────
+            // â”€â”€ Section: Kategori â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             SliverToBoxAdapter(
               child: _sectionHead(
                 'Kategori Pilihan',
@@ -164,7 +161,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
             ),
             SliverToBoxAdapter(child: _buildCategories(categories)),
 
-            // ── Section: Produk ──────────────────────────────
+            // â”€â”€ Section: Produk â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             SliverToBoxAdapter(
               child: _sectionHead(
                 'Semua Produk',
@@ -199,9 +196,9 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // HERO HEADER — Gradient + Logo + Floating Search
-  // ═══════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // HERO HEADER â€” Gradient + Logo + Floating Search
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   Widget _buildHeroHeader(int cartTotal) {
     return SliverToBoxAdapter(
       child: Stack(
@@ -257,7 +254,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
                 children: [
                   const SizedBox(height: 12),
 
-                  // ── Top Row: Logo + Text + Icons ──
+                  // â”€â”€ Top Row: Logo + Text + Icons â”€â”€
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -292,7 +289,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
                             badge: cartTotal > 0 ? '$cartTotal' : null,
                             onTap: () => Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => ShoppingCartView()),
+                              MaterialPageRoute(builder: (_) => BuyerCartView()),
                             ),
                           ),
                         ],
@@ -302,7 +299,7 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
 
                   const SizedBox(height: 24),
 
-                  // ── Floating Search Bar ──
+                  // â”€â”€ Floating Search Bar â”€â”€
                   Container(
                     height: 50,
                     decoration: BoxDecoration(
@@ -361,9 +358,9 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // BANNER CAROUSEL — Modern rounded with overlay
-  // ═══════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // BANNER CAROUSEL â€” Modern rounded with overlay
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   Widget _buildBanner(HomeProvider p) {
     final banners = p.buyerDashboardModel?.banners ?? [];
     
@@ -463,9 +460,9 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // SECTION HEADER
-  // ═══════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   Widget _sectionHead(
     String title, {
     required VoidCallback onTap,
@@ -536,9 +533,9 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // CATEGORY LIST — Pastel circles with shadow
-  // ═══════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // CATEGORY LIST â€” Pastel circles with shadow
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   Widget _buildCategories(List categories) {
     final icons = [
       Assets.iconsIcConsumable,
@@ -659,9 +656,9 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   // PRODUCT CARD
-  // ═══════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   Widget _buildProductCard(List products, int i) {
     final item = products[i];
 
@@ -685,26 +682,43 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
       child: BuyerProductCard(
         imageUrl: item.images != null && item.images!.isNotEmpty ? item.images![0].imgUrl ?? '' : '',
         title: item.name ?? '-',
-        sellerName: item.seller?.name ?? '-',
+        sellerName: item.seller?.name?.trim().isNotEmpty == true ? item.seller!.name! : item.seller?.companyName ?? '-',
         category: item.category?.name ?? '-',
-        rating: 4.9, // Default for now
-        soldCount: item.qty ?? 0,
+        rating: 4.9,
+        soldCount: item.soldQty ?? 0,
         price: item.price ?? 0,
-        isNew: i < 3, // Just a visual mock for new items
-        onTap: () => CusNav.nPush(context, DetailProductView(id: item.id?.toString() ?? '')),
-        onWishlistTap: () {
-          // wishlist logic
+        isNew: i < 3,
+        isWishlisted: item.isInWishlist ?? false,
+        onTap: () async {
+          await CusNav.nPush(context, DetailProductView(product: item));
+          _loadData();
+        },
+        onWishlistTap: () async {
+          final wishlistP = context.read<WishlistProvider>();
+          final isCurrentlyFav = item.isInWishlist ?? false;
+          final productId = item.id?.toString() ?? '';
+          if (productId.isEmpty) return;
+          setState(() { item.isInWishlist = !isCurrentlyFav; });
+          try {
+            if (isCurrentlyFav) {
+              await wishlistP.deleteWishlist(productId: productId);
+            } else {
+              await wishlistP.addProductWishlist(productId: productId, productData: item);
+            }
+          } catch (_) {
+            setState(() { item.isInWishlist = isCurrentlyFav; });
+          }
         },
         onAddToCartTap: () {
-          // add to cart logic
+          context.read<BuyerCartProvider>().addToCart(context, item.id ?? 0, qty: 1);
         },
       ),
     );
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // EMPTY STATE — Friendly, not error-like
-  // ═══════════════════════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // EMPTY STATE â€” Friendly, not error-like
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   Widget _buildEmpty() {
     return Center(
       child: Padding(
@@ -817,9 +831,9 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// HEADER ICON BUTTON — Pill/Circle with elevation + badge
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// HEADER ICON BUTTON â€” Pill/Circle with elevation + badge
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 class _HeaderImageClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
@@ -837,9 +851,9 @@ class _HeaderImageClipper extends CustomClipper<Path> {
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // DIAGONAL RED ACCENT STRIPE
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 class _DiagonalStripePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -849,7 +863,7 @@ class _DiagonalStripePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    // Same diagonal line as the clipper edge (35% top → 65% bottom)
+    // Same diagonal line as the clipper edge (35% top â†’ 65% bottom)
     // Offset slightly left so the stripe sits right on the edge
     final start = Offset(size.width * 0.35 - 2, 0);
     final end = Offset(size.width * 0.65 - 2, size.height);
@@ -860,9 +874,9 @@ class _DiagonalStripePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-// ═══════════════════════════════════════════════════════════════
-// HEADER ICON BUTTON — Pill/Circle with elevation + badge
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// HEADER ICON BUTTON â€” Pill/Circle with elevation + badge
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 class _HeaderIconBtn extends StatelessWidget {
   final IconData icon;
   final String? badge;

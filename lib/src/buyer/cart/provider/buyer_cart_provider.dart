@@ -63,8 +63,8 @@ class BuyerCartProvider extends BaseController with ChangeNotifier {
 
     try {
       final body = {
-        'product_id': productId,
-        'qty': qty,
+        'product_id': productId.toString(),
+        'qty': qty.toString(),
       };
 
       await postRest('${Constant.BASE_API_FULL}/buyer/v1/buyer/cart', body: body);

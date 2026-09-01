@@ -31,6 +31,7 @@ import 'package:mspeed/src/buyer/cart/provider/buyer_nego_provider.dart';
 import 'package:mspeed/src/buyer/chat/provider/chat_provider.dart';
 import 'package:mspeed/src/buyer/chat/view/chat_list_view.dart';
 import 'package:mspeed/src/buyer/checkout/provider/checkout_provider.dart';
+import 'package:mspeed/src/buyer/checkout/provider/buyer_checkout_provider.dart';
 import 'package:mspeed/src/buyer/home/view/product_or_seller_search_view.dart';
 import 'package:mspeed/src/buyer/home/view/search_toko_lainnya_view.dart';
 import 'package:mspeed/src/buyer/notifikasi/provider/notifikasi_buyer_provider.dart';
@@ -387,6 +388,8 @@ class MyApp extends StatelessWidget {
                   create: (context) => BuyerNegoProvider()),
               ChangeNotifierProvider<CheckOutProvider>(
                   create: (context) => CheckOutProvider()),
+              ChangeNotifierProvider<BuyerCheckoutProvider>(
+                  create: (context) => BuyerCheckoutProvider()),
               ChangeNotifierProvider<ChatProvider>(
                   create: (context) => ChatProvider()),
               ChangeNotifierProvider<ChatSellerProvider>(

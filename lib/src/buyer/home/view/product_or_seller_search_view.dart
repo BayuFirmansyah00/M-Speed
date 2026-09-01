@@ -13,6 +13,7 @@ import 'package:mspeed/src/buyer/cart/provider/buyer_cart_provider.dart';
 import 'package:mspeed/src/buyer/cart/view/buyer_cart_view.dart';
 import 'package:mspeed/src/buyer/product/view/detail_product_view.dart';
 import 'package:provider/provider.dart';
+import 'package:mspeed/src/buyer/home/model/buyer_dashboard_model.dart';
 
 import '../../../../common/base/base_state.dart';
 import '../../../../generated/assets.dart';
@@ -62,8 +63,19 @@ class _ProductOrSellerSearchViewState
     Widget _buildProductItem(BuyerProductData product) {
       return GestureDetector(
         onTap: () async {
-          // Note: Detail backend is pending (TODO)
-          await CusNav.nPush(context, DetailProductView(id: product.id?.toString() ?? ''));
+          final mappedProduct = DashboardProductModel(
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            qty: product.qty,
+            description: product.description,
+            size: product.size,
+            productCode: product.productCode,
+            images: product.photo != null ? [ProductImageModel(imgUrl: product.photo)] : [],
+            category: ProductCategoryModel(name: product.category?.name),
+            seller: ProductSellerModel(id: product.seller?.id, companyName: product.seller?.companyName),
+          );
+          await CusNav.nPush(context, DetailProductView(product: mappedProduct));
         },
         child: Container(
           decoration: BoxDecoration(

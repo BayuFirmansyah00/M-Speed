@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:mspeed/common/component/custom_appbar.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/generated/assets.dart';
-import 'package:mspeed/src/buyer/cart/provider/shopping_cart_provider.dart';
-import 'package:mspeed/src/buyer/cart/view/shopping_cart_view.dart';
+import 'package:mspeed/src/buyer/cart/provider/buyer_cart_provider.dart';
+import 'package:mspeed/src/buyer/cart/view/buyer_cart_view.dart';
 import 'package:mspeed/src/buyer/chat/view/chat_person_view.dart';
 import 'package:mspeed/src/buyer/wishlist/provider/wishlist_provider.dart';
 import 'package:mspeed/utils/utils.dart';
@@ -13,12 +12,12 @@ import 'package:share_plus/share_plus.dart';
 
 import 'package:mspeed/common/helper/constant.dart';
 import '../../../../common/component/image_carousel.dart';
-import '../provider/product_provider.dart';
+import '../../home/model/buyer_dashboard_model.dart';
 
 class DetailProductView extends StatefulWidget {
-  final String id;
+  final DashboardProductModel product;
 
-  DetailProductView({Key? key, required this.id}) : super(key: key);
+  DetailProductView({Key? key, required this.product}) : super(key: key);
 
   @override
   State<DetailProductView> createState() => _DetailProductViewState();
@@ -26,25 +25,20 @@ class DetailProductView extends StatefulWidget {
 
 class _DetailProductViewState extends State<DetailProductView> {
   bool isFav = false;
+  
   @override
   void initState() {
-    getData();
     super.initState();
-  }
-
-  getData() async {
-    Utils.showLoading();
-    await context
-        .read<ProductProvider>()
-        .fetchDetailProduct(productId: widget.id);
-    await context.read<ShoppingCartProvider>().fetchShoppingCart(context);
-    Utils.dismissLoading();
+    isFav = widget.product.isInWishlist ?? false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<BuyerCartProvider>().fetchCart();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final data = context.watch<ProductProvider>().productModel.data?.first;
-    final cartTotal = context.watch<ShoppingCartProvider>().countQtyCartItem();
+    final cartTotal = context.watch<BuyerCartProvider>().totalCartItems;
+    final product = widget.product;
 
     Widget buildProductDetailRow(String label, String value,
         {Color textColor = const Color(0xFF111827)}) {
@@ -98,11 +92,18 @@ class _DetailProductViewState extends State<DetailProductView> {
               ),
               child: IconButton(
                 onPressed: () {
+                  final seller = product.seller;
+                  final sellerName = seller?.name?.trim().isNotEmpty == true
+                      ? seller!.name!.trim()
+                      : seller?.companyName?.trim().isNotEmpty == true
+                          ? seller!.companyName!.trim()
+                          : 'Nama Toko';
+
                   CusNav.nPush(
                       context,
                       ChatPersonView(
-                          id: data?.SellerID ?? '',
-                          sellerName: data?.SellerNama ?? ''));
+                          id: seller?.id?.toString() ?? '',
+                          sellerName: sellerName));
                 },
                 icon: Icon(Icons.chat_bubble_outline_rounded,
                     color: Constant.primaryColor),
@@ -114,10 +115,12 @@ class _DetailProductViewState extends State<DetailProductView> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () async {
+                    Utils.showLoading();
                     await context
-                        .read<ShoppingCartProvider>()
-                        .addToCart(context, produkId: data?.ID ?? '0', qty: 1);
-                    CusNav.nPushReplace(context, ShoppingCartView());
+                        .read<BuyerCartProvider>()
+                        .addToCart(context, product.id ?? 0, qty: 1);
+                    Utils.dismissLoading();
+                    CusNav.nPushReplace(context, BuyerCartView());
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Constant.primaryColor,
@@ -161,13 +164,22 @@ class _DetailProductViewState extends State<DetailProductView> {
         actions: [
           IconButton(
             onPressed: () {
-              Share.share(data?.foto ?? '', subject: data?.nama ?? '');
+              String shareImg = '';
+              if (product.images != null) {
+                final valid = product.images!
+                    .where((e) => e.imgUrl != null && e.imgUrl!.trim().isNotEmpty)
+                    .toList();
+                if (valid.isNotEmpty) {
+                  shareImg = valid.first.imgUrl!;
+                }
+              }
+              Share.share(shareImg, subject: product.name ?? 'Produk');
             },
             icon: const Icon(Icons.ios_share_rounded, color: Colors.black, size: 22),
           ),
           IconButton(
             onPressed: () {
-              CusNav.nPush(context, ShoppingCartView());
+              CusNav.nPush(context, BuyerCartView());
             },
             icon: cartTotal == 0
                 ? SvgPicture.asset(Assets.svgsIcCart, width: 24)
@@ -191,8 +203,30 @@ class _DetailProductViewState extends State<DetailProductView> {
                 // Product Image
                 Container(
                   color: Colors.white,
-                  child: ImageCarousel(
-                    imageUrls: [data?.foto ?? ''],
+                  child: Builder(
+                    builder: (ctx) {
+                      List<String> validUrls = [];
+                      if (product.images != null) {
+                        for (var img in product.images!) {
+                          if (img.imgUrl != null && img.imgUrl!.trim().isNotEmpty) {
+                            validUrls.add(img.imgUrl!);
+                          }
+                        }
+                      }
+                      
+                      if (validUrls.isEmpty) {
+                        return Container(
+                          height: 250,
+                          color: Colors.grey.shade200,
+                          alignment: Alignment.center,
+                          child: Icon(Icons.image_not_supported_rounded, size: 50, color: Colors.grey),
+                        );
+                      }
+                      
+                      return ImageCarousel(
+                        imageUrls: validUrls,
+                      );
+                    },
                   ),
                 ),
                 
@@ -208,7 +242,7 @@ class _DetailProductViewState extends State<DetailProductView> {
                         children: [
                           Expanded(
                             child: Text(
-                              'Rp ${Utils.formatCurrency(num.parse(data?.harga ?? '0'))}',
+                              'Rp ${Utils.formatCurrency(product.price ?? 0)}',
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.w800,
@@ -217,15 +251,34 @@ class _DetailProductViewState extends State<DetailProductView> {
                             ),
                           ),
                           StatefulBuilder(
-                            builder: (BuildContext context, StateSetter setState) {
+                            builder: (BuildContext context, StateSetter setFavState) {
                               return GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    isFav = !isFav;
-                                    context
-                                        .read<WishlistProvider>()
-                                        .addProductWishlist(productId: widget.id);
-                                  });
+                                onTap: () async {
+                                  final wishlistP = context.read<WishlistProvider>();
+                                  if (wishlistP.wishlistActionLoading) return; // guard double-tap
+                                  final productId = product.id?.toString() ?? '';
+                                  if (productId.isEmpty) return;
+
+                                  final wasInWishlist = isFav;
+                                  // Optimistic UI
+                                  setFavState(() { isFav = !wasInWishlist; });
+                                  // Sync back to dashboard model object
+                                  widget.product.isInWishlist = !wasInWishlist;
+
+                                  try {
+                                    if (wasInWishlist) {
+                                      await wishlistP.deleteWishlist(productId: productId);
+                                    } else {
+                                      await wishlistP.addProductWishlist(
+                                        productId: productId,
+                                        productData: product,
+                                      );
+                                    }
+                                  } catch (_) {
+                                    // Revert on failure
+                                    setFavState(() { isFav = wasInWishlist; });
+                                    widget.product.isInWishlist = wasInWishlist;
+                                  }
                                 },
                                 child: Container(
                                   padding: const EdgeInsets.all(8),
@@ -246,7 +299,7 @@ class _DetailProductViewState extends State<DetailProductView> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        data?.nama ?? '',
+                        product.name ?? 'Nama produk tidak tersedia',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
@@ -269,7 +322,7 @@ class _DetailProductViewState extends State<DetailProductView> {
                                 const Icon(Icons.inventory_2_outlined, size: 14, color: Colors.grey),
                                 const SizedBox(width: 6),
                                 Text(
-                                  'Stok: ${data?.qty ?? 0}',
+                                  'Stok: ${product.qty ?? 0}',
                                   style: const TextStyle(
                                       fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black87),
                                 ),
@@ -289,7 +342,7 @@ class _DetailProductViewState extends State<DetailProductView> {
                                 const Icon(Icons.sell_outlined, size: 14, color: Colors.grey),
                                 const SizedBox(width: 6),
                                 Text(
-                                  'Terjual: ${data?.terjual ?? 0}',
+                                  'Terjual: ${product.soldQty ?? 0}',
                                   style: const TextStyle(
                                       fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black87),
                                 ),
@@ -324,22 +377,32 @@ class _DetailProductViewState extends State<DetailProductView> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              data?.SellerNama ?? 'Nama Toko',
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF111827),
-                              ),
+                            Builder(
+                              builder: (ctx) {
+                                final seller = product.seller;
+                                final sellerName = seller?.name?.trim().isNotEmpty == true
+                                    ? seller!.name!.trim()
+                                    : seller?.companyName?.trim().isNotEmpty == true
+                                        ? seller!.companyName!.trim()
+                                        : 'Nama Toko';
+                                return Text(
+                                  sellerName,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF111827),
+                                  ),
+                                );
+                              }
                             ),
                             const SizedBox(height: 4),
                             Row(
                               children: [
                                 const Icon(Icons.location_on_rounded, size: 14, color: Colors.grey),
                                 const SizedBox(width: 4),
-                                Text(
-                                  data?.kota ?? 'Lokasi',
-                                  style: const TextStyle(
+                                const Text(
+                                  'Lokasi belum tersedia',
+                                  style: TextStyle(
                                     fontSize: 13,
                                     color: Colors.grey,
                                   ),
@@ -381,9 +444,11 @@ class _DetailProductViewState extends State<DetailProductView> {
                         ),
                         child: Column(
                           children: [
-                            buildProductDetailRow('Kode Produk', data?.kodeProduk ?? '-'),
+                            buildProductDetailRow('Kode Produk', product.productCode ?? '-'),
                             const Divider(height: 16, color: Color(0xFFEEEEEE)),
-                            buildProductDetailRow('Kategori', data?.NamaKategori ?? '-', textColor: Constant.primaryColor),
+                            buildProductDetailRow('Ukuran', product.size ?? '-'),
+                            const Divider(height: 16, color: Color(0xFFEEEEEE)),
+                            buildProductDetailRow('Kategori', product.category?.name ?? '-', textColor: Constant.primaryColor),
                           ],
                         ),
                       ),
@@ -398,7 +463,7 @@ class _DetailProductViewState extends State<DetailProductView> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        data?.deskripsi ?? '',
+                        product.description?.isNotEmpty == true ? product.description! : 'Deskripsi produk tidak tersedia.',
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w400,

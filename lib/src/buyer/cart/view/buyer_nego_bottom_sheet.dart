@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'package:mspeed/common/component/custom_button.dart';
@@ -27,9 +26,22 @@ class _BuyerNegoBottomSheetState extends State<BuyerNegoBottomSheet> {
   @override
   void initState() {
     super.initState();
-    if (widget.cartItem.finalPrice != null) {
-      double price = double.tryParse(widget.cartItem.finalPrice!) ?? 0;
-      _priceController.text = price.toInt().toString();
+    if (widget.cartItem.latestNegoValue != null && widget.cartItem.latestNegoValue! > 0) {
+      _priceController.text = widget.cartItem.latestNegoValue!.toInt().toString();
+    } else if (widget.cartItem.initialPrice != null) {
+      double price = double.tryParse(widget.cartItem.initialPrice!) ?? 0;
+      if (price > 0) {
+        _priceController.text = price.toInt().toString();
+      }
+    } else if (widget.cartItem.product?.price != null) {
+      double price = double.tryParse(widget.cartItem.product!.price.toString()) ?? 0;
+      if (price > 0) {
+        _priceController.text = price.toInt().toString();
+      }
+    }
+
+    if (widget.cartItem.buyerNote != null) {
+      _noteController.text = widget.cartItem.buyerNote!;
     }
   }
 
@@ -45,23 +57,23 @@ class _BuyerNegoBottomSheetState extends State<BuyerNegoBottomSheet> {
       final negoP = context.read<BuyerNegoProvider>();
       final cartId = widget.cartItem.id;
       final valueStr = _priceController.text.replaceAll(RegExp(r'[^0-9]'), '');
-      
+
       if (cartId == null || valueStr.isEmpty) return;
-      
+
       final value = double.tryParse(valueStr) ?? 0;
-      
+
       negoP.submitNego(
         cartId: cartId,
         value: value,
         buyerNote: _noteController.text,
         onSuccess: (msg) {
-          CustomAlert.showSnackBar(context, msg, false);
+          Utils.showSuccess(msg: msg);
           Navigator.pop(context);
-          context.read<BuyerCartProvider>().fetchCart();
+          context.read<BuyerCartProvider>().fetchCart(withLoading: false);
         },
         onError: (msg) {
           CustomAlert.showSnackBar(context, msg, true);
-        }
+        },
       );
     }
   }
@@ -70,7 +82,10 @@ class _BuyerNegoBottomSheetState extends State<BuyerNegoBottomSheet> {
   Widget build(BuildContext context) {
     final negoP = context.watch<BuyerNegoProvider>();
     final productName = widget.cartItem.product?.name ?? '-';
-    final initialPrice = widget.cartItem.finalPrice ?? '0';
+    final normalPrice = double.tryParse(widget.cartItem.product?.price?.toString() ?? '0') ?? 0;
+    final displayCurrentPrice = normalPrice > 0
+        ? normalPrice
+        : (double.tryParse(widget.cartItem.initialPrice ?? '0') ?? 0);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -109,15 +124,22 @@ class _BuyerNegoBottomSheetState extends State<BuyerNegoBottomSheet> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Harga saat ini: Rp ${Utils.thousandSeparator(double.tryParse(initialPrice)?.toInt() ?? 0)}',
+              'Harga normal: Rp ${Utils.thousandSeparator(displayCurrentPrice.toInt())}',
               style: const TextStyle(color: Colors.grey, fontSize: 13),
             ),
+            if (widget.cartItem.latestNegoValue != null && widget.cartItem.latestNegoValue! > 0) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Tawaran terakhir: Rp ${Utils.thousandSeparator(widget.cartItem.latestNegoValue!.toInt())}',
+                style: const TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+            ],
             const SizedBox(height: 16),
-            const Text('Harga Tawaran', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text('Harga Tawaran Anda (Satuan)', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             CustomTextField.underlineTextField(
               controller: _priceController,
-              hintText: 'Masukkan harga tawaran',
+              hintText: 'Masukkan harga tawaran satuan',
               textInputType: TextInputType.number,
             ),
             const SizedBox(height: 16),
@@ -125,7 +147,7 @@ class _BuyerNegoBottomSheetState extends State<BuyerNegoBottomSheet> {
             const SizedBox(height: 8),
             CustomTextField.underlineTextField(
               controller: _noteController,
-              hintText: 'Masukkan catatan',
+              hintText: 'Masukkan catatan untuk penjual',
               maxLength: 100,
             ),
             const SizedBox(height: 24),

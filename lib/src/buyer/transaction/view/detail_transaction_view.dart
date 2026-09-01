@@ -54,14 +54,14 @@ class _DetailTransactionViewState extends BaseState<DetailTransactionView> {
     userId = await prefs.getString(Constant.kSetPrefId) ?? "";
     buyerName = await prefs.getString(Constant.kSetPrefFirstName) ?? "";
     buyerPhone = await prefs.getString(Constant.kSetPrefPhone) ?? "";
+    // Fetch detail pesanan dari endpoint Buyer V1
     await context.read<TransactionProvider>().fetchDetailTransaction(
+      withLoading: true,
       transaction_id: widget.transaction_id,
     );
-
-    await context.read<SellerPesananProvider>().fetchDetailPesanan(
-      withLoading: true,
-      parent_id: widget.transaction_id,
-    );
+    // Catatan: SellerPesananProvider.fetchDetailPesanan() sengaja TIDAK dipanggil di sini.
+    // Data pesanan buyer diambil sepenuhnya dari endpoint Buyer V1 (GET /buyer/v1/buyer/transactions/{id}).
+    // UI legacy yang masih watch SellerPesananProvider akan menerima null state (ditangani secara null-safe).
   }
 
   DetailTransaksiBuyerModelData? data = DetailTransaksiBuyerModelData();

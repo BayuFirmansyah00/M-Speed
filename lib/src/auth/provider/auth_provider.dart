@@ -8,7 +8,7 @@ import 'package:mspeed/src/buyer/home/view/main_home.dart';
 import 'package:mspeed/src/keuangan/home/view/main_home_keuangan_view.dart';
 import 'package:mspeed/src/penerima/home/view/dashboard_pesanan_view.dart';
 import 'package:mspeed/src/seller/home/view/seller_main_home.dart';
-import 'package:mspeed/src/seller/profil/view/profile_edit_seller_view.dart';
+
 import 'package:mspeed/utils/utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
@@ -21,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mspeed/main.dart';
 import 'package:mspeed/src/seller/profil/provider/profile_seller_provider.dart';
+import 'package:mspeed/src/buyer/wishlist/provider/wishlist_provider.dart';
 
 class AuthProvider extends BaseController with ChangeNotifier {
   TextEditingController usernameC = TextEditingController();
@@ -93,8 +94,9 @@ class AuthProvider extends BaseController with ChangeNotifier {
           debugPrint('RAW ROLE: ${response.data['data']?['role']}');
 
           // Parsing response Laravel Sanctum yang benar
-          final AuthResponseModel authResponse =
-              AuthResponseModel.fromJson(response.data);
+          final AuthResponseModel authResponse = AuthResponseModel.fromJson(
+            response.data,
+          );
 
           if (!authResponse.isValid) {
             loading(false);
@@ -109,29 +111,45 @@ class AuthProvider extends BaseController with ChangeNotifier {
 
           // Simpan data ke SharedPreferences
           await prefs.setString(Constant.kSetPrefToken, token);
-          
+
           final String email = authResponse.email ?? usernameC.text;
           final String role = authResponse.role ?? 'BUYER';
           final String userId = authResponse.id ?? '';
-          
+
           debugPrint('PARSED ROLE: ${authResponse.role}');
 
-          final bool isAdmin = ['ADMIN', 'MANAGER', 'AUDIT'].contains(role.toUpperCase());
+          final bool isAdmin = [
+            'ADMIN',
+            'MANAGER',
+            'AUDIT',
+          ].contains(role.toUpperCase());
 
           await prefs.setString(Constant.kSetPrefId, userId);
           await prefs.setString(Constant.kSetPrefRoles, role);
           debugPrint('\n================================');
           debugPrint('[AUTH DEBUG] user_id = $userId');
-          debugPrint('[AUTH DEBUG] seller_data_id = ${authResponse.sellerDataId}');
-          debugPrint('[AUTH DEBUG] company_name = ${authResponse.email}'); // Company name isn't in AuthResponseModel right now
+          debugPrint(
+            '[AUTH DEBUG] seller_data_id = ${authResponse.sellerDataId}',
+          );
+          debugPrint(
+            '[AUTH DEBUG] company_name = ${authResponse.email}',
+          ); // Company name isn't in AuthResponseModel right now
           debugPrint('================================\n');
-          
-          if (authResponse.sellerDataId != null && authResponse.sellerDataId!.isNotEmpty) {
-            await prefs.setString('seller_data_id', authResponse.sellerDataId.toString());
-            debugPrint('[AUTH DEBUG] saved seller_data_id = ${authResponse.sellerDataId}');
+
+          if (authResponse.sellerDataId != null &&
+              authResponse.sellerDataId!.isNotEmpty) {
+            await prefs.setString(
+              'seller_data_id',
+              authResponse.sellerDataId.toString(),
+            );
+            debugPrint(
+              '[AUTH DEBUG] saved seller_data_id = ${authResponse.sellerDataId}',
+            );
           } else {
             await prefs.remove('seller_data_id');
-            debugPrint('[AUTH DEBUG] saved seller_data_id = NULL (removed from prefs)');
+            debugPrint(
+              '[AUTH DEBUG] saved seller_data_id = NULL (removed from prefs)',
+            );
           }
 
           if (authResponse.completeness != null) {
@@ -139,7 +157,7 @@ class AuthProvider extends BaseController with ChangeNotifier {
           }
           await prefs.setBool(Constant.kSetPrefIsAdmin, isAdmin);
           await prefs.setString(Constant.kSetPrefEmail, email);
-          
+
           // Data fallback agar aman (karena response login backend belum mengembalikan profil lengkap)
           await prefs.setString(Constant.kSetPrefFirstName, '');
           await prefs.setString(Constant.kSetPrefLastName, '');
@@ -150,11 +168,11 @@ class AuthProvider extends BaseController with ChangeNotifier {
           // Cek completeness dari local storage, default ke 0 agar dashboard terkunci
           // jika tidak ada. Idealnya backend mengirim completeness saat login.
           final completeness = prefs.getString('completeness') ?? '0';
-          
+
           usernameC.clear();
           passC.clear();
           loading(false);
-          
+
           debugPrint('NAVIGATE ROLE: $role');
           _navigateByRole(context, role, completeness);
         }
@@ -176,7 +194,11 @@ class AuthProvider extends BaseController with ChangeNotifier {
   }
 
   /// Navigasi berdasarkan role user dari database Laravel.
-  void _navigateByRole(BuildContext context, String role, String? completeness) {
+  void _navigateByRole(
+    BuildContext context,
+    String role,
+    String? completeness,
+  ) {
     switch (role.toUpperCase()) {
       case 'SELLER':
         debugPrint('NAVIGATING TO SELLER');
@@ -214,11 +236,13 @@ class AuthProvider extends BaseController with ChangeNotifier {
     );
 
     if (response.statusCode == 201 || response.statusCode == 200) {
-      firebaseTokenModel =
-          FirebaseTokenModel.fromJson(jsonDecode(response.body));
+      firebaseTokenModel = FirebaseTokenModel.fromJson(
+        jsonDecode(response.body),
+      );
       loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]?["error"] ??
+      final message =
+          jsonDecode(response.body)["messages"]?["error"] ??
           jsonDecode(response.body)["message"] ??
           'Gagal update token firebase';
       loading(false);
@@ -243,9 +267,17 @@ class AuthProvider extends BaseController with ChangeNotifier {
     final context = NavigationService.navigatorKey.currentContext;
     if (context != null) {
       try {
-        Provider.of<ProfileSellerProvider>(context, listen: false).resetProfileState();
+        Provider.of<ProfileSellerProvider>(
+          context,
+          listen: false,
+        ).resetProfileState();
       } catch (e) {
         debugPrint('Gagal reset ProfileSellerProvider saat logout: $e');
+      }
+      try {
+        Provider.of<WishlistProvider>(context, listen: false).resetState();
+      } catch (e) {
+        debugPrint('Gagal reset WishlistProvider saat logout: $e');
       }
     }
 

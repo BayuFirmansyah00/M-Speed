@@ -4,13 +4,14 @@ import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/common/helper/constant.dart';
 import 'package:mspeed/common/helper/app_colors.dart';
-import 'package:mspeed/src/buyer/cart/provider/shopping_cart_provider.dart';
+import 'package:mspeed/src/buyer/cart/provider/buyer_cart_provider.dart';
 import 'package:mspeed/src/buyer/product/view/detail_product_view.dart';
 import 'package:mspeed/src/buyer/seller/view/seller_home_product_view.dart';
 import 'package:mspeed/src/buyer/wishlist/model/buyer_wishlist_model.dart';
 import 'package:mspeed/src/buyer/wishlist/provider/wishlist_provider.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
+import 'package:mspeed/src/buyer/home/model/buyer_dashboard_model.dart';
 
 class WishlistSayaView extends StatefulWidget {
   const WishlistSayaView({super.key});
@@ -22,7 +23,6 @@ class WishlistSayaView extends StatefulWidget {
 class _WishlistSayaViewState extends BaseState<WishlistSayaView> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final searchController = TextEditingController();
-  List<BuyerWishlistModelData?> wishlists = [];
 
   @override
   void initState() {
@@ -32,7 +32,7 @@ class _WishlistSayaViewState extends BaseState<WishlistSayaView> with SingleTick
   }
 
   Future<void> initData() async {
-    await context.read<WishlistProvider>().fetchWishlist();
+    await context.read<WishlistProvider>().fetchWishlist(withLoading: true);
   }
 
   @override
@@ -82,7 +82,7 @@ class _WishlistSayaViewState extends BaseState<WishlistSayaView> with SingleTick
     );
   }
 
-  Widget _buildProductGrid(List<BuyerWishlistModelDataDetail?> products) {
+  Widget _buildProductGrid(List<DashboardProductModel> products) {
     if (products.isEmpty) {
       return _buildEmptyState('Belum ada produk favorit', 'Tambahkan produk ke favorit\nuntuk melihatnya di sini.');
     }
@@ -98,33 +98,46 @@ class _WishlistSayaViewState extends BaseState<WishlistSayaView> with SingleTick
       itemCount: products.length,
       itemBuilder: (ctx, i) {
         final e = products[i];
+        final imgUrl = (e.images != null && e.images!.isNotEmpty)
+            ? (e.images!.first.imgUrl ?? '')
+            : '';
+        final sellerName = e.seller?.name?.trim().isNotEmpty == true
+            ? e.seller!.name!
+            : e.seller?.companyName ?? '-';
         return BuyerProductCard(
-          imageUrl: e?.foto ?? "",
-          title: e?.nama ?? "-",
-          sellerName: "", // Optional since we are in products view
-          category: e?.IDKategori ?? "-",
+          imageUrl: imgUrl,
+          title: e.name ?? '-',
+          sellerName: sellerName,
+          category: e.category?.name ?? '-',
           rating: 5.0,
-          soldCount: 0,
-          price: double.tryParse(e?.harga ?? "0") ?? 0,
+          soldCount: e.soldQty ?? 0,
+          price: e.price ?? 0,
           isNew: false,
           isWishlisted: true,
           onTap: () async {
-            await CusNav.nPush(context, DetailProductView(id: e?.ID ?? ''));
+            await CusNav.nPush(context, DetailProductView(product: e));
+            // After returning, if user removed from wishlist inside detail, update list
+            if (e.isInWishlist == false) {
+              context.read<WishlistProvider>().fetchWishlist();
+            }
           },
-          onWishlistTap: () {
-            context.read<WishlistProvider>().deleteWishlist(
-                  wishlistId: e?.IDWishlist?.toString() ?? e?.ID?.toString() ?? "",
-                ).then((_) {
-              context.read<WishlistProvider>().fetchWishlist(withLoading: true);
-            });
+          onWishlistTap: () async {
+            final productId = e.id?.toString() ?? '';
+            if (productId.isEmpty) return;
+            try {
+              await context.read<WishlistProvider>().deleteWishlist(productId: productId);
+              Utils.showSuccess(msg: 'Produk dihapus dari favorit');
+            } catch (err) {
+              Utils.showFailed(msg: 'Gagal menghapus dari favorit');
+            }
           },
           onAddToCartTap: () {
-            context.read<ShoppingCartProvider>().addToCart(
-                  context,
-                  produkId: e?.ID ?? "0",
-                  qty: 1,
-                ).then((_) {
-              Utils.showSuccess(msg: "Produk berhasil ditambahkan ke cart");
+            context.read<BuyerCartProvider>().addToCart(
+              context,
+              e.id ?? 0,
+              qty: 1,
+            ).then((_) {
+              Utils.showSuccess(msg: 'Produk berhasil ditambahkan ke cart');
             });
           },
         );
@@ -220,16 +233,72 @@ class _WishlistSayaViewState extends BaseState<WishlistSayaView> with SingleTick
     );
   }
 
-  Widget _buildSellerList(List<BuyerWishlistModelData?> sellers) {
+  Widget _buildSellerList(List<ProductSellerModel> sellers) {
     if (sellers.isEmpty) {
-      return _buildEmptyState('Belum ada toko favorit', 'Tambahkan toko ke favorit\nuntuk melihatnya di sini.');
+      return _buildEmptyState('Belum ada toko favorit', 'Favoritekan produk dari toko\nuntuk melihatnya di sini.');
     }
     return ListView.builder(
       padding: const EdgeInsets.all(Constant.space16),
       itemCount: sellers.length,
       itemBuilder: (ctx, i) {
-        if (sellers[i] == null) return const SizedBox();
-        return _buildSellerCard(sellers[i]!);
+        final seller = sellers[i];
+        return Container(
+          margin: const EdgeInsets.only(bottom: Constant.space12),
+          padding: const EdgeInsets.all(Constant.space12),
+          decoration: BoxDecoration(
+            color: Constant.dsSurface,
+            borderRadius: BorderRadius.circular(Constant.radiusLg),
+            border: Border.all(color: Constant.dsBorder, width: 1),
+            boxShadow: [Constant.shadowSmall],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48, height: 48,
+                decoration: BoxDecoration(
+                  color: Constant.dsBackground,
+                  borderRadius: BorderRadius.circular(Constant.radiusMd),
+                ),
+                child: const Icon(Icons.storefront_rounded, color: AppColors.buyerPrimary, size: 24),
+              ),
+              const SizedBox(width: Constant.space12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      seller.name?.trim().isNotEmpty == true ? seller.name! : seller.companyName ?? '-',
+                      style: TextStyle(
+                        fontFamily: Constant.primaryTextStyle.fontFamily,
+                        fontSize: 14, fontWeight: FontWeight.bold, color: Constant.dsTextPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: Constant.space4),
+                    Text(
+                      seller.companyName ?? '',
+                      style: TextStyle(
+                        fontFamily: Constant.primaryTextStyle.fontFamily,
+                        fontSize: 11, color: Constant.dsTextSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              OutlinedButton(
+                onPressed: () {
+                  CusNav.nPush(context, SellerHomeProductView(id: seller.id?.toString() ?? '0'));
+                },
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.buyerPrimary),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Constant.radiusSm)),
+                  padding: const EdgeInsets.symmetric(horizontal: Constant.space12, vertical: 0),
+                  minimumSize: const Size(0, 32),
+                ),
+                child: const Text('Kunjungi', style: TextStyle(color: AppColors.buyerPrimary, fontSize: 12, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        );
       },
     );
   }
@@ -237,17 +306,22 @@ class _WishlistSayaViewState extends BaseState<WishlistSayaView> with SingleTick
   @override
   Widget build(BuildContext context) {
     final p = context.watch<WishlistProvider>();
-    if (wishlists.isEmpty && searchController.text.isEmpty) {
-      wishlists = p.wishlistModel.data ?? [];
-    }
+    final allProducts = p.v1WishlistProducts;
 
-    // Flatten all products for the Product tab
-    List<BuyerWishlistModelDataDetail?> allProducts = [];
-    for (var seller in wishlists) {
-      if (seller?.detail != null) {
-        allProducts.addAll(seller!.detail!);
+    // Derive unique sellers from the product list
+    final Map<int, ProductSellerModel> sellerMap = {};
+    for (final product in allProducts) {
+      if (product.seller?.id != null) {
+        sellerMap.putIfAbsent(product.seller!.id!, () => product.seller!);
       }
     }
+    final uniqueSellers = sellerMap.values.toList();
+
+    // Filter for search
+    final filteredProducts = searchController.text.isEmpty
+        ? allProducts
+        : allProducts.where((prod) =>
+            (prod.name ?? '').toLowerCase().contains(searchController.text.toLowerCase())).toList();
 
     return Scaffold(
       backgroundColor: Constant.dsBackground,
@@ -281,10 +355,7 @@ class _WishlistSayaViewState extends BaseState<WishlistSayaView> with SingleTick
                   child: TextField(
                     controller: searchController,
                     onChanged: (val) {
-                      setState(() {
-                        wishlists = p.wishlistModel.data?.where((element) =>
-                            element?.namaseller?.toLowerCase().contains(val.toLowerCase()) ?? false).toList() ?? [];
-                      });
+                      setState(() {}); // trigger filteredProducts rebuild
                     },
                     decoration: InputDecoration(
                       hintText: 'Cari produk favorit...',
@@ -320,16 +391,16 @@ class _WishlistSayaViewState extends BaseState<WishlistSayaView> with SingleTick
           RefreshIndicator(
             color: AppColors.buyerPrimary,
             onRefresh: () async {
-              context.read<WishlistProvider>().fetchWishlist(withLoading: true);
+              await context.read<WishlistProvider>().fetchWishlist(withLoading: true);
             },
-            child: _buildProductGrid(allProducts),
+            child: _buildProductGrid(filteredProducts),
           ),
           RefreshIndicator(
             color: AppColors.buyerPrimary,
             onRefresh: () async {
-              context.read<WishlistProvider>().fetchWishlist(withLoading: true);
+              await context.read<WishlistProvider>().fetchWishlist(withLoading: true);
             },
-            child: _buildSellerList(wishlists),
+            child: _buildSellerList(uniqueSellers),
           ),
         ],
       ),

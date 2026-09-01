@@ -106,6 +106,7 @@ class DashboardProductModel {
   String? name;
   String? productCode;
   int? qty;
+  int? soldQty;
   double? price;
   String? size;
   String? description;
@@ -119,6 +120,7 @@ class DashboardProductModel {
     this.name,
     this.productCode,
     this.qty,
+    this.soldQty,
     this.price,
     this.size,
     this.description,
@@ -133,6 +135,7 @@ class DashboardProductModel {
     name = json['name']?.toString();
     productCode = json['product_code']?.toString();
     qty = json['qty'] is int ? json['qty'] : int.tryParse(json['qty']?.toString() ?? '0');
+    soldQty = json['sold_qty'] is int ? json['sold_qty'] : int.tryParse(json['sold_qty']?.toString() ?? '0') ?? 0;
     price = json['price'] != null ? double.tryParse(json['price'].toString()) : null;
     size = json['size']?.toString();
     description = json['description']?.toString();
@@ -157,6 +160,7 @@ class DashboardProductModel {
     data['name'] = this.name;
     data['product_code'] = this.productCode;
     data['qty'] = this.qty;
+    data['sold_qty'] = this.soldQty;
     data['price'] = this.price;
     data['size'] = this.size;
     data['description'] = this.description;
