@@ -183,7 +183,7 @@ class _DataAlamatAdminViewState extends BaseState<DataAlamatAdminView> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'Data Alamat',
+                                  'Alamat',
                                   style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w700,

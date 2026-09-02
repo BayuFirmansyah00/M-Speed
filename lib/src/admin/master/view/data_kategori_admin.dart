@@ -167,7 +167,7 @@ class _DataKategoriAdminViewState extends BaseState<DataKategoriAdminView> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'Data Kategori',
+                                  'Kategori',
                                   style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w700,

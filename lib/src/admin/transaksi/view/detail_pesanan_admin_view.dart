@@ -100,7 +100,6 @@ class _DetailPesananAdminViewState extends BaseState<DetailPesananAdminView> {
                 ],
               ),
             ),
-      bottomNavigationBar: data != null ? _buildBottomBar(data) : const SizedBox.shrink(),
     );
   }
 

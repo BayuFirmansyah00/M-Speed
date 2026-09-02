@@ -131,7 +131,7 @@ class _DataBannerAdminViewState extends BaseState<DataBannerAdminView> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text('Data Banner',
+                              Text('Banner',
                                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
                               SizedBox(height: 2),
                               Text('Kelola banner promosi aplikasi',

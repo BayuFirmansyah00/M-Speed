@@ -322,7 +322,7 @@ class _DataDppAdminViewState extends BaseState<DataDppAdminView> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'Data DPP',
+                                  'DPP',
                                   style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w700,

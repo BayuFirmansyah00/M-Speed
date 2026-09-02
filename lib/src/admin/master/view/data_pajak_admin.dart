@@ -167,7 +167,7 @@ class _DataPajakAdminViewState extends BaseState<DataPajakAdminView> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'Data Pajak',
+                                  'Pajak',
                                   style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w700,

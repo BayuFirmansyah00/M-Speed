@@ -108,7 +108,7 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'Data Order',
+                                  'Transaksi',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w700,
@@ -117,7 +117,7 @@ class _DataOrderAdminViewState extends State<DataOrderAdminView> {
                                 ),
                                 SizedBox(height: 2),
                                 Text(
-                                  'Riwayat dan status semua pesanan masuk',
+                                  'Riwayat dan status semua pesanan / transaksi',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.white70,

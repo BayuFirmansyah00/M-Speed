@@ -98,7 +98,7 @@ class _DataMateraiAdminViewState extends BaseState<DataMateraiAdminView> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'Data Materai',
+                                  'E-Materai',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w700,
@@ -107,7 +107,7 @@ class _DataMateraiAdminViewState extends BaseState<DataMateraiAdminView> {
                                 ),
                                 SizedBox(height: 2),
                                 Text(
-                                  'Konfigurasi tarif dan data Materai',
+                                  'Konfigurasi tarif dan data e-materai',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.white70,

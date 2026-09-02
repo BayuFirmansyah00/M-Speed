@@ -88,7 +88,7 @@ class _DataSubditAdminViewState extends BaseState<DataSubditAdminView> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'Data Subdit',
+                                  'Subdirektorat',
                                   style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w700,

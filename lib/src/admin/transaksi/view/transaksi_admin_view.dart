@@ -18,14 +18,14 @@ class _TransaksiAdminViewState extends State<TransaksiAdminView> {
   Widget build(BuildContext context) {
     final menus = [
       _TxMenu(
-        title: 'Data DPP',
+        title: 'DPP',
         subtitle: 'Dasar pengenaan pajak transaksi',
         icon: Icons.receipt_long_rounded,
         gradient: [const Color(0xffF43F5E), const Color(0xffE11D48)],
         onTap: () => CusNav.nPush(context, DataDppAdminView()),
       ),
       _TxMenu(
-        title: 'Data Order',
+        title: 'Transaksi',
         subtitle: 'Riwayat dan status semua pesanan',
         icon: Icons.assignment_rounded,
         gradient: [const Color(0xffEF4444), const Color(0xffDC2626)],

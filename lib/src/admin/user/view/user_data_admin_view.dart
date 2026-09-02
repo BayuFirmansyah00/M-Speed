@@ -18,6 +18,7 @@ import 'package:mspeed/src/admin/user/view/create_data_penerima_admin_view.dart'
 import 'package:mspeed/src/admin/user/view/create_data_seller_admin_view.dart';
 import 'package:mspeed/src/admin/user/view/create_data_manager_admin_view.dart';
 import 'package:mspeed/src/admin/user/view/create_data_audit_admin_view.dart';
+import 'package:mspeed/src/admin/user/view/create_data_direksi_admin_view.dart';
 import 'package:mspeed/src/admin/user/view/create_data_subdirektorat_admin_view.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
@@ -29,14 +30,14 @@ import 'package:mspeed/src/admin/user/model/seller_admin_model.dart';
 // Enum
 // ─────────────────────────────────────────────────────────────────────────────
 enum UserDataType {
-  BUYER('Data Buyer'),
-  SELLER('Data Seller'),
-  FINANCE('Data Finance'),
-  PENERIMA('Data Penerima'),
-  MANAGER('Data Manager'),
-  AUDIT('Data Audit'),
-  DIREKSI('Data Direksi'),
-  SUB_DIREKTORAT('Data Sub-Direktorat');
+  BUYER('Buyer'),
+  SELLER('Seller'),
+  FINANCE('Keuangan'),
+  PENERIMA('Penerima'),
+  MANAGER('Manager'),
+  AUDIT('Audit'),
+  DIREKSI('Direksi'),
+  SUB_DIREKTORAT('Subdirektorat');
 
   final String title;
   const UserDataType(this.title);
@@ -153,6 +154,8 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       CusNav.nPush(context, CreateDataManagerAdminView(manager: p.userData[i].rawModel as dynamic));
     } else if (widget.userType == UserDataType.AUDIT) {
       CusNav.nPush(context, CreateDataAuditAdminView(audit: p.userData[i].rawModel as dynamic));
+    } else if (widget.userType == UserDataType.DIREKSI) {
+      CusNav.nPush(context, CreateDataDireksiAdminView(direksi: p.userData[i].rawModel as dynamic));
     } else if (widget.userType == UserDataType.SUB_DIREKTORAT) {
       CusNav.nPush(context, CreateDataSubDirektoratAdminView(subdit: p.userData[i].rawModel as dynamic));
     }
@@ -195,13 +198,15 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       CusNav.nPush(context, CreateDataManagerAdminView());
     } else if (widget.userType == UserDataType.AUDIT) {
       CusNav.nPush(context, CreateDataAuditAdminView());
+    } else if (widget.userType == UserDataType.DIREKSI) {
+      CusNav.nPush(context, CreateDataDireksiAdminView());
     } else if (widget.userType == UserDataType.SUB_DIREKTORAT) {
       CusNav.nPush(context, CreateDataSubDirektoratAdminView());
     }
   }
 
   void _showExportBottomSheet() {
-    final title = widget.userType == UserDataType.FINANCE ? 'Data Finance' : 'Data Penerima';
+    final title = widget.userType == UserDataType.FINANCE ? 'Keuangan' : 'Penerima';
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,

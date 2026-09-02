@@ -22,8 +22,8 @@ class _MasterAdminViewState extends State<MasterAdminView> {
   Widget build(BuildContext context) {
     final menus = [
       _MasterMenu(
-        title: 'Subdit',
-        subtitle: 'Kelola data subdivisi dan direktorat',
+        title: 'Subdirektorat',
+        subtitle: 'Kelola data subdirektorat',
         svgAsset: Assets.svgsIcMasterKategori,
         gradient: [const Color(0xffE11D48), const Color(0xffBE123C)],
         onTap: () => CusNav.nPush(context, DataSubditAdminView()),
@@ -50,7 +50,7 @@ class _MasterAdminViewState extends State<MasterAdminView> {
         onTap: () => CusNav.nPush(context, DataKategoriAdminView()),
       ),
       _MasterMenu(
-        title: 'Materai',
+        title: 'E-Materai',
         subtitle: 'Manajemen e-materai',
         svgAsset: Assets.svgsIcMasterKategori,
         gradient: [const Color(0xffFCA5A5), const Color(0xffF87171)],
