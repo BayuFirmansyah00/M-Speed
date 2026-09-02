@@ -1,3 +1,5 @@
+import 'package:mspeed/utils/utils.dart';
+
 class BuyerDashboardModel {
   List<DashboardBannerModel>? banners;
   List<DashboardCategoryModel>? categories;
@@ -67,7 +69,7 @@ class DashboardBannerModel {
   DashboardBannerModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     caption = json['caption']?.toString();
-    imgUrl = json['img_url']?.toString();
+    imgUrl = Utils.resolveImageUrlNullable(json['img_url']?.toString());
   }
 
   Map<String, dynamic> toJson() {
@@ -229,7 +231,7 @@ class ProductImageModel {
   ProductImageModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     caption = json['caption']?.toString();
-    imgUrl = json['img_url']?.toString();
+    imgUrl = Utils.resolveImageUrlNullable(json['img_url']?.toString());
   }
 
   Map<String, dynamic> toJson() {

@@ -108,13 +108,14 @@ class KeuanganProvider extends BaseController with ChangeNotifier {
     final lastName = prefs.getString(Constant.kSetPrefLastName) ?? '';
     final email = prefs.getString(Constant.kSetPrefEmail) ?? '';
     final role = prefs.getString(Constant.kSetPrefRoles) ?? 'FINANCE';
-    final isAdmin = prefs.getBool(Constant.kSetPrefIsAdmin) ?? false;
+    final bool isImp = prefs.getBool('is_impersonated') ?? false;
+    final String origToken = prefs.getString('admin_original_token') ?? '';
 
     final full = '$firstName $lastName'.trim();
     _financeName = full.isNotEmpty ? full : (email.isNotEmpty ? email : 'Finance User');
     _financeEmail = email;
     _financeRole = role.toUpperCase();
-    _isImpersonated = isAdmin;
+    _isImpersonated = isImp || origToken.isNotEmpty;
     notifyListeners();
   }
 

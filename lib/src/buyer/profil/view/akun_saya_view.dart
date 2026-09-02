@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
+import 'package:mspeed/common/component/impersonation_banner_widget.dart';
 import 'package:mspeed/common/helper/Constant.dart';
 import 'package:mspeed/common/helper/app_colors.dart';
 import 'package:mspeed/generated/assets.dart';
@@ -62,6 +63,7 @@ class AkunSayaView extends StatefulWidget {
 class _AkunSayaViewState extends BaseState<AkunSayaView>
     with SingleTickerProviderStateMixin {
   String userId = "";
+  bool _isImpersonated = false;
   AkunSayaBuyerModel userModel = AkunSayaBuyerModel();
   late AnimationController _animCtrl;
   late Animation<double> _fadeAnim;
@@ -94,6 +96,9 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
   Future<void> initData() async {
     final prefs = await SharedPreferences.getInstance();
     userId = prefs.getString(Constant.kSetPrefId) ?? "";
+    final bool isImp = prefs.getBool('is_impersonated') ?? false;
+    final String origToken = prefs.getString('admin_original_token') ?? '';
+    _isImpersonated = isImp || origToken.isNotEmpty;
     if (mounted) {
       final akunBuyer = context.read<ProfileProvider>().akunBuyerModel;
       if (akunBuyer.data == null || akunBuyer.result != "success") {
@@ -163,6 +168,10 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
             child: Column(
               children: [
                 _buildProfileHeader(cartTotal),
+                const ImpersonationBannerWidget(
+                  roleName: 'Buyer',
+                  margin: EdgeInsets.fromLTRB(16, 16, 16, 0),
+                ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
                   child: Column(
@@ -536,6 +545,27 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
             color: const Color(0xFF6B7280),
             onTap: () => CusNav.nPush(context, SettingsView()),
           ),
+          if (_isImpersonated) ...[
+            _divider(),
+            _menuTile(
+              title: 'Kembali ke Admin',
+              icon: Icons.admin_panel_settings_rounded,
+              subtitle: 'Selesaikan sesi impersonate & kembali ke Admin',
+              color: const Color(0xFFB45309),
+              onTap: () async {
+                await Utils.showYesNoDialog(
+                  context: context,
+                  title: 'Kembali ke Admin',
+                  desc: 'Apakah Anda yakin ingin mengakhiri sesi impersonate dan kembali ke dashboard admin?',
+                  yesCallback: () async {
+                    Navigator.pop(context);
+                    await context.read<AdminUserProvider>().backToAdmin(context);
+                  },
+                  noCallback: () => Navigator.pop(context),
+                );
+              },
+            ),
+          ],
           _divider(),
           _menuTile(
             title: 'Logout',
@@ -555,7 +585,8 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
 
   Widget _menuTile({
     required String title,
-    required String iconAsset,
+    String? iconAsset,
+    IconData? icon,
     required VoidCallback onTap,
     String subtitle = '',
     Color color = _C.txt1,
@@ -576,11 +607,13 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Center(
-                child: SvgPicture.asset(
-                  iconAsset,
-                  width: 22,
-                  colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-                ),
+                child: icon != null
+                    ? Icon(icon, color: color, size: 22)
+                    : SvgPicture.asset(
+                        iconAsset ?? Assets.svgsIcTransaksi,
+                        width: 22,
+                        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+                      ),
               ),
             ),
             const SizedBox(width: 14),

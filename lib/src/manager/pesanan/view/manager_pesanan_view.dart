@@ -73,53 +73,39 @@ class _ManagerPesananViewState extends BaseState<ManagerPesananView> {
     final p = context.watch<ManagerProvider>();
     final filtered = p.filteredOrders;
     final pendingCount = (p.orders.data ?? []).where((o) => o.canApproveOrder || o.canApproveInvoice).length;
+    debugPrint('[MANAGER_PESANAN_VIEW] build: rawOrders=${p.orders.data?.length ?? 0}, filteredOrders=${filtered.length}, filterStatus="${p.filterStatus}"');
 
     return Scaffold(
       backgroundColor: _kBg,
-      body: NestedScrollView(
-        headerSliverBuilder: (ctx, innerBoxIsScrolled) => [
-          // ── SliverAppBar ─────────────────────────────────────────────────
-          SliverAppBar(
-            floating: true,
-            snap: true,
-            pinned: false,
-            backgroundColor: _kSurface,
-            surfaceTintColor: _kSurface,
-            elevation: 0,
-            forceElevated: innerBoxIsScrolled,
-            expandedHeight: 130,
-            flexibleSpace: FlexibleSpaceBar(
-              background: _buildHeader(pendingCount),
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            _buildHeader(pendingCount),
+            _buildSearchAndFilter(p),
+            Expanded(
+              child: p.isLoadingOrders
+                  ? const Center(child: CircularProgressIndicator(color: _kPrimary))
+                  : filtered.isEmpty
+                      ? _buildEmptyState()
+                      : RefreshIndicator(
+                          color: _kPrimary,
+                          onRefresh: _loadOrders,
+                          child: ListView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
+                            itemCount: filtered.length,
+                            itemBuilder: (ctx, i) {
+                              final order = filtered[i];
+                              return ManagerOrderItemWidget(
+                                order: order,
+                                onTap: () => _openDetail(order.id!),
+                              );
+                            },
+                          ),
+                        ),
             ),
-          ),
-
-          // ── Search & Filter ───────────────────────────────────────────────
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _StickySearchDelegate(
-              child: _buildSearchAndFilter(p),
-            ),
-          ),
-        ],
-        body: p.isLoadingOrders
-            ? const Center(child: CircularProgressIndicator(color: _kPrimary))
-            : filtered.isEmpty
-                ? _buildEmptyState()
-                : RefreshIndicator(
-                    color: _kPrimary,
-                    onRefresh: _loadOrders,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-                      itemCount: filtered.length,
-                      itemBuilder: (ctx, i) {
-                        final order = filtered[i];
-                        return ManagerOrderItemWidget(
-                          order: order,
-                          onTap: () => _openDetail(order.id!),
-                        );
-                      },
-                    ),
-                  ),
+          ],
+        ),
       ),
     );
   }
@@ -127,10 +113,9 @@ class _ManagerPesananViewState extends BaseState<ManagerPesananView> {
   // ── Header ────────────────────────────────────────────────────────────────
   Widget _buildHeader(int pendingCount) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
       color: _kSurface,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -304,27 +289,4 @@ class _ManagerPesananViewState extends BaseState<ManagerPesananView> {
       ),
     );
   }
-}
-
-// ── SliverPersistentHeaderDelegate ────────────────────────────────────────
-class _StickySearchDelegate extends SliverPersistentHeaderDelegate {
-  final Widget child;
-  const _StickySearchDelegate({required this.child});
-
-  @override
-  double get minExtent => 112;
-  @override
-  double get maxExtent => 112;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Material(
-      elevation: overlapsContent ? 2 : 0,
-      shadowColor: Colors.black12,
-      child: child,
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _StickySearchDelegate old) => old.child != child;
 }

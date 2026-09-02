@@ -11,9 +11,13 @@ class ApiClient {
   }
 
   ApiClient._internal() {
+    final baseUrl = Constant.BASE_API_FULL.endsWith('/')
+        ? Constant.BASE_API_FULL
+        : '${Constant.BASE_API_FULL}/';
+
     dio = Dio(
       BaseOptions(
-        baseUrl: Constant.BASE_API_FULL,
+        baseUrl: baseUrl,
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
         headers: {
@@ -26,6 +30,13 @@ class ApiClient {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          // Normalize relative path so leading slash doesn't drop /api prefix
+          if (!options.path.startsWith('http://') && !options.path.startsWith('https://')) {
+            if (options.path.startsWith('/')) {
+              options.path = options.path.substring(1);
+            }
+          }
+
           // Attach Bearer token on every request
           final prefs = await SharedPreferences.getInstance();
           final token = prefs.getString(Constant.kSetPrefToken);

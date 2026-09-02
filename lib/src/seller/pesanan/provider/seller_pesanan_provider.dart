@@ -4,13 +4,9 @@ import 'dart:io';
 import 'package:mspeed/common/base/base_controller.dart';
 import 'package:mspeed/common/helper/constant.dart';
 import 'package:flutter/material.dart';
-import 'package:mspeed/common/helper/multipart.dart';
 import 'package:mspeed/src/seller/pesanan/model/detail_pesanan_seller_model.dart';
 import 'package:mspeed/src/seller/pesanan/model/pesanan_seller_model.dart';
 import 'package:mspeed/src/seller/pesanan/view/pesanan_buat_surat_view.dart';
-import 'package:path/path.dart';
-import 'package:http/http.dart' as http;
-import 'package:mspeed/common/helper/session_helper.dart';
 import 'package:mspeed/utils/utils.dart';
 
 class SellerPesananProvider extends BaseController with ChangeNotifier {
@@ -161,6 +157,37 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
         return true;
       } else {
         Utils.showFailed(msg: parsed['message'] ?? 'Gagal mengirim barang');
+      }
+    } catch (e) {
+      Utils.showFailed(msg: e.toString());
+    } finally {
+      if (withLoading) loading(false);
+    }
+    return false;
+  }
+
+  Future<bool> createInvoice({
+    bool withLoading = false,
+    required String parent_id,
+    String? note,
+  }) async {
+    if (withLoading) loading(true);
+    try {
+      final Map<String, dynamic> payload = {};
+      if (note != null && note.trim().isNotEmpty) {
+        payload['note'] = note.trim();
+      }
+
+      final response = await post(
+        Constant.BASE_API_FULL + '${Constant.epSellerOrders}/$parent_id/invoice',
+        body: payload,
+      );
+      final parsed = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Utils.showSuccess(msg: 'Tagihan (invoice) berhasil diterbitkan.');
+        return true;
+      } else {
+        Utils.showFailed(msg: parsed['message'] ?? 'Gagal menerbitkan tagihan');
       }
     } catch (e) {
       Utils.showFailed(msg: e.toString());

@@ -1020,8 +1020,139 @@ class _DetailTransactionViewState extends BaseState<DetailTransactionView> {
     );
   }
 
+  void _showRatingDialog(BuildContext context) {
+    int selectedStar = 5;
+    final noteController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Beri Penilaian & Ulasan',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 20),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Bagikan pengalaman belanja Anda untuk pesanan ini.',
+                      style: TextStyle(fontSize: 12, color: Colors.black54),
+                    ),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: List.generate(5, (index) {
+                          final star = index + 1;
+                          return IconButton(
+                            icon: Icon(
+                              star <= selectedStar ? Icons.star_rounded : Icons.star_outline_rounded,
+                              color: Colors.amber,
+                              size: 36,
+                            ),
+                            onPressed: () {
+                              setDialogState(() {
+                                selectedStar = star;
+                              });
+                            },
+                          );
+                        }),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: noteController,
+                      maxLines: 3,
+                      style: const TextStyle(fontSize: 13),
+                      decoration: InputDecoration(
+                        labelText: 'Catatan Ulasan (Opsional)',
+                        hintText: 'Barang sesuai, respon seller cepat...',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        contentPadding: const EdgeInsets.all(12),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            child: const Text('Batal'),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              Navigator.pop(context);
+                              final p = context.read<TransactionProvider>();
+                              bool success = await p.submitRating(
+                                transactionId: widget.transaction_id,
+                                star: selectedStar,
+                                note: noteController.text,
+                              );
+                              if (success) {
+                                await p.fetchDetailTransaction(transaction_id: widget.transaction_id);
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            child: const Text('Kirim Ulasan', style: TextStyle(color: Colors.white)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget buildBottomBar() {
     final status = data?.timeline?.last?.label;
+    final rawStatus = (data?.ParentOrderModel?.status ?? '').toUpperCase();
+    final isPaidOrCompleted = rawStatus == 'TELAH_DIBAYAR' ||
+        rawStatus == 'PESANAN_DIBAYAR' ||
+        rawStatus == 'PAID' ||
+        rawStatus == 'SELESAI' ||
+        rawStatus == 'PESANAN_SELESAI' ||
+        status == 'Pesanan Lunas' ||
+        status == 'Pesanan Selesai' ||
+        status == 'Telah Dibayar';
+
     return Container(
       padding: EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -1064,8 +1195,6 @@ class _DetailTransactionViewState extends BaseState<DetailTransactionView> {
               ),
             ),
           ),
-          // if ((data?.ParentOrderModel?.status == 'PESANAN_BARU' &&
-          //     dataSeller?.ParentOrderModel?.ttdPesananBuyer == null)) ...[
           SizedBox(width: 16),
           if (data?.ParentOrderModel?.status == 'PESANAN_BARU' &&
               dataSeller?.ParentOrderModel?.ttdPesananBuyer == null)
@@ -1082,6 +1211,23 @@ class _DetailTransactionViewState extends BaseState<DetailTransactionView> {
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          if (isPaidOrCompleted)
+            Expanded(
+              child: SizedBox(
+                height: 48,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.star_rounded, color: Colors.white, size: 20),
+                  onPressed: () => _showRatingDialog(context),
+                  label: const Text('Beri Penilaian', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber.shade800,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -1137,7 +1283,6 @@ class _DetailTransactionViewState extends BaseState<DetailTransactionView> {
               ),
             ),
           ],
-          // ]
         ],
       ),
     );

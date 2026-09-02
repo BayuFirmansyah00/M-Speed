@@ -81,7 +81,9 @@ class PenerimaPesananProvider extends BaseController with ChangeNotifier {
       _receiverName = 'Penerima Logistik';
     }
 
-    _isImpersonated = prefs.getBool('is_impersonated') ?? false;
+    final bool isImp = prefs.getBool('is_impersonated') ?? false;
+    final String origToken = prefs.getString('admin_original_token') ?? '';
+    _isImpersonated = isImp || origToken.isNotEmpty;
     notifyListeners();
   }
 

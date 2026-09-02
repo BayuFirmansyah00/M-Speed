@@ -23,6 +23,40 @@ extension numberExtension on num {
 class Utils {
   static String? get mapStyle => '[]';
 
+  /// Resolves image URLs from Laravel backend:
+  /// - Fixes /storage/asset_img_backend/ -> /asset_img_backend/
+  /// - Rewrites localhost/127.0.0.1 to Constant.DOMAIN_LOCAL for emulator compatibility
+  /// - Prefixes relative paths with base domain
+  static String resolveImageUrl(String? rawUrl) {
+    if (rawUrl == null || rawUrl.trim().isEmpty) return '';
+    var url = rawUrl.trim();
+
+    // Fix wrong storage prefix for direct public assets
+    if (url.contains('/storage/asset_img_backend/')) {
+      url = url.replaceAll('/storage/asset_img_backend/', '/asset_img_backend/');
+    }
+
+    // Derive base origin from Constant.BASE_API_FULL
+    final baseApi = Constant.BASE_API_FULL;
+    final baseOrigin = baseApi.replaceAll(RegExp(r'/api/?$'), '');
+
+    // If URL uses localhost or 127.0.0.1
+    final localhostRegex = RegExp(r'^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?');
+    if (localhostRegex.hasMatch(url)) {
+      url = url.replaceFirst(localhostRegex, baseOrigin);
+    } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      final cleanPath = url.startsWith('/') ? url : '/$url';
+      url = '$baseOrigin$cleanPath';
+    }
+
+    return url;
+  }
+
+  static String? resolveImageUrlNullable(String? rawUrl) {
+    final res = resolveImageUrl(rawUrl);
+    return res.isNotEmpty ? res : null;
+  }
+
   // AppBar
   static AppBar appBar(
     String title, {

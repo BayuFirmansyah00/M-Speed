@@ -136,28 +136,35 @@ class FinanceOrderData {
   }
 
   /// Actionability: Finance can execute payment or reject payment
-  /// only when latest order log status is 'penerimaan & verifikasi'
-  bool get canProcessPayment => activeStatusLog == 'penerimaan & verifikasi';
+  /// when latest order log status is 'siap tagih by manager' or 'penerimaan & verifikasi'
+  bool get canProcessPayment =>
+      activeStatusLog == 'siap tagih by manager' ||
+      activeStatusLog == 'penerimaan & verifikasi';
 
   /// Whether the order is paid
   bool get isPaid =>
       paymentStatus.toLowerCase().contains('dibayar') ||
       activeStatusLog == 'pesanan dibayar' ||
-      activeStatusLog == 'telah_dibayar';
+      activeStatusLog == 'telah_dibayar' ||
+      activeStatusLog == 'paid';
 
   /// Whether payment was rejected by finance
-  bool get isRejected => activeStatusLog.contains('ditolak');
+  bool get isRejected =>
+      activeStatusLog == 'pembayaran ditolak finance' ||
+      activeStatusLog.contains('ditolak finance');
 
   /// Status display label
   String get statusDisplayLabel {
     final status = activeStatusLog;
-    if (status == 'penerimaan & verifikasi') return 'Siap Dibayar';
-    if (status == 'pesanan dibayar' || status == 'telah_dibayar') return 'Telah Dibayar';
+    if (status == 'penerimaan & verifikasi' || status == 'siap tagih by manager') return 'Siap Dibayar';
+    if (status == 'pesanan dibayar' || status == 'telah_dibayar' || status == 'paid') return 'Telah Dibayar';
     if (status == 'pembayaran ditolak finance') return 'Pembayaran Ditolak';
-    if (status == 'siap tagih by manager') return 'Siap Tagih';
-    if (status == 'barang dikirim') return 'Dikirim';
-    if (status == 'pesanan diterima seller') return 'Diproses Seller';
-    if (status == 'pesanan disetujui manager') return 'Disetujui Manager';
+    if (status == 'tagihan') return 'Menunggu Approval Manager';
+    if (status == 'tolak tagih by manager') return 'Tagihan Ditolak Manager';
+    if (status == 'pesanan diterima penerima') return 'Diterima Penerima';
+    if (status == 'pesanan dikirim' || status == 'barang dikirim') return 'Dikirim';
+    if (status == 'pesanan diterima penjual') return 'Diproses Penjual';
+    if (status == 'approve pesanan by manager') return 'Disetujui Manager';
     if (status == 'pesanan baru') return 'Pesanan Baru';
     if (status == 'pesanan selesai') return 'Pesanan Selesai';
     if (status == 'dibatalkan') return 'Dibatalkan';
@@ -167,14 +174,16 @@ class FinanceOrderData {
   /// Status display color
   Color get statusBadgeColor {
     final status = activeStatusLog;
-    if (status == 'penerimaan & verifikasi') return const Color(0xFFF59E0B); // Amber - Action Required
-    if (status == 'pesanan dibayar' || status == 'telah_dibayar' || status == 'pesanan selesai') {
+    if (status == 'siap tagih by manager' || status == 'penerimaan & verifikasi') {
+      return const Color(0xFFF59E0B); // Amber - Action Required
+    }
+    if (status == 'pesanan dibayar' || status == 'telah_dibayar' || status == 'paid' || status == 'pesanan selesai') {
       return const Color(0xFF10B981); // Emerald - Done
     }
     if (status.contains('ditolak') || status == 'dibatalkan') {
       return const Color(0xFFEF4444); // Red - Rejected
     }
-    if (status == 'barang dikirim') return const Color(0xFF3B82F6); // Blue
+    if (status == 'pesanan dikirim' || status == 'barang dikirim') return const Color(0xFF3B82F6); // Blue
     return const Color(0xFF6B7280); // Gray
   }
 

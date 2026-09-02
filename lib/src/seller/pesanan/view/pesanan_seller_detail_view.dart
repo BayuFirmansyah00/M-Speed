@@ -1,11 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mspeed/common/base/base_state.dart';
-import 'package:mspeed/common/component/custom_appbar.dart';
 import 'package:mspeed/common/component/custom_button.dart';
 import 'package:mspeed/common/component/custom_dialog.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
-import 'package:mspeed/common/helper/constant.dart';
 
 import 'package:mspeed/src/seller/pesanan/model/pesanan_seller_model.dart';
 import 'package:mspeed/src/seller/pesanan/provider/seller_pesanan_provider.dart';
@@ -403,6 +400,93 @@ class _PesananSellerDetailViewState extends BaseState<PesananSellerDetailView> {
     );
   }
 
+  void _showCreateInvoiceDialog(
+    BuildContext context,
+    SellerOrderData data,
+    SellerPesananProvider p, {
+    bool isReInvoice = false,
+  }) {
+    final noteController = TextEditingController();
+
+    CustomDialog.mainDialog(
+      context: context,
+      title: "",
+      content: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    isReInvoice ? 'Buat Ulang Tagihan' : 'Terbitkan Tagihan (Invoice)',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _kTextPrimary),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, color: Colors.black54, size: 20),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                isReInvoice
+                    ? 'Terbitkan ulang tagihan revisi untuk pesanan #${data.orderNum ?? ''} agar ditinjau kembali oleh Manager.'
+                    : 'Terbitkan tagihan pembayaran untuk pesanan #${data.orderNum ?? ''} yang telah diterima oleh Penerima.',
+                style: const TextStyle(fontSize: 12, color: _kTextSecondary),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: noteController,
+                style: const TextStyle(fontSize: 14, color: _kTextPrimary),
+                maxLines: 3,
+                decoration: InputDecoration(
+                  labelText: "Catatan Tagihan (Opsional)",
+                  hintText: "Contoh: Tagihan pembayaran termin 1 / revisi berkas...",
+                  hintStyle: const TextStyle(fontSize: 13, color: _kTextSecondary),
+                  labelStyle: const TextStyle(fontSize: 13, color: _kTextSecondary),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomButton.secondaryButton(
+                      "Batal",
+                      () => Navigator.pop(context),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: CustomButton.mainButton(
+                      isReInvoice ? "Kirim Ulang" : "Terbitkan Tagihan",
+                      () async {
+                        Navigator.pop(context);
+                        bool success = await p.createInvoice(
+                          parent_id: data.id.toString(),
+                          note: noteController.text,
+                        );
+                        if (success) refresh();
+                      },
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildActionButtons(SellerOrderData data) {
     final p = context.read<SellerPesananProvider>();
     final status = data.statusEnum;
@@ -476,6 +560,64 @@ class _PesananSellerDetailViewState extends BaseState<PesananSellerDetailView> {
             ),
             child: const Text(
               'Kirim Barang / Input Resi',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (status.canCreateInvoice) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        color: _kSurface,
+        child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            icon: const Icon(Icons.receipt_long_rounded, color: Colors.white, size: 20),
+            onPressed: () => _showCreateInvoiceDialog(context, data, p, isReInvoice: false),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4F46E5), // Indigo
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            label: const Text(
+              'Buat Tagihan (Invoice)',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (status.canReInvoice) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        color: _kSurface,
+        child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
+            onPressed: () => _showCreateInvoiceDialog(context, data, p, isReInvoice: true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE11D48), // Rose
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            label: const Text(
+              'Buat Ulang Tagihan (Revisi)',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 14,

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mspeed/common/base/base_state.dart';
+import 'package:mspeed/common/component/image_network_widget.dart';
 import 'package:mspeed/src/manager/dashboard/model/manager_dashboard_model.dart';
 import 'package:mspeed/src/manager/pesanan/provider/manager_provider.dart';
 import 'package:provider/provider.dart';
@@ -143,13 +144,13 @@ class _ManagerDashboardViewState extends BaseState<ManagerDashboardView> {
               )
             else
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
                 sliver: SliverGrid(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
-                    childAspectRatio: 0.68,
+                    mainAxisExtent: 280,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (ctx, i) => _buildProductCard(dashboard.products![i]),
@@ -251,15 +252,9 @@ class _ManagerDashboardViewState extends BaseState<ManagerDashboardView> {
                 itemCount: banners.length,
                 itemBuilder: (ctx, i) {
                   final b = banners[i];
-                  return Image.network(
-                    b.imgUrl ?? '',
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      color: Colors.blue.shade50,
-                      child: Center(
-                        child: Icon(Icons.image_outlined, size: 36, color: Colors.blue.shade200),
-                      ),
-                    ),
+                  return ImageNetworkWidget(
+                    imageUrl: b.imgUrl ?? '',
+                    boxFit: BoxFit.cover,
                   );
                 },
               ),
@@ -543,89 +538,95 @@ class _ManagerDashboardViewState extends BaseState<ManagerDashboardView> {
           // Image
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-            child: AspectRatio(
-              aspectRatio: 1.15,
-              child: Container(
-                color: Colors.grey.shade100,
-                child: item.primaryImageUrl != null
-                    ? Image.network(
-                        item.primaryImageUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Center(
-                          child: Icon(Icons.inventory_2_outlined, size: 36, color: Colors.grey.shade300),
-                        ),
-                      )
-                    : Center(
-                        child: Icon(Icons.inventory_2_outlined, size: 36, color: Colors.grey.shade300),
-                      ),
+            child: SizedBox(
+              height: 125,
+              width: double.infinity,
+              child: ImageNetworkWidget(
+                imageUrl: item.primaryImageUrl ?? '',
+                boxFit: BoxFit.cover,
               ),
             ),
           ),
 
           // Content
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.name ?? '-',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: _kTextPrimary,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  priceStr,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    color: _kRed,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.storefront_rounded, size: 11, color: Colors.grey.shade500),
-                    const SizedBox(width: 3),
-                    Expanded(
-                      child: Text(
-                        sellerName,
-                        style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        item.name ?? '-',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: _kTextPrimary,
+                          height: 1.25,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        priceStr,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          color: _kRed,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
-                ),
-                if (city != null && city.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      city,
-                      style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    ],
                   ),
-                const SizedBox(height: 4),
-                Text(
-                  'Stok ${item.qty ?? 0} • $catName',
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: _kTeal,
-                    fontWeight: FontWeight.w600,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.storefront_rounded, size: 11, color: Colors.grey.shade500),
+                          const SizedBox(width: 3),
+                          Expanded(
+                            child: Text(
+                              sellerName,
+                              style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (city != null && city.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            city,
+                            style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Stok ${item.qty ?? 0} • $catName',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: _kTeal,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

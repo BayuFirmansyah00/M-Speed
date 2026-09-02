@@ -94,13 +94,38 @@ class _MainHomeManagerViewState extends State<MainHomeManagerView>
     );
     _indicatorController.forward(from: 0);
     setState(() => _selectedIndex = index);
+
+    final p = context.read<ManagerProvider>();
+    debugPrint('[MANAGER_NAV] Selected index = $index (${_navItems[index].label})');
+
+    if (index == 0) {
+      p.fetchDashboard(withLoading: false);
+    } else if (index == 1) {
+      // Direct tab tap: reset filter to all
+      p.filterStatus = null;
+      p.fetchOrders(withLoading: false);
+    } else if (index == 2) {
+      p.fetchTeam(withLoading: false);
+    }
   }
 
   void _navigateToOrdersWithFilter(String statusFilter) {
     final p = context.read<ManagerProvider>();
     p.filterStatus = statusFilter.isEmpty ? null : statusFilter;
+    debugPrint('[MANAGER_NAV] Navigate from Dashboard KPI filter: "$statusFilter"');
     p.fetchOrders(withLoading: true);
-    _onTap(1); // Switch to Pesanan Tab
+
+    if (_selectedIndex != 1) {
+      _prevIndex = _selectedIndex;
+      _indicatorAnim = Tween<double>(
+        begin: _prevIndex.toDouble(),
+        end: 1.0,
+      ).animate(
+        CurvedAnimation(parent: _indicatorController, curve: Curves.easeInOutCubic),
+      );
+      _indicatorController.forward(from: 0);
+      setState(() => _selectedIndex = 1);
+    }
   }
 
   @override

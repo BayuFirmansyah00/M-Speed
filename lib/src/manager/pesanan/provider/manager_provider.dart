@@ -123,11 +123,11 @@ class ManagerProvider extends BaseController with ChangeNotifier {
   List<ManagerOrderData> get filteredOrders {
     final all = _orders.data ?? [];
     final q = searchController.text.trim().toLowerCase();
-    return all.where((o) {
+    final result = all.where((o) {
       // Status filter
       if (filterStatus != null && filterStatus!.isNotEmpty) {
-        final status = o.latestLogFromHistory?.status ?? o.paymentStatus ?? '';
-        if (status != filterStatus) return false;
+        final status = (o.latestLogFromHistory?.status ?? o.paymentStatus ?? '').trim().toLowerCase();
+        if (status != filterStatus!.trim().toLowerCase()) return false;
       }
       // Search filter
       if (q.isNotEmpty) {
@@ -138,6 +138,9 @@ class ManagerProvider extends BaseController with ChangeNotifier {
       }
       return true;
     }).toList();
+
+    debugPrint('[MANAGER_ORDERS] rawOrders=${all.length}, filterStatus="$filterStatus", q="$q", finalDisplayedOrders=${result.length}');
+    return result;
   }
 
   // ─────────────────────────────────────────────────────────────────
@@ -167,19 +170,21 @@ class ManagerProvider extends BaseController with ChangeNotifier {
         queryParams['search'] = search.trim();
       }
 
+      debugPrint('[MANAGER_DASHBOARD] request started -> GET /manager/v1/manager/dashboard params=$queryParams');
       final response = await ApiClient().dio.get(
         '/manager/v1/manager/dashboard',
         queryParameters: queryParams,
       );
+      debugPrint('[MANAGER_DASHBOARD] response status = ${response.statusCode}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         _dashboard = ManagerDashboardModel.fromJson(response.data);
-        log('[ManagerProvider] fetchDashboard success: ${_dashboard.products?.length ?? 0} products');
+        debugPrint('[MANAGER_DASHBOARD] API orders = ${_dashboard.parentOrders?.length ?? 0}, KPI total = $kpiTotalPesanan, Products = ${_dashboard.products?.length ?? 0}');
       } else {
-        throw Exception('Gagal memuat data dashboard');
+        throw Exception('Gagal memuat data dashboard (HTTP ${response.statusCode})');
       }
-    } catch (e) {
-      log('[ManagerProvider] fetchDashboard error: $e');
+    } catch (e, stack) {
+      debugPrint('[MANAGER_DASHBOARD] fetchDashboard error: $e\n$stack');
       Utils.showFailed(msg: 'Gagal memuat dashboard: ${e.toString()}');
     } finally {
       _isLoadingDashboard = false;
@@ -215,15 +220,25 @@ class ManagerProvider extends BaseController with ChangeNotifier {
     notifyListeners();
 
     try {
+      debugPrint('[MANAGER_ORDERS] request started -> GET /manager/v1/manager/orders');
       final response = await ApiClient().dio.get('/manager/v1/manager/orders');
+      debugPrint('[MANAGER_ORDERS] response status = ${response.statusCode}');
+
       if (response.statusCode == 200 || response.statusCode == 201) {
+        final rawData = response.data;
+        final rawCount = (rawData is Map && rawData['data'] is List) ? (rawData['data'] as List).length : 0;
         _orders = ManagerOrderModel.fromJson(response.data);
-        log('[ManagerProvider] fetchOrders: ${_orders.data?.length ?? 0} orders');
+        final parsedCount = _orders.data?.length ?? 0;
+        debugPrint('[MANAGER_ORDERS] raw order count = $rawCount, parsed order count = $parsedCount');
+        if (parsedCount > 0) {
+          final first = _orders.data!.first;
+          debugPrint('[MANAGER_ORDERS] firstOrderId = ${first.id}, firstOrderStatus = "${first.latestLogFromHistory?.status ?? first.paymentStatus}"');
+        }
       } else {
-        throw Exception('Gagal memuat daftar pesanan');
+        throw Exception('Gagal memuat daftar pesanan (HTTP ${response.statusCode})');
       }
-    } catch (e) {
-      log('[ManagerProvider] fetchOrders error: $e');
+    } catch (e, stack) {
+      debugPrint('[MANAGER_ORDERS] fetchOrders error: $e\n$stack');
       Utils.showFailed(msg: 'Gagal memuat pesanan: ${e.toString()}');
     } finally {
       _isLoadingOrders = false;
@@ -395,15 +410,21 @@ class ManagerProvider extends BaseController with ChangeNotifier {
     notifyListeners();
 
     try {
+      debugPrint('[MANAGER_TEAM] request started -> GET /manager/v1/manager/team');
       final response = await ApiClient().dio.get('/manager/v1/manager/team');
+      debugPrint('[MANAGER_TEAM] response status = ${response.statusCode}');
+
       if (response.statusCode == 200 || response.statusCode == 201) {
+        final rawData = response.data;
+        final rawCount = (rawData is Map && rawData['data'] is List) ? (rawData['data'] as List).length : 0;
         _team = ManagerTeamModel.fromJson(response.data);
-        log('[ManagerProvider] fetchTeam: ${_team.data?.length ?? 0} members');
+        final parsedCount = _team.data?.length ?? 0;
+        debugPrint('[MANAGER_TEAM] raw member count = $rawCount, parsed member count = $parsedCount');
       } else {
-        throw Exception('Gagal memuat data tim');
+        throw Exception('Gagal memuat data tim (HTTP ${response.statusCode})');
       }
-    } catch (e) {
-      log('[ManagerProvider] fetchTeam error: $e');
+    } catch (e, stack) {
+      debugPrint('[MANAGER_TEAM] fetchTeam error: $e\n$stack');
       Utils.showFailed(msg: 'Gagal memuat data tim: ${e.toString()}');
     } finally {
       _isLoadingTeam = false;
@@ -423,9 +444,9 @@ class ManagerProvider extends BaseController with ChangeNotifier {
     _managerName = name.isNotEmpty ? name : 'Manager';
     _managerEmail = prefs.getString(Constant.kSetPrefEmail) ?? '';
     _managerPhone = prefs.getString(Constant.kSetPrefPhone) ?? '';
-    _managerRole = prefs.getString(Constant.kSetPrefRoles) ?? 'MANAGER';
-    _isImpersonated = prefs.getString('admin_original_token') != null &&
-        prefs.getString('admin_original_token')!.isNotEmpty;
+    final bool isImp = prefs.getBool('is_impersonated') ?? false;
+    final String origToken = prefs.getString('admin_original_token') ?? '';
+    _isImpersonated = isImp || origToken.isNotEmpty;
     notifyListeners();
   }
 

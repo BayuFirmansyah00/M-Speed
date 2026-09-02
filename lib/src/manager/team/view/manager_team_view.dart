@@ -43,46 +43,35 @@ class _ManagerTeamViewState extends BaseState<ManagerTeamView> {
             return name.contains(search) || dept.contains(search);
           }).toList();
 
+    debugPrint('[MANAGER_TEAM_VIEW] build: rawMembers=${members.length}, filteredMembers=${filtered.length}, search="$search"');
+
     return Scaffold(
       backgroundColor: _kBg,
-      body: NestedScrollView(
-        headerSliverBuilder: (ctx, innerBoxIsScrolled) => [
-          SliverAppBar(
-            floating: true,
-            snap: true,
-            pinned: false,
-            backgroundColor: _kSurface,
-            surfaceTintColor: _kSurface,
-            elevation: 0,
-            forceElevated: innerBoxIsScrolled,
-            expandedHeight: 110,
-            flexibleSpace: FlexibleSpaceBar(
-              background: _buildHeader(members.length),
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            _buildHeader(members.length),
+            _buildSearchBar(p),
+            Expanded(
+              child: p.isLoadingTeam
+                  ? const Center(child: CircularProgressIndicator(color: _kPrimary))
+                  : filtered.isEmpty
+                      ? _buildEmptyState()
+                      : RefreshIndicator(
+                          color: _kPrimary,
+                          onRefresh: () async {
+                            await p.fetchTeam(withLoading: true);
+                          },
+                          child: ListView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
+                            itemCount: filtered.length,
+                            itemBuilder: (ctx, i) => _buildMemberCard(filtered[i]),
+                          ),
+                        ),
             ),
-          ),
-
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _StickySearchDelegate(
-              child: _buildSearchBar(p),
-            ),
-          ),
-        ],
-        body: p.isLoadingTeam
-            ? const Center(child: CircularProgressIndicator(color: _kPrimary))
-            : filtered.isEmpty
-                ? _buildEmptyState()
-                : RefreshIndicator(
-                    color: _kPrimary,
-                    onRefresh: () async {
-                      await p.fetchTeam(withLoading: true);
-                    },
-                    child: ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-                      itemCount: filtered.length,
-                      itemBuilder: (ctx, i) => _buildMemberCard(filtered[i]),
-                    ),
-                  ),
+          ],
+        ),
       ),
     );
   }
@@ -90,10 +79,9 @@ class _ManagerTeamViewState extends BaseState<ManagerTeamView> {
   // ── Header ────────────────────────────────────────────────────────────────
   Widget _buildHeader(int count) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
       color: _kSurface,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -349,27 +337,4 @@ class _MemberInfoRow extends StatelessWidget {
       ),
     );
   }
-}
-
-// ── SliverPersistentHeaderDelegate ────────────────────────────────────────
-class _StickySearchDelegate extends SliverPersistentHeaderDelegate {
-  final Widget child;
-  const _StickySearchDelegate({required this.child});
-
-  @override
-  double get minExtent => 66;
-  @override
-  double get maxExtent => 66;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Material(
-      elevation: overlapsContent ? 2 : 0,
-      shadowColor: Colors.black12,
-      child: child,
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _StickySearchDelegate old) => old.child != child;
 }

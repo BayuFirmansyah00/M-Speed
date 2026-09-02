@@ -158,11 +158,16 @@ class AuthProvider extends BaseController with ChangeNotifier {
           }
           await prefs.setBool(Constant.kSetPrefIsAdmin, isAdmin);
           await prefs.setString(Constant.kSetPrefEmail, email);
-
           // Data fallback agar aman (karena response login backend belum mengembalikan profil lengkap)
           await prefs.setString(Constant.kSetPrefFirstName, '');
           await prefs.setString(Constant.kSetPrefLastName, '');
           await prefs.setString(Constant.kSetPrefPhone, '');
+
+          // Pastikan sesi login normal bukan impersonated
+          await prefs.setBool('is_impersonated', false);
+          await prefs.remove('admin_original_token');
+          await prefs.remove('admin_original_id');
+          await prefs.remove('admin_original_email');
 
           log("ROLE USER: $role, IS_ADMIN: $isAdmin");
 

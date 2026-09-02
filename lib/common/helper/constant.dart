@@ -129,18 +129,50 @@ class Constant {
   static Color telahDibayarColor = greenColor;
   static Color pesananDitolakColor = primaryColor;
 
-  static Color statusColor(String status) {
-    if (status == 'PESANAN_BARU') return Colors.blue;
-    if (status == 'PESANAN_DITERIMA') return Colors.indigo;
-    if (status == 'PESANAN_DIKIRIM') return Colors.orange;
-    if (status == 'PESANAN_TELAH_DITERIMA') return Colors.purple;
-    if (status == 'BARANG_DITERIMA') return Colors.pink;
-    if (status == 'PROSES_PEMBAYARAN') return Colors.amber;
-    if (status == 'TELAH_DIBAYAR') return Colors.teal;
-    if (status == 'PESANAN_SELESAI') return Colors.green;
-    if (status == 'DIBATALKAN') return Colors.red;
-    if (status == 'PESANAN_DITOLAK') return Colors.red;
-    return Colors.black;
+  static Color statusColor(String rawStatus) {
+    final status = rawStatus.toLowerCase().trim();
+    if (status == 'pesanan dibayar' ||
+        status == 'telah dibayar' ||
+        status == 'sudah dibayar' ||
+        status == 'paid' ||
+        status == 'selesai' ||
+        status == 'pesanan_selesai' ||
+        status == 'telah_dibayar') {
+      return const Color(0xFF059669); // Emerald
+    }
+    if (status == 'tagihan' ||
+        status == 'siap tagih by manager' ||
+        status == 'penerimaan & verifikasi' ||
+        status == 'proses_pembayaran' ||
+        status.contains('tagih') ||
+        status.contains('pembayaran')) {
+      return const Color(0xFFD97706); // Amber
+    }
+    if (status == 'pesanan diterima penerima' ||
+        status == 'barang_diterima' ||
+        status == 'pesanan_telah_diterima' ||
+        status.contains('diterima penerima')) {
+      return const Color(0xFF7C3AED); // Purple
+    }
+    if (status == 'pesanan dikirim' ||
+        status == 'pesanan_dikirim' ||
+        status.contains('dikirim')) {
+      return const Color(0xFF2563EB); // Blue
+    }
+    if (status == 'approve pesanan by manager' ||
+        status == 'pesanan diterima penjual' ||
+        status == 'pesanan_diterima' ||
+        status.contains('diterima penjual') ||
+        status.contains('disetujui')) {
+      return const Color(0xFF0891B2); // Cyan
+    }
+    if (status == 'pesanan baru' || status == 'pesanan_baru') {
+      return const Color(0xFFE50012); // Primary Red
+    }
+    if (status.contains('reject') || status.contains('tolak') || status.contains('batal')) {
+      return const Color(0xFFDC2626); // Danger Red
+    }
+    return const Color(0xFF6B7280); // Neutral gray
   }
 
   static TextStyle primaryTextStyle = TextStyle(

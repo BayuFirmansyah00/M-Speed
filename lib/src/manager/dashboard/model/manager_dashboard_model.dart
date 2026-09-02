@@ -1,3 +1,5 @@
+import 'package:mspeed/utils/utils.dart';
+
 /// Manager Dashboard Model
 /// Source of truth: ManagerDashboardResource.php
 /// Returns: banners, categories, parent_orders, products
@@ -54,7 +56,7 @@ class ManagerBannerItem {
     return ManagerBannerItem(
       id: json['id'],
       caption: json['caption']?.toString(),
-      imgUrl: json['img_url']?.toString(),
+      imgUrl: Utils.resolveImageUrlNullable(json['img_url']?.toString()),
     );
   }
 }
@@ -252,7 +254,7 @@ class ManagerProductImage {
   factory ManagerProductImage.fromJson(Map<String, dynamic> json) {
     return ManagerProductImage(
       id: json['id'],
-      imgUrl: json['img_url']?.toString(),
+      imgUrl: Utils.resolveImageUrlNullable(json['img_url']?.toString()),
     );
   }
 }

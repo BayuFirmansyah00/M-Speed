@@ -5,6 +5,7 @@ import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_appbar.dart';
 import 'package:mspeed/common/component/custom_button.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
+import 'package:mspeed/common/component/impersonation_banner_widget.dart';
 import 'package:mspeed/common/helper/constant.dart';
 import 'package:mspeed/common/helper/safe_network_image.dart';
 import 'package:mspeed/generated/assets.dart';
@@ -26,6 +27,8 @@ class ProfileSellerView extends StatefulWidget {
 }
 
 class _ProfileSellerViewState extends BaseState<ProfileSellerView> {
+  bool _isImpersonated = false;
+
   @override
   void initState() {
     getData();
@@ -33,6 +36,11 @@ class _ProfileSellerViewState extends BaseState<ProfileSellerView> {
   }
 
   getData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bool isImp = prefs.getBool('is_impersonated') ?? false;
+    final String origToken = prefs.getString('admin_original_token') ?? '';
+    _isImpersonated = isImp || origToken.isNotEmpty;
+
     final p = context.read<ProfileSellerProvider>();
     p.locationCoordinate = LatLng(-7.1144282, 112.4069792);
     await p.setMapLocation(PickedData(LatLng(-7.1144282, 112.4069792), ''));
@@ -574,48 +582,86 @@ class _ProfileSellerViewState extends BaseState<ProfileSellerView> {
       return Container(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
         color: Colors.transparent,
-        child: InkWell(
-          onTap: () async {
-            SharedPreferences prefs = await SharedPreferences.getInstance();
-            final isAdmin = await prefs.getBool(Constant.kSetPrefIsAdmin) ?? false;
-            if (isAdmin) {
-              _showLogoutBottomSheet(context);
-            } else {
-              Utils.showYesNoDialog(
-                context: context,
-                title: "Konfirmasi",
-                desc: "Apakah Anda yakin ingin keluar?",
-                yesCallback: () async {
-                  await context.read<AuthProvider>().logout();
-                  Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+        child: Column(
+          children: [
+            if (_isImpersonated) ...[
+              InkWell(
+                onTap: () async {
+                  await Utils.showYesNoDialog(
+                    context: context,
+                    title: "Kembali ke Admin",
+                    desc: "Apakah Anda yakin ingin mengakhiri sesi impersonate dan kembali ke dashboard admin?",
+                    yesCallback: () async {
+                      Navigator.pop(context);
+                      await context.read<AdminUserProvider>().backToAdmin(context);
+                    },
+                    noCallback: () => Navigator.pop(context),
+                  );
                 },
-                noCallback: () => Navigator.pop(context),
-              );
-            }
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            decoration: BoxDecoration(
-              color: const Color(0xffFEF2F2),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xffFECACA)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(Icons.logout_rounded, color: Color(0xffEF4444)),
-                SizedBox(width: 8),
-                Text(
-                  'Logout',
-                  style: TextStyle(
-                    color: Color(0xffEF4444),
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFFCD34D), width: 1.5),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(Icons.admin_panel_settings_rounded, color: Color(0xFFB45309)),
+                      SizedBox(width: 8),
+                      Text(
+                        'Kembali ke Admin',
+                        style: TextStyle(
+                          color: Color(0xFF92400E),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
+            ],
+            InkWell(
+              onTap: () async {
+                Utils.showYesNoDialog(
+                  context: context,
+                  title: "Konfirmasi",
+                  desc: "Apakah Anda yakin ingin keluar?",
+                  yesCallback: () async {
+                    await context.read<AuthProvider>().logout();
+                    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                  },
+                  noCallback: () => Navigator.pop(context),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xffFEF2F2),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xffFECACA)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.logout_rounded, color: Color(0xffEF4444)),
+                    SizedBox(width: 8),
+                    Text(
+                      'Logout',
+                      style: TextStyle(
+                        color: Color(0xffEF4444),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       );
     }
@@ -628,6 +674,10 @@ class _ProfileSellerViewState extends BaseState<ProfileSellerView> {
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           header(),
+          const ImpersonationBannerWidget(
+            roleName: 'Seller',
+            margin: EdgeInsets.fromLTRB(20, 16, 20, 0),
+          ),
           data(),
           bottomBar(),
         ],

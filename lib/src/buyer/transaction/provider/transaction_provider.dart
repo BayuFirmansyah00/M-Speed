@@ -4,14 +4,12 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:mspeed/common/base/base_controller.dart';
 import 'package:mspeed/common/helper/constant.dart';
-import 'package:mspeed/common/helper/multipart.dart';
 import 'package:mspeed/src/buyer/transaction/model/daftar_transaksi_buyer_model.dart';
 import 'package:mspeed/src/buyer/transaction/model/detail_tansaction_buyer_model.dart';
 import 'package:mspeed/src/buyer/transaction/model/riwayat_nego_transaksi_model.dart';
 import 'package:mspeed/src/buyer/transaction/model/transaction_model.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
-import 'package:http/http.dart' as http;
+import 'package:mspeed/utils/utils.dart';
 
 class TransactionProvider extends BaseController with ChangeNotifier {
   String isSubAgent = "agen";
@@ -55,37 +53,55 @@ class TransactionProvider extends BaseController with ChangeNotifier {
 
   bool showMore = false;
 
-  /// Mapping status log Laravel → index tab Flutter (1-6)
+  /// Public helper for testing status-to-tab mapping
+  static int logStatusToTabIndexForTest(Map item) => _logStatusToTabIndex(item);
+
+  /// Mapping status Laravel → index tab Flutter (1-6)
   /// Tab: 1=Pesanan Baru, 2=Pesanan Diterima, 3=Pesanan Dikirim,
   ///      4=Barang Diterima, 5=Proses Pembayaran, 6=Telah Dibayar
-  static int _logStatusToTabIndex(List logs) {
-    if (logs.isEmpty) return 1;
-    // Gunakan log terakhir (latest, urutan terbaru dari backend)
-    final latestStatus = (logs.first['status'] ?? '').toString().toLowerCase();
-    if (latestStatus.contains('siap tagih') ||
-        latestStatus.contains('sudah dibayar') ||
-        latestStatus.contains('paid') ||
-        latestStatus.contains('selesai') ||
-        latestStatus.contains('telah dibayar')) {
-      return 6;
-    } else if (latestStatus.contains('tagihan') ||
-        latestStatus.contains('proses pembayaran') ||
-        latestStatus.contains('invoice')) {
-      return 5;
-    } else if (latestStatus.contains('diterima penerima') ||
-        latestStatus.contains('barang diterima') ||
-        latestStatus.contains('diterima receiver')) {
-      return 4;
-    } else if (latestStatus.contains('dikirim') ||
-        latestStatus.contains('pengiriman')) {
-      return 3;
-    } else if (latestStatus.contains('approve') ||
-        latestStatus.contains('disetujui') ||
-        latestStatus.contains('pesanan diterima')) {
-      return 2;
+  static int _logStatusToTabIndex(Map item) {
+    String status = '';
+    if (item['latest_log'] != null && item['latest_log']['status'] != null) {
+      status = item['latest_log']['status'].toString().toLowerCase().trim();
+    } else if (item['payment_status'] != null) {
+      status = item['payment_status'].toString().toLowerCase().trim();
+    } else if (item['logs'] is List && (item['logs'] as List).isNotEmpty) {
+      status = (item['logs'] as List).first['status']?.toString().toLowerCase().trim() ?? '';
+    }
+
+    if (status == 'pesanan dibayar' ||
+        status == 'telah dibayar' ||
+        status == 'sudah dibayar' ||
+        status == 'paid' ||
+        status == 'selesai' ||
+        status == 'pesanan_selesai') {
+      return 6; // Tab 6: Telah Dibayar
+    } else if (status == 'tagihan' ||
+        status == 'siap tagih by manager' ||
+        status == 'tolak tagih by manager' ||
+        status == 'penerimaan & verifikasi' ||
+        status == 'pembayaran ditolak finance' ||
+        status.contains('tagih') ||
+        status.contains('pembayaran')) {
+      return 5; // Tab 5: Proses Pembayaran
+    } else if (status == 'pesanan diterima penerima' ||
+        status.contains('diterima penerima') ||
+        status.contains('barang diterima') ||
+        status == 'barang_diterima') {
+      return 4; // Tab 4: Barang Diterima
+    } else if (status == 'pesanan dikirim' ||
+        status.contains('dikirim') ||
+        status == 'pesanan_dikirim') {
+      return 3; // Tab 3: Pesanan Dikirim
+    } else if (status == 'approve pesanan by manager' ||
+        status == 'pesanan diterima penjual' ||
+        status.contains('diterima penjual') ||
+        status.contains('disetujui') ||
+        status == 'pesanan_diterima') {
+      return 2; // Tab 2: Pesanan Diterima
     } else {
-      // Default: pesanan baru / not approve / dll
-      return 1;
+      // Default: pesanan baru / reject pesanan by manager / not approve pesanan by manager
+      return 1; // Tab 1: Pesanan Baru
     }
   }
 
@@ -94,10 +110,10 @@ class TransactionProvider extends BaseController with ChangeNotifier {
     if (withLoading) loading(true);
 
     try {
-      // GET /api/buyer/v1/buyer/transactions
+      // GET /api/buyer/v1/buyer/transactions?per_page=100
       // Response: { data: [...ParentOrder], links: {}, meta: {} }
       final parsed = await getRest(
-          Constant.BASE_API_FULL + '/buyer/v1/buyer/transactions');
+          Constant.BASE_API_FULL + '/buyer/v1/buyer/transactions?per_page=100');
 
       // Laravel returns pagination: { data: [...], meta: {}, links: {} }
       final List dataArray =
@@ -109,9 +125,9 @@ class TransactionProvider extends BaseController with ChangeNotifier {
       ];
 
       for (final item in dataArray) {
-        // Tentukan tab berdasarkan log status terbaru
-        final List logs = (item['logs'] is List) ? item['logs'] : [];
-        final int tabIndex = _logStatusToTabIndex(logs);
+        if (item is! Map) continue;
+        // Tentukan tab berdasarkan status order Laravel
+        final int tabIndex = _logStatusToTabIndex(item);
 
         // Hitung total belanja: sum(items.final_price) + shipping_cost
         double shippingCost = 0;
@@ -144,7 +160,7 @@ class TransactionProvider extends BaseController with ChangeNotifier {
         final mapped = DaftarTransaksiBuyerModelData(
           ID: item['id']?.toString(),
           nomorOrder: item['order_num']?.toString(),
-          status: item['payment_status']?.toString(),
+          status: item['latest_log']?['status']?.toString() ?? item['payment_status']?.toString(),
           SellerID: sellerID,
           SellerNama: sellerNama,
           total: grandTotal.toStringAsFixed(0),
@@ -156,9 +172,11 @@ class TransactionProvider extends BaseController with ChangeNotifier {
         tabBuckets[tabIndex - 1].add(mapped);
       }
 
-      // Update hanya tab yang diminta
-      daftarTransaksi[status - 1] = DaftarTransaksiBuyerModel(
-          result: 'success', data: tabBuckets[status - 1]);
+      // Update seluruh tab sekaligus agar konsisten saat tab berganti
+      for (int i = 0; i < 6; i++) {
+        daftarTransaksi[i] = DaftarTransaksiBuyerModel(
+            result: 'success', data: tabBuckets[i]);
+      }
       notifyListeners();
     } catch (e) {
       throw Exception('Gagal memuat transaksi: $e');
@@ -275,27 +293,66 @@ class TransactionProvider extends BaseController with ChangeNotifier {
     }
   }
 
+  Future<bool> submitRating({
+    bool withLoading = false,
+    required String transactionId,
+    required int star,
+    String? note,
+  }) async {
+    if (withLoading) loading(true);
+    try {
+      final payload = {
+        'ratings': [
+          {
+            'rating_type_id': 1,
+            'star': star,
+            if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
+          }
+        ]
+      };
+
+      final response = await post(
+        Constant.BASE_API_FULL + '/buyer/v1/buyer/transactions/$transactionId/ratings',
+        body: payload,
+      );
+      final parsed = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Utils.showSuccess(msg: 'Penilaian dan ulasan berhasil dikirim.');
+        return true;
+      } else {
+        Utils.showFailed(msg: parsed['message'] ?? 'Gagal mengirim penilaian');
+      }
+    } catch (e) {
+      Utils.showFailed(msg: e.toString());
+    } finally {
+      if (withLoading) loading(false);
+    }
+    return false;
+  }
+
   Future<String?> fetchSuratTtd(
       {bool withLoading = false, required String transaction_id}) async {
     if (withLoading) loading(true);
-    final response = await get(
-        Constant.BASE_API_FULL + '/cetaksuratpesananbuyer',
-        body: {"parent_order_id": transaction_id});
+    try {
+      final response = await get(
+          Constant.BASE_API_FULL + '/cetaksuratpesananbuyer',
+          body: {"parent_order_id": transaction_id});
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      if (withLoading) loading(false);
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        if (withLoading) loading(false);
 
-      if (jsonDecode(response.body)["result"] == "success") {
-        return jsonDecode(response.body)["data"];
+        if (jsonDecode(response.body)["result"] == "success") {
+          return jsonDecode(response.body)["data"];
+        } else {
+          return null;
+        }
       } else {
+        loading(false);
         return null;
       }
-      // return model;
-    } else {
-      // final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
+    } catch (_) {
+      if (withLoading) loading(false);
       return null;
-      // throw Exception(message);
     }
   }
 
@@ -313,30 +370,10 @@ class TransactionProvider extends BaseController with ChangeNotifier {
       required String nomor_order,
       required File image}) async {
     if (withLoading) loading(true);
-
-    final file = await http.MultipartFile.fromPath(
-      'file',
-      image.path,
-      filename: basename(image.path),
-    );
-
-    // POST /api/order-documents — upload dokumen/TTD pesanan
-    final response = await post(
-        Constant.BASE_API_FULL + '/order-documents',
-        body: {
-          'parent_order_id': transaction_id,
-          'document_type_id': '1', // TTD buyer
-        },
-        files: [file]);
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      if (withLoading) loading(false);
-      isTtdSuccess = true;
-      return true;
-    } else {
-      isTtdSuccess = false;
-      return false;
-    }
+    Utils.showFailed(msg: 'Fitur TTD Surat Pesanan belum tersedia pada REST API.');
+    if (withLoading) loading(false);
+    isTtdSuccess = false;
+    return false;
   }
 
   int? resetDate;
@@ -347,18 +384,9 @@ class TransactionProvider extends BaseController with ChangeNotifier {
     required String parentOrderId,
   }) async {
     if (withLoading) loading(true);
-
-    // POST /api/parent-orders/{id}/dispute — kembalikan/dispute tagihan
-    final response = await post(
-      Constant.BASE_API_FULL + '/parent-orders/$parentOrderId/dispute',
-      body: {
-        'reset': '$resetDate',
-        'desc': reason ?? '',
-      },
-    );
-
+    Utils.showFailed(msg: 'Fitur dispute tagihan belum tersedia pada REST API.');
     if (withLoading) loading(false);
-    return response.statusCode == 200 || response.statusCode == 201;
+    return false;
   }
 
   XFile? ematerai;
@@ -368,17 +396,8 @@ class TransactionProvider extends BaseController with ChangeNotifier {
     required String parentOrderId,
   }) async {
     if (withLoading) loading(true);
-
-    var file = await getMultipart('file', File(ematerai!.path));
-
-    // POST /api/materais — upload e-meterai untuk pesanan
-    final response = await post(
-      Constant.BASE_API_FULL + '/materais',
-      body: {'parent_order_id': parentOrderId},
-      files: [file],
-    );
-
+    Utils.showFailed(msg: 'Fitur upload e-materai mandiri belum tersedia pada REST API.');
     if (withLoading) loading(false);
-    return response.statusCode == 200 || response.statusCode == 201;
+    return false;
   }
 }
