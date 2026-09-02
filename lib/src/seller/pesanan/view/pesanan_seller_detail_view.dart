@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_appbar.dart';
 import 'package:mspeed/common/component/custom_button.dart';
+import 'package:mspeed/common/component/custom_dialog.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
 import 'package:mspeed/common/helper/constant.dart';
 
@@ -10,7 +11,6 @@ import 'package:mspeed/src/seller/pesanan/model/pesanan_seller_model.dart';
 import 'package:mspeed/src/seller/pesanan/provider/seller_pesanan_provider.dart';
 import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 // ═══════════════════════════════════════════════════════════════════
 // M-SPEED Brand Color Palette
@@ -295,7 +295,7 @@ class _PesananSellerDetailViewState extends BaseState<PesananSellerDetailView> {
                 ),
               ),
               Text(
-                'Rp ${Utils.thousandSeparator(data.totalOrderPrice.toInt())}',
+                Utils.thousandSeparator(data.totalOrderPrice.toInt()),
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
@@ -305,6 +305,100 @@ class _PesananSellerDetailViewState extends BaseState<PesananSellerDetailView> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  void _showKirimBarangDialog(BuildContext context, SellerOrderData data, SellerPesananProvider p) {
+    final receiptController = TextEditingController();
+    final noteController = TextEditingController();
+
+    CustomDialog.mainDialog(
+      context: context,
+      title: "",
+      content: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Kirim Barang Pesanan',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _kTextPrimary),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, color: Colors.black54, size: 20),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Masukkan nomor resi pengiriman kurir (opsional) beserta catatan.',
+                style: TextStyle(fontSize: 12, color: _kTextSecondary),
+              ),
+              TextField(
+                controller: receiptController,
+                style: const TextStyle(fontSize: 14, color: _kTextPrimary),
+                decoration: InputDecoration(
+                  labelText: "Nomor Resi (Opsional)",
+                  hintText: "Contoh: JNT123456789",
+                  hintStyle: const TextStyle(fontSize: 13, color: _kTextSecondary),
+                  labelStyle: const TextStyle(fontSize: 13, color: _kTextSecondary),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: noteController,
+                style: const TextStyle(fontSize: 14, color: _kTextPrimary),
+                maxLines: 3,
+                decoration: InputDecoration(
+                  labelText: "Catatan Pengiriman (Opsional)",
+                  hintText: "Catatan tambahan...",
+                  hintStyle: const TextStyle(fontSize: 13, color: _kTextSecondary),
+                  labelStyle: const TextStyle(fontSize: 13, color: _kTextSecondary),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomButton.secondaryButton(
+                      "Batal",
+                      () => Navigator.pop(context),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: CustomButton.mainButton(
+                      "Kirim Sekarang",
+                      () async {
+                        Navigator.pop(context);
+                        bool success = await p.kirimBarang(
+                          parent_id: data.id.toString(),
+                          receiptNum: receiptController.text,
+                          note: noteController.text,
+                        );
+                        if (success) refresh();
+                      },
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -326,58 +420,41 @@ class _PesananSellerDetailViewState extends BaseState<PesananSellerDetailView> {
             ),
           ],
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () {
-                  // Tolak Pesanan - not yet fully implemented in provider but UI can show
-                  Utils.showFailed(
-                    msg: 'Tolak Pesanan belum tersedia di UI ini',
-                  );
-                },
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  foregroundColor: Colors.red,
-                  side: const BorderSide(color: Colors.red),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: const Text(
-                  'Tolak',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              flex: 2,
-              child: ElevatedButton(
-                onPressed: () async {
+        child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () {
+              Utils.showYesNoDialog(
+                context: context,
+                title: 'Terima Pesanan',
+                desc: 'Apakah Anda yakin ingin menerima dan memproses pesanan #${data.orderNum ?? ''} ini?',
+                yesCallback: () async {
+                  CusNav.nPop(context);
                   bool success = await p.fetchActionPesananBaru(
                     parent_id: data.id.toString(),
                     terima: true,
                   );
                   if (success) refresh();
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _kPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: const Text(
-                  'Terima Pesanan',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
+                noCallback: () => CusNav.nPop(context),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF16A765),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
-          ],
+            child: const Text(
+              'Terima Pesanan',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: Colors.white,
+              ),
+            ),
+          ),
         ),
       );
     }
@@ -389,10 +466,7 @@ class _PesananSellerDetailViewState extends BaseState<PesananSellerDetailView> {
         child: SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: () async {
-              bool success = await p.kirimBarang(parent_id: data.id.toString());
-              if (success) refresh();
-            },
+            onPressed: () => _showKirimBarangDialog(context, data, p),
             style: ElevatedButton.styleFrom(
               backgroundColor: _kPrimary,
               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -401,9 +475,10 @@ class _PesananSellerDetailViewState extends BaseState<PesananSellerDetailView> {
               ),
             ),
             child: const Text(
-              'Kirim Pesanan',
+              'Kirim Barang / Input Resi',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
+                fontSize: 14,
                 color: Colors.white,
               ),
             ),
@@ -412,8 +487,7 @@ class _PesananSellerDetailViewState extends BaseState<PesananSellerDetailView> {
       );
     }
 
-
-    return const SizedBox.shrink(); // No actions for completed/rejected/unknown
+    return const SizedBox.shrink();
   }
 
   @override

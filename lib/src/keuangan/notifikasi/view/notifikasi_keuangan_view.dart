@@ -72,7 +72,7 @@ class _NotifikasiKeuanganViewState extends BaseState<NotifikasiKeuanganView>
                         Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: Constant.primaryColor.withOpacity(0.1),
+                            color: Constant.primaryColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
@@ -188,12 +188,12 @@ class _NotifikasiKeuanganViewState extends BaseState<NotifikasiKeuanganView>
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Constant.primaryColor.withOpacity(0.3),
+            color: Constant.primaryColor.withValues(alpha: 0.3),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),

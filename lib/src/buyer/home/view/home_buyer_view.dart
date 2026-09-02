@@ -599,13 +599,14 @@ class _HomeBuyerViewState extends BaseState<HomeBuyerView>
             },
               child: GestureDetector(
               onTap: () async {
-                final map = context.read<HomeProvider>().kategoriMap;
-                final name = cat.name ?? '';
-                if (map.containsKey(name)) {
-                  map.updateAll((k, v) => false);
-                  map[name] = true;
-                }
-                await CusNav.nPush(context, ProductOrSellerSearchView());
+                debugPrint('CATEGORY CLICK: id = ${cat.id}, name = ${cat.name}');
+                await CusNav.nPush(
+                  context,
+                  ProductOrSellerSearchView(
+                    initialCategoryId: cat.id,
+                    initialCategoryName: cat.name,
+                  ),
+                );
               },
               child: SizedBox(
                 width: 72,

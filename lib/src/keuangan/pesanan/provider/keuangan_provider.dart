@@ -1,419 +1,346 @@
-import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:flutter_pdfview/flutter_pdfview.dart';
-import 'package:mspeed/common/base/base_controller.dart';
-import 'package:mspeed/common/component/custom_navigator.dart';
-import 'package:mspeed/common/helper/constant.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:mspeed/common/helper/encrypt.dart';
-import 'package:mspeed/common/page/pdf_view.dart';
-import 'package:mspeed/src/keuangan/pesanan/model/daftar_transaksi_keuangan_model.dart';
-import 'package:mspeed/src/keuangan/pesanan/model/detail_transaksi_keuangan_model.dart';
-import 'package:mspeed/src/keuangan/pesanan/model/download_model.dart';
-import 'package:mspeed/src/keuangan/pesanan/model/lihat_lampiran_model.dart';
-import 'package:path/path.dart';
+import 'package:mspeed/common/base/base_controller.dart';
+import 'package:mspeed/common/helper/constant.dart';
+import 'package:mspeed/core/network/api_client.dart';
+import 'package:mspeed/src/keuangan/pesanan/model/finance_order_model.dart';
+import 'package:mspeed/utils/utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 
+/// KeuanganProvider
+/// Handles all Finance API calls and business state:
+/// - GET  /finance/v1/finance/orders          → fetchOrders
+/// - GET  /finance/v1/finance/orders/{id}      → fetchOrderDetail
+/// - POST /finance/v1/finance/orders/{id}/pay  → processPayment (with optional proof & note)
+/// - POST /finance/v1/finance/orders/{id}/reject → rejectPayment (with reason/note)
 class KeuanganProvider extends BaseController with ChangeNotifier {
-  DaftarTransaksiKeuanganModel _daftarTransaksi =
-      DaftarTransaksiKeuanganModel();
+  // ─────────────────────────────────────────────────────────────────
+  // State: Orders & Detail
+  // ─────────────────────────────────────────────────────────────────
+  List<FinanceOrderData> _orders = [];
+  List<FinanceOrderData> get orders => _orders;
 
-  DaftarTransaksiKeuanganModel get daftarTransaksi => _daftarTransaksi;
+  FinanceOrderData? _selectedOrder;
+  FinanceOrderData? get selectedOrder => _selectedOrder;
 
-  set daftarTransaksi(DaftarTransaksiKeuanganModel value) {
-    _daftarTransaksi = value;
-  }
+  FinanceOrderMeta? _meta;
+  FinanceOrderMeta? get meta => _meta;
 
-  TextEditingController uploadC = TextEditingController();
-  FocusNode uploadNode = FocusNode();
+  bool _isLoadingOrders = false;
+  bool get isLoadingOrders => _isLoadingOrders;
 
-  TextEditingController attachC = TextEditingController();
-  String? fileAttachUrl;
-  TextEditingController descC = TextEditingController();
+  bool _isLoadingDetail = false;
+  bool get isLoadingDetail => _isLoadingDetail;
 
-  bool _isReady = false;
+  bool _isProcessing = false;
+  bool get isProcessing => _isProcessing;
+
   String _errorMessage = '';
+  String get errorMessage => _errorMessage;
 
-  bool get isReady => this._isReady;
+  // ─────────────────────────────────────────────────────────────────
+  // State: Filter & Search
+  // ─────────────────────────────────────────────────────────────────
+  final TextEditingController searchController = TextEditingController();
+  String? _selectedStatus;
+  String? get selectedStatus => _selectedStatus;
 
-  set isReady(bool value) => this._isReady = value;
+  int? _selectedMonth;
+  int? get selectedMonth => _selectedMonth;
 
-  String? _remotePDFpath;
-  String? get remotePDFpath => this._remotePDFpath;
+  int? _selectedYear;
+  int? get selectedYear => _selectedYear;
 
-  set remotePDFpath(String? value) {
-    this._remotePDFpath = value;
+  // Form Controllers for Actions
+  final TextEditingController actionNoteController = TextEditingController();
+  File? _paymentProofFile;
+  File? get paymentProofFile => _paymentProofFile;
+  set paymentProofFile(File? file) {
+    _paymentProofFile = file;
     notifyListeners();
   }
 
-  String get errorMessage => this._errorMessage;
+  // ─────────────────────────────────────────────────────────────────
+  // State: Profile & Impersonate Info
+  // ─────────────────────────────────────────────────────────────────
+  String _financeName = 'Finance User';
+  String get financeName => _financeName;
 
-  set errorMessage(String value) => this._errorMessage = value;
+  String _financeEmail = '';
+  String get financeEmail => _financeEmail;
 
-  Completer<PDFViewController> _controller = Completer<PDFViewController>();
-  Completer<PDFViewController> get controller => this._controller;
+  String _financeRole = 'FINANCE';
+  String get financeRole => _financeRole;
 
-  set controller(Completer<PDFViewController> value) =>
-      this._controller = value;
-  int? _pages = 1;
-  int? _currentPage = 1;
-  bool _isRender = false;
-  bool get isRender => this._isRender;
-  set isRender(bool value) => this._isRender = value;
-  int? get pages => this._pages;
+  bool _isImpersonated = false;
+  bool get isImpersonated => _isImpersonated;
 
-  set pages(int? value) => this._pages = value;
+  // ─────────────────────────────────────────────────────────────────
+  // Computed KPIs (From Real Backend Orders)
+  // ─────────────────────────────────────────────────────────────────
+  int get kpiTotalPesanan => _orders.length;
 
-  int? get currentPage => this._currentPage;
+  /// Orders awaiting Finance payment action (status: 'penerimaan & verifikasi')
+  int get kpiSiapDibayar =>
+      _orders.where((o) => o.canProcessPayment).length;
 
-  set currentPage(int? value) => this._currentPage = value;
+  /// Orders already paid by Finance (status: 'pesanan dibayar' or 'telah_dibayar')
+  int get kpiTelahDibayar =>
+      _orders.where((o) => o.isPaid).length;
 
-  File? _imageAttachment;
-  File? get imageAttachment => _imageAttachment;
+  /// Orders rejected by Finance
+  int get kpiDitolak =>
+      _orders.where((o) => o.isRejected).length;
 
-  set imageAttachment(File? imageAttachment1) {
-    _imageAttachment = imageAttachment1;
+  /// Total nominal of all paid orders
+  double get kpiTotalNominalDibayar =>
+      _orders.where((o) => o.isPaid).fold(0.0, (sum, o) => sum + o.grandTotal);
+
+  // ─────────────────────────────────────────────────────────────────
+  // Profile Loading
+  // ─────────────────────────────────────────────────────────────────
+  Future<void> loadProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final firstName = prefs.getString(Constant.kSetPrefFirstName) ?? '';
+    final lastName = prefs.getString(Constant.kSetPrefLastName) ?? '';
+    final email = prefs.getString(Constant.kSetPrefEmail) ?? '';
+    final role = prefs.getString(Constant.kSetPrefRoles) ?? 'FINANCE';
+    final isAdmin = prefs.getBool(Constant.kSetPrefIsAdmin) ?? false;
+
+    final full = '$firstName $lastName'.trim();
+    _financeName = full.isNotEmpty ? full : (email.isNotEmpty ? email : 'Finance User');
+    _financeEmail = email;
+    _financeRole = role.toUpperCase();
+    _isImpersonated = isAdmin;
     notifyListeners();
   }
 
-  clearData() {
-    attachC.clear();
-  }
-
-  Future<void> fetchViewNotif({
-    bool withLoading = false,
-    required String id,
-    required String type,
+  // ─────────────────────────────────────────────────────────────────
+  // API: Fetch Orders List
+  // ─────────────────────────────────────────────────────────────────
+  Future<void> fetchOrders({
+    bool withLoading = true,
+    String? search,
+    String? statusLog,
+    int? month,
+    int? year,
   }) async {
-    if (withLoading) loading(true);
-    controller = Completer<PDFViewController>();
-    pages = 1;
-    currentPage = 1;
-    isReady = false;
-    errorMessage = '';
-    downloadModel = DownloadModel();
-    String encodedId = Encrypt().encode64(id);
-    Map<String, String> param = {'id': encodedId, 'type': type};
-
-    final response = await post(
-        Constant.BASE_API_FULL + '/notification/notif/view',
-        body: param);
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      downloadModel = DownloadModel.fromJson(jsonDecode(response.body));
-      remotePDFpath = downloadModel.data ?? "";
+    if (withLoading) {
+      _isLoadingOrders = true;
       notifyListeners();
-      if (withLoading) loading(false);
-      // isFetching = false;
-    } else {
-      remotePDFpath = '';
-      final message = jsonDecode(response.body)["message"];
-      loading(false);
-      throw Exception(message);
     }
-  }
-
-  Future<void> fetchTransaction({bool withLoading = false}) async {
-    if (withLoading) loading(true);
+    _errorMessage = '';
 
     try {
-      final parsed = await getRest(Constant.BASE_API_FULL + '/parent-orders'); // Maybe add role filter if necessary
-      
-      // Jika parsed adalah list (Laravel Resource Controller pattern)
-      List<dynamic> dataList = [];
-      if (parsed is Map<String, dynamic> && parsed.containsKey('data')) {
-        dataList = parsed['data'];
-      } else if (parsed is List) {
-        dataList = parsed;
-      }
-      
-      daftarTransaksi = DaftarTransaksiKeuanganModel.fromJson({'result': 'success', 'data': dataList});
-      notifyListeners();
-    } catch (e) {
-      throw Exception(e);
-    } finally {
-      if (withLoading) loading(false);
-    }
-  }
+      final queryParams = <String, dynamic>{};
+      if (search != null && search.isNotEmpty) queryParams['search'] = search;
+      if (statusLog != null && statusLog.isNotEmpty) queryParams['status_log'] = statusLog;
+      if (month != null) queryParams['month'] = month;
+      if (year != null) queryParams['year'] = year;
 
-  DetailTransaksiKeuanganModel _detailTransaksi =
-      DetailTransaksiKeuanganModel();
-
-  DetailTransaksiKeuanganModel get detailTransaksi => _detailTransaksi;
-
-  set detailTransaksi(DetailTransaksiKeuanganModel value) {
-    _detailTransaksi = value;
-  }
-
-  bool showMore = false;
-
-  Future<void> fetchDetailTransaction(
-      {bool withLoading = false, required String transaction_id}) async {
-    if (withLoading) loading(true);
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String userId = prefs.getString(Constant.kSetPrefId) ?? '1';
-
-    try {
-      final parsed = await getRest(
-        Constant.BASE_API_FULL + '/parent-orders/$transaction_id?keuangan_id=$userId'
+      final response = await ApiClient().dio.get(
+        '/finance/v1/finance/orders',
+        queryParameters: queryParams,
       );
-      
-      Map<String, dynamic>? dataItem = parsed;
-      if (dataItem != null) {
-        var parentOrder = DetailTransaksiKeuanganModelDataParentOrderModel.fromJson(dataItem);
-        var mappedData = DetailTransaksiKeuanganModelData(
-          ParentOrderModel: parentOrder,
-          detail: [],
-          timeline: [],
-        );
-        detailTransaksi = DetailTransaksiKeuanganModel(result: "success", data: mappedData);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final parsed = FinanceOrderListResponse.fromJson(response.data);
+        _orders = parsed.data;
+        _meta = parsed.meta;
       }
-      
-      log("ISINYA REKENing : ${detailTransaksi.data?.ParentOrderModel?.Rekening}");
-      notifyListeners();
+    } on DioException catch (e) {
+      log('[KeuanganProvider] fetchOrders DioException: ${e.message}');
+      _errorMessage = e.response?.data?['message']?.toString() ?? 'Gagal memuat daftar pesanan.';
     } catch (e) {
-      throw Exception(e);
+      log('[KeuanganProvider] fetchOrders error: $e');
+      _errorMessage = 'Terjadi kesalahan saat memuat pesanan.';
     } finally {
-      if (withLoading) loading(false);
-    }
-  }
-
-  DownloadModel _downloadModel = DownloadModel();
-
-  DownloadModel get downloadModel => _downloadModel;
-
-  set downloadModel(DownloadModel value) {
-    _downloadModel = value;
-  }
-
-  LihatLampiranModel _lihatLampiranModel = LihatLampiranModel();
-
-  LihatLampiranModel get lihatLampiranModel => _lihatLampiranModel;
-
-  set lihatLampiranModel(LihatLampiranModel value) {
-    _lihatLampiranModel = value;
-  }
-
-  Future<String?> fetchPesananKeuangan(BuildContext context,
-      {bool withLoading = false, required String transaction_id}) async {
-    if (withLoading) loading(true);
-    final response = await get(
-        Constant.BASE_API_FULL + '/cetaksuratpesanankeuangan',
-        body: {"parent_order_id": transaction_id});
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      downloadModel = DownloadModel.fromJson(jsonDecode(response.body));
-      notifyListeners();
-      if (withLoading) loading(false);
-
-      await CusNav.nPush(
-          context,
-          PdfView(
-              pdfUrl: (downloadModel.data ?? ""),
-              title: "Download Surat Pesanan"));
-
-      if (jsonDecode(response.body)["result"] == "success") {
-        return jsonDecode(response.body)["data"];
-      } else {
-        return null;
+      if (withLoading) {
+        _isLoadingOrders = false;
       }
-      // return model;
-    } else {
-      loading(false);
-      return null;
-    }
-  }
-
-  Future<String?> fetchInvoiceKeuangan(BuildContext context,
-      {bool withLoading = false, required String transaction_id}) async {
-    if (withLoading) loading(true);
-    final response = await get(Constant.BASE_API_FULL + '/cetakinvoicekeuangan',
-        body: {"parent_order_id": transaction_id});
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      downloadModel = DownloadModel.fromJson(jsonDecode(response.body));
       notifyListeners();
-      if (withLoading) loading(false);
-
-      // await launchUrl(Uri.parse(downloadModel.data ?? ""));
-      await CusNav.nPush(
-          context,
-          PdfView(
-              pdfUrl: (downloadModel.data ?? ""), title: "Download Invoice"));
-
-      if (jsonDecode(response.body)["result"] == "success") {
-        return jsonDecode(response.body)["data"];
-      } else {
-        return null;
-      }
-      // return model;
-    } else {
-      loading(false);
-      return null;
     }
   }
 
-  Future<String?> fetchKwitansiKeuangan(BuildContext context,
-      {bool withLoading = false, required String transaction_id}) async {
-    if (withLoading) loading(true);
-    final response = await get(
-        Constant.BASE_API_FULL + '/cetakkwitansikeuangan',
-        body: {"parent_order_id": transaction_id});
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      downloadModel = DownloadModel.fromJson(jsonDecode(response.body));
+  // ─────────────────────────────────────────────────────────────────
+  // API: Fetch Order Detail
+  // ─────────────────────────────────────────────────────────────────
+  Future<void> fetchOrderDetail(int orderId, {bool withLoading = true}) async {
+    if (withLoading) {
+      _isLoadingDetail = true;
       notifyListeners();
-      if (withLoading) loading(false);
-
-      // await launchUrl(Uri.parse(downloadModel.data ?? ""));
-      await CusNav.nPush(
-          context,
-          PdfView(
-              pdfUrl: (downloadModel.data ?? ""), title: "Download Kwitansi"));
-
-      if (jsonDecode(response.body)["result"] == "success") {
-        return jsonDecode(response.body)["data"];
-      } else {
-        return null;
-      }
-      // return model;
-    } else {
-      loading(false);
-      return null;
     }
-  }
+    _errorMessage = '';
 
-  Future<String?> fetchSuratJalankeuangan(BuildContext context,
-      {bool withLoading = false, required String transaction_id}) async {
-    if (withLoading) loading(true);
-    final response = await get(
-        Constant.BASE_API_FULL + '/cetaksuratjalankeuangan',
-        body: {"parent_order_id": transaction_id});
+    try {
+      final response = await ApiClient().dio.get('/finance/v1/finance/orders/$orderId');
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      downloadModel = DownloadModel.fromJson(jsonDecode(response.body));
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final parsed = FinanceOrderDetailResponse.fromJson(response.data);
+        _selectedOrder = parsed.data;
+      }
+    } on DioException catch (e) {
+      log('[KeuanganProvider] fetchOrderDetail DioException: ${e.message}');
+      _errorMessage = e.response?.data?['message']?.toString() ?? 'Gagal memuat detail pesanan.';
+      Utils.showFailed(msg: _errorMessage);
+    } catch (e) {
+      log('[KeuanganProvider] fetchOrderDetail error: $e');
+      _errorMessage = 'Gagal memuat detail pesanan: $e';
+      Utils.showFailed(msg: _errorMessage);
+    } finally {
+      if (withLoading) {
+        _isLoadingDetail = false;
+      }
       notifyListeners();
-      if (withLoading) loading(false);
-
-      await CusNav.nPush(
-          context,
-          PdfView(
-              pdfUrl: (downloadModel.data ?? ""),
-              title: "Download Surat Jalan"));
-
-      if (jsonDecode(response.body)["result"] == "success") {
-        return jsonDecode(response.body)["data"];
-      } else {
-        return null;
-      }
-      // return model;
-    } else {
-      loading(false);
-      return null;
     }
   }
 
-  Future<String?> fetchLampiranTagihanKeuangan(BuildContext context,
-      {bool withLoading = false, required String transaction_id}) async {
-    if (withLoading) loading(true);
+  // ─────────────────────────────────────────────────────────────────
+  // API: Process Payment (Pay Order)
+  // ─────────────────────────────────────────────────────────────────
+  Future<bool> processPayment({
+    required int orderId,
+    String? note,
+    File? proofFile,
+  }) async {
+    _isProcessing = true;
+    notifyListeners();
 
-    final response = await get(
-      Constant.BASE_API_FULL + '/lihatlampirantagihan',
-      body: {"parent_order_id": transaction_id},
+    try {
+      dynamic postData;
+
+      if (proofFile != null && await proofFile.exists()) {
+        final fileName = proofFile.path.split(Platform.pathSeparator).last;
+        postData = FormData.fromMap({
+          if (note != null && note.isNotEmpty) 'note': note,
+          'payment_proof': await MultipartFile.fromFile(
+            proofFile.path,
+            filename: fileName,
+          ),
+        });
+      } else {
+        postData = {
+          if (note != null && note.isNotEmpty) 'note': note,
+        };
+      }
+
+      final response = await ApiClient().dio.post(
+        '/finance/v1/finance/orders/$orderId/pay',
+        data: postData,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Utils.showSuccess(msg: 'Pembayaran pesanan berhasil diproses dan dicatat.');
+        actionNoteController.clear();
+        _paymentProofFile = null;
+        // Refresh local detail & list
+        await fetchOrderDetail(orderId, withLoading: false);
+        fetchOrders(withLoading: false);
+        return true;
+      }
+      return false;
+    } on DioException catch (e) {
+      log('[KeuanganProvider] processPayment DioException: ${e.response?.data}');
+      final msg = e.response?.data?['message']?.toString() ??
+          'Gagal memproses pembayaran. Periksa kembali status pesanan.';
+      Utils.showFailed(msg: msg);
+      return false;
+    } catch (e) {
+      log('[KeuanganProvider] processPayment error: $e');
+      Utils.showFailed(msg: 'Terjadi kesalahan: $e');
+      return false;
+    } finally {
+      _isProcessing = false;
+      notifyListeners();
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // API: Reject Payment
+  // ─────────────────────────────────────────────────────────────────
+  Future<bool> rejectPayment({
+    required int orderId,
+    String? note,
+  }) async {
+    _isProcessing = true;
+    notifyListeners();
+
+    try {
+      final response = await ApiClient().dio.post(
+        '/finance/v1/finance/orders/$orderId/reject',
+        data: {
+          'note': (note != null && note.isNotEmpty) ? note : 'Pembayaran ditolak oleh Divisi Finance.',
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        Utils.showSuccess(msg: 'Pembayaran pesanan berhasil ditolak.');
+        actionNoteController.clear();
+        await fetchOrderDetail(orderId, withLoading: false);
+        fetchOrders(withLoading: false);
+        return true;
+      }
+      return false;
+    } on DioException catch (e) {
+      log('[KeuanganProvider] rejectPayment DioException: ${e.response?.data}');
+      final msg = e.response?.data?['message']?.toString() ?? 'Gagal menolak pembayaran.';
+      Utils.showFailed(msg: msg);
+      return false;
+    } catch (e) {
+      log('[KeuanganProvider] rejectPayment error: $e');
+      Utils.showFailed(msg: 'Terjadi kesalahan: $e');
+      return false;
+    } finally {
+      _isProcessing = false;
+      notifyListeners();
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // Filter Management
+  // ─────────────────────────────────────────────────────────────────
+  void setFilterStatus(String? status) {
+    _selectedStatus = status;
+    notifyListeners();
+  }
+
+  void setFilterMonth(int? month) {
+    _selectedMonth = month;
+    notifyListeners();
+  }
+
+  void setFilterYear(int? year) {
+    _selectedYear = year;
+    notifyListeners();
+  }
+
+  void resetFilters() {
+    _selectedStatus = null;
+    _selectedMonth = null;
+    _selectedYear = null;
+    searchController.clear();
+    notifyListeners();
+    applyFilters();
+  }
+
+  void applyFilters() {
+    fetchOrders(
+      withLoading: true,
+      search: searchController.text.trim(),
+      statusLog: _selectedStatus,
+      month: _selectedMonth,
+      year: _selectedYear,
     );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      lihatLampiranModel =
-          LihatLampiranModel.fromJson(jsonDecode(response.body));
-      notifyListeners();
-
-      if (withLoading) loading(false);
-
-      var result = jsonDecode(response.body)["result"];
-      if (result == "success") {
-        var data = jsonDecode(response.body)["data"];
-        return data["url"] as String?;
-      } else {
-        return null;
-      }
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
-    }
   }
 
-  Future<bool> verifyOrder({
-    bool withLoading = true,
-    required String parentId,
-    String? note,
-  }) async {
-    if (withLoading) loading(true);
-
-    try {
-      final response = await post(
-        Constant.BASE_API_FULL + '/finance/v1/finance/orders/$parentId/verify',
-        body: note != null && note.isNotEmpty ? {"note": note} : {},
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return true;
-      } else if (response.statusCode == 401) {
-        throw Exception("Sesi Anda telah berakhir. Silakan login kembali (401).");
-      } else if (response.statusCode == 403) {
-        throw Exception("Akses ditolak. Anda tidak memiliki izin untuk tindakan ini (403).");
-      } else if (response.statusCode == 422) {
-        final message = jsonDecode(response.body)["message"] ?? "Transisi status tidak valid.";
-        throw Exception(message);
-      } else {
-        throw Exception("Terjadi kesalahan server (500).");
-      }
-    } catch (e) {
-      if (e is SocketException || e is TimeoutException) {
-        throw Exception("Terjadi kesalahan jaringan. Silakan periksa koneksi Anda.");
-      }
-      rethrow;
-    } finally {
-      if (withLoading) loading(false);
-    }
-  }
-
-  Future<bool> payOrder({
-    bool withLoading = true,
-    required String parentId,
-    String? note,
-  }) async {
-    if (withLoading) loading(true);
-
-    try {
-      final response = await post(
-        Constant.BASE_API_FULL + '/finance/v1/finance/orders/$parentId/pay',
-        body: note != null && note.isNotEmpty ? {"note": note} : {},
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return true;
-      } else if (response.statusCode == 401) {
-        throw Exception("Sesi Anda telah berakhir. Silakan login kembali (401).");
-      } else if (response.statusCode == 403) {
-        throw Exception("Akses ditolak. Anda tidak memiliki izin untuk tindakan ini (403).");
-      } else if (response.statusCode == 422) {
-        final message = jsonDecode(response.body)["message"] ?? "Transisi status tidak valid.";
-        throw Exception(message);
-      } else {
-        throw Exception("Terjadi kesalahan server (500).");
-      }
-    } catch (e) {
-      if (e is SocketException || e is TimeoutException) {
-        throw Exception("Terjadi kesalahan jaringan. Silakan periksa koneksi Anda.");
-      }
-      rethrow;
-    } finally {
-      if (withLoading) loading(false);
-    }
+  // ─────────────────────────────────────────────────────────────────
+  // Cleanup
+  // ─────────────────────────────────────────────────────────────────
+  void clearActionData() {
+    actionNoteController.clear();
+    _paymentProofFile = null;
   }
 }

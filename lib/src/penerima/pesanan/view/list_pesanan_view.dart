@@ -1,22 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
-import 'package:mspeed/common/helper/Constant.dart';
-import 'package:mspeed/generated/assets.dart';
-import 'package:mspeed/src/admin/user/provider/admin_user_provider.dart';
-import 'package:mspeed/src/auth/provider/auth_provider.dart';
-import 'package:mspeed/src/auth/view/login_view.dart';
-
-import 'package:mspeed/src/buyer/transaction/provider/transaction_status.dart';
-import 'package:mspeed/src/penerima/notifikasi/provider/notifikasi_penerima_provider.dart';
-import 'package:mspeed/src/penerima/notifikasi/view/notifikasi_penerima_view.dart';
-import 'package:mspeed/src/penerima/pesanan/model/pesanan_penerima_model.dart';
 import 'package:mspeed/src/penerima/pesanan/provider/penerima_pesanan_provider.dart';
 import 'package:mspeed/src/penerima/pesanan/view/order_item_widget.dart';
 import 'package:mspeed/src/penerima/pesanan/view/penerima_pesanan_detail_view.dart';
-import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+// ── Color Constants ────────────────────────────────────────────────────────
+const Color _kPrimary = Color(0xFF0284C7);
+const Color _kPrimaryDark = Color(0xFF0369A1);
+const Color _kBg = Color(0xFFF8FAFC);
+const Color _kSurface = Color(0xFFFFFFFF);
+const Color _kTextPrimary = Color(0xFF1F2937);
+const Color _kTextSecondary = Color(0xFF6B7280);
+const Color _kBorder = Color(0xFFE5E7EB);
 
 class ListPesananView extends StatefulWidget {
   const ListPesananView({super.key});
@@ -26,138 +23,286 @@ class ListPesananView extends StatefulWidget {
 }
 
 class _ListPesananViewState extends BaseState<ListPesananView> {
-  String userId = "";
-  String userName = "";
-  final searchC = TextEditingController();
-
   @override
   void initState() {
     super.initState();
-    initData();
-  }
-
-  Future<void> initData() async {
-    final prefs = await SharedPreferences.getInstance();
-    userId = prefs.getString(Constant.kSetPrefId) ?? "";
-    userName = prefs.getString(Constant.kSetPrefFirstName) ?? "";
-
-    if (!mounted) return;
-
-    // Hindari concurrent withLoading: true yang memicu multiple loading overlay.
-    final pesananP = context.read<PenerimaPesananProvider>();
-    final notifP = context.read<NotifikasiPenerimaProvider>();
-
-    await pesananP.fetchTransaction(withLoading: true);
-    // Notifikasi di-load tanpa loading agar tidak memblokir UI.
-    notifP.fetchNotification(withLoading: false);
-  }
-
-  void refresh() {
-    final pesananP = context.read<PenerimaPesananProvider>();
-    final notifP = context.read<NotifikasiPenerimaProvider>();
-
-    pesananP.fetchTransaction(withLoading: true).then((_) {
-      notifP.fetchNotification(withLoading: false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadData();
     });
   }
 
-  List<PesananPenerimaModelData?> _filterOrders(
-    List<PesananPenerimaModelData?>? source,
-    String query,
-  ) {
-    if (source == null) return [];
-    if (query.trim().isEmpty) return source;
-    final lower = query.toLowerCase();
-    return source
-        .where((e) =>
-            (e?.nomorOrder?.toLowerCase().contains(lower) ?? false) ||
-            (e?.nama?.toLowerCase().contains(lower) ?? false))
-        .toList();
+  Future<void> _loadData() async {
+    final p = context.read<PenerimaPesananProvider>();
+    await p.fetchOrders(withLoading: true);
   }
 
-  Widget _buildOption(String title, String path, GestureTapCallback? onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 18,
-              height: 18,
-              child: FittedBox(child: Image.asset(path)),
-            ),
-            Constant.xSizedBox8,
-            Text(title),
-          ],
-        ),
-      ),
-    );
-  }
+  void _showFilterBottomSheet(BuildContext context) {
+    final p = context.read<PenerimaPesananProvider>();
+    String? tempStatus = p.selectedStatus;
+    int? tempBulan = p.selectedMonth;
+    int? tempTahun = p.selectedYear;
 
-  void _showLogoutBottomSheet(BuildContext context) {
     showModalBottomSheet(
-      backgroundColor: Colors.white,
+      backgroundColor: _kSurface,
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (BuildContext modalContext) {
-        return SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 12),
-              Row(
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            final listStatus = [
+              {'value': null, 'label': 'Semua Status'},
+              {'value': 'pesanan dikirim', 'label': 'Sedang Dikirim (Perlu Verifikasi)'},
+              {'value': 'pesanan diterima penerima', 'label': 'Telah Diterima Penerima'},
+              {'value': 'pesanan diproses seller', 'label': 'Diproses Seller'},
+              {'value': 'pesanan disetujui manager', 'label': 'Disetujui Manager'},
+              {'value': 'penerimaan & verifikasi', 'label': 'Penerimaan & Verifikasi'},
+              {'value': 'pesanan dibayar', 'label': 'Telah Dibayar'},
+              {'value': 'pesanan selesai', 'label': 'Pesanan Selesai'},
+              {'value': 'dibatalkan', 'label': 'Dibatalkan'},
+            ];
+
+            final listBulan = [
+              {'value': null, 'label': 'Semua Bulan'},
+              {'value': 1, 'label': 'Januari'},
+              {'value': 2, 'label': 'Februari'},
+              {'value': 3, 'label': 'Maret'},
+              {'value': 4, 'label': 'April'},
+              {'value': 5, 'label': 'Mei'},
+              {'value': 6, 'label': 'Juni'},
+              {'value': 7, 'label': 'Juli'},
+              {'value': 8, 'label': 'Agustus'},
+              {'value': 9, 'label': 'September'},
+              {'value': 10, 'label': 'Oktober'},
+              {'value': 11, 'label': 'November'},
+              {'value': 12, 'label': 'Desember'},
+            ];
+
+            final currentYear = DateTime.now().year;
+            final listTahun = [
+              {'value': null, 'label': 'Semua Tahun'},
+              for (int y = currentYear + 1; y >= currentYear - 3; y--)
+                {'value': y, 'label': y.toString()}
+            ];
+
+            return Padding(
+              padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).viewInsets.bottom + 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => CusNav.nPop(modalContext),
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE4E6EF),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
                   ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Filter Penerimaan Logistik',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: _kTextPrimary,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          setModalState(() {
+                            tempStatus = null;
+                            tempBulan = null;
+                            tempTahun = null;
+                          });
+                        },
+                        child: const Text(
+                          'Reset',
+                          style: TextStyle(
+                            color: Color(0xFFDC2626),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(color: _kBorder),
+                  const SizedBox(height: 10),
+
                   const Text(
-                    'Opsi',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    'Status Pengiriman Pesanan',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: _kTextPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: listStatus.map((status) {
+                      final isSelected = tempStatus == status['value'];
+                      return ChoiceChip(
+                        label: Text(
+                          status['label'] as String,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : _kTextSecondary,
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                            fontSize: 11,
+                          ),
+                        ),
+                        selected: isSelected,
+                        selectedColor: _kPrimary,
+                        backgroundColor: _kBg,
+                        checkmarkColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(
+                            color: isSelected ? _kPrimary : _kBorder,
+                          ),
+                        ),
+                        onSelected: (selected) {
+                          setModalState(() {
+                            tempStatus = status['value'];
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 18),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Bulan',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: _kTextPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: _kBg,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: _kBorder),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<int?>(
+                                  value: tempBulan,
+                                  isExpanded: true,
+                                  icon: const Icon(Icons.keyboard_arrow_down_rounded, color: _kTextSecondary),
+                                  items: listBulan.map((bulan) {
+                                    return DropdownMenuItem<int?>(
+                                      value: bulan['value'] as int?,
+                                      child: Text(
+                                        bulan['label'] as String,
+                                        style: const TextStyle(fontSize: 12, color: _kTextPrimary),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (val) {
+                                    setModalState(() {
+                                      tempBulan = val;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Tahun',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: _kTextPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: _kBg,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: _kBorder),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<int?>(
+                                  value: tempTahun,
+                                  isExpanded: true,
+                                  icon: const Icon(Icons.keyboard_arrow_down_rounded, color: _kTextSecondary),
+                                  items: listTahun.map((tahun) {
+                                    return DropdownMenuItem<int?>(
+                                      value: tahun['value'] as int?,
+                                      child: Text(
+                                        tahun['label'] as String,
+                                        style: const TextStyle(fontSize: 12, color: _kTextPrimary),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (val) {
+                                    setModalState(() {
+                                      tempTahun = val;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  ElevatedButton(
+                    onPressed: () {
+                      p.setFilterStatus(tempStatus);
+                      p.setFilterMonth(tempBulan);
+                      p.setFilterYear(tempTahun);
+                      p.applyFilters();
+                      Navigator.pop(modalContext);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _kPrimary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Terapkan Filter',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-              _buildOption(
-                'Login Admin',
-                Assets.imagesIcLoginAdmin,
-                () async {
-                  Navigator.pop(modalContext);
-                  Utils.showYesNoDialog(
-                    context: context,
-                    title: "Konfirmasi",
-                    desc: "Apakah Anda Yakin ingin kembali ke Admin",
-                    yesCallback: () async {
-                      await context.read<AdminUserProvider>().backToAdmin(context);
-                    },
-                    noCallback: () => CusNav.nPop(context),
-                  );
-                },
-              ),
-              _buildOption(
-                'Logout',
-                Assets.imagesIcLogoutToAdmin,
-                () async {
-                  Navigator.pop(modalContext);
-                  Utils.showYesNoDialog(
-                    context: context,
-                    title: 'Konfirmasi',
-                    desc: 'Apakah Anda yakin?',
-                    noCallback: () => Navigator.pop(context),
-                    yesCallback: () async {
-                      Navigator.pushNamedAndRemoveUntil(
-                          context, '/login', (route) => false);
-                    },
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -166,411 +311,222 @@ class _ListPesananViewState extends BaseState<ListPesananView> {
   @override
   Widget build(BuildContext context) {
     final p = context.watch<PenerimaPesananProvider>();
-    final source = p.pesananPenerimaModel.data ?? [];
-    final listPesanan = _filterOrders(source, searchC.text);
-
-    final total = source.length;
-    final proses = source.where((e) {
-      final s = e?.status ?? '';
-      return s == 'PESANAN_BARU' ||
-          s == 'PESANAN_DITERIMA' ||
-          s == 'PESANAN_DIKIRIM' ||
-          s == 'PROSES_PEMBAYARAN' ||
-          s == 'TELAH_DIBAYAR' ||
-          s == 'pesanan baru' ||
-          s == 'approve pesanan by manager' ||
-          s == 'pesanan diterima penjual' ||
-          s == 'pesanan dikirim' ||
-          s == 'siap tagih by manager' ||
-          s == 'penerimaan & verifikasi';
-    }).length;
-    final selesai = source.where((e) {
-      final s = e?.status ?? '';
-      return s == 'BARANG_DITERIMA' || s == 'PESANAN_SELESAI' || s == 'pesanan diterima penerima' || s == 'pesanan dibayar';
-    }).length;
+    final orders = p.orders;
+    final isAnyFilterActive = p.selectedStatus != null || p.selectedMonth != null || p.selectedYear != null;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7),
+      backgroundColor: _kBg,
       body: SafeArea(
-        child: RefreshIndicator(
-          color: Constant.primaryColor,
-          backgroundColor: Colors.white,
-          onRefresh: () async => refresh(),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // HEADER
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [Constant.primaryColor, Colors.orangeAccent],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+        child: Column(
+          children: [
+            // ── Top Bar with Search & Filter ──────────────────────────
+            Container(
+              color: _kSurface,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.inventory_2_rounded, color: _kPrimary, size: 22),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Daftar Alokasi Penerimaan',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: _kTextPrimary,
                         ),
                       ),
-                      child: const CircleAvatar(
-                        radius: 24,
-                        backgroundColor: Colors.white,
-                        backgroundImage: AssetImage(Assets.iconsIcSellerProfile),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Selamat datang,',
-                            style: TextStyle(
-                              color: Colors.black54,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              letterSpacing: 0.2,
-                            ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _kPrimary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${orders.length} pesanan',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: _kPrimaryDark,
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            userName,
-                            style: const TextStyle(
-                              color: Colors.black87,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.3,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Consumer<NotifikasiPenerimaProvider>(
-                      builder: (context, npProvider, child) {
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.04),
-                                blurRadius: 10,
-                                spreadRadius: 1,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: IconButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const NotificationPenerimaView(),
-                                ),
-                              );
-                            },
-                            icon: Badge(
-                              isLabelVisible:
-                                  npProvider.unreadCount.toString() != '0',
-                              label: Text(npProvider.unreadCount.toString()),
-                              offset: const Offset(8, -4),
-                              backgroundColor: Constant.primaryColor,
-                              child: const Icon(Icons.notifications_none_rounded,
-                                  color: Colors.black87),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 10,
-                            spreadRadius: 1,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.logout_rounded,
-                            color: Colors.redAccent, size: 22),
-                        onPressed: () async {
-                          final prefs =
-                              await SharedPreferences.getInstance();
-                          final isAdmin =
-                              prefs.getBool(Constant.kSetPrefIsAdmin) ?? false;
-                          if (isAdmin) {
-                            _showLogoutBottomSheet(context);
-                          } else {
-                            Utils.showYesNoDialog(
-                    context: context,
-                    title: 'Konfirmasi',
-                    desc: 'Apakah Anda yakin?',
-                    noCallback: () => Navigator.pop(context),
-                    yesCallback: () async {
-                                await context.read<AuthProvider>().logout();
-                                Navigator.pushAndRemoveUntil(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => LoginView()),
-                                  (Route<dynamic> route) => false,
-                                );
-                              },
-                            );
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // SUMMARY CARDS
-                Row(
-                  children: [
-                    _buildStatCard(
-                      label: 'Total',
-                      value: total,
-                      icon: Icons.receipt_long_rounded,
-                      color: Constant.primaryColor,
-                    ),
-                    const SizedBox(width: 10),
-                    _buildStatCard(
-                      label: 'Proses',
-                      value: proses,
-                      icon: Icons.local_shipping_rounded,
-                      color: const Color(0xFF0B4177),
-                    ),
-                    const SizedBox(width: 10),
-                    _buildStatCard(
-                      label: 'Selesai',
-                      value: selesai,
-                      icon: Icons.check_circle_rounded,
-                      color: const Color(0xFF16A34A),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // SEARCH BAR
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 20,
-                        spreadRadius: 0,
-                        offset: const Offset(0, 8),
+                        ),
                       ),
                     ],
                   ),
-                  child: TextField(
-                    controller: searchC,
-                    onChanged: (_) => setState(() {}),
-                    textInputAction: TextInputAction.search,
-                    style: const TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.w500),
-                    decoration: InputDecoration(
-                      hintText: 'Cari nomor order atau penjual...',
-                      hintStyle: TextStyle(
-                          color: Colors.black38,
-                          fontWeight: FontWeight.w400),
-                      prefixIcon: const Icon(Icons.search_rounded,
-                          color: Colors.black38),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: Colors.transparent,
-                      contentPadding: const EdgeInsets.symmetric(
-                          vertical: 14, horizontal: 16),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
+                  const SizedBox(height: 12),
 
-                // TITLE
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Daftar Pesanan',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black87,
-                        letterSpacing: 0.2,
+                  // Search Box & Filter Button
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: _kBg,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: _kBorder),
+                          ),
+                          child: Row(
+                            children: [
+                              const SizedBox(width: 12),
+                              const Icon(Icons.search_rounded, color: _kTextSecondary, size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextField(
+                                  controller: p.searchController,
+                                  style: const TextStyle(fontSize: 13, color: _kTextPrimary),
+                                  textInputAction: TextInputAction.search,
+                                  onSubmitted: (_) => p.applyFilters(),
+                                  decoration: const InputDecoration(
+                                    hintText: 'Cari nomor order / buyer / seller...',
+                                    hintStyle: TextStyle(color: _kTextSecondary, fontSize: 12),
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.zero,
+                                  ),
+                                ),
+                              ),
+                              if (p.searchController.text.isNotEmpty)
+                                GestureDetector(
+                                  onTap: () {
+                                    p.searchController.clear();
+                                    p.applyFilters();
+                                  },
+                                  child: const Padding(
+                                    padding: EdgeInsets.only(right: 10),
+                                    child: Icon(Icons.close_rounded, color: _kTextSecondary, size: 18),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                    Text(
-                      '${listPesanan.length} pesanan',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black.withValues(alpha: 0.4),
+                      const SizedBox(width: 8),
+                      // Filter Button
+                      GestureDetector(
+                        onTap: () => _showFilterBottomSheet(context),
+                        child: Container(
+                          height: 44,
+                          width: 44,
+                          decoration: BoxDecoration(
+                            color: isAnyFilterActive
+                                ? _kPrimary.withValues(alpha: 0.12)
+                                : _kBg,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isAnyFilterActive ? _kPrimary : _kBorder,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.tune_rounded,
+                            color: isAnyFilterActive ? _kPrimaryDark : _kTextPrimary,
+                            size: 20,
+                          ),
+                        ),
                       ),
+                    ],
+                  ),
+
+                  // Active Filter Indicator
+                  if (isAnyFilterActive) ...[
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        const Text(
+                          'Filter Aktif: ',
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _kTextSecondary),
+                        ),
+                        if (p.selectedStatus != null)
+                          Container(
+                            margin: const EdgeInsets.only(right: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: _kPrimary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              p.selectedStatus!,
+                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: _kPrimaryDark),
+                            ),
+                          ),
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: () => p.resetFilters(),
+                          child: const Text(
+                            'Reset Semua',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFFDC2626)),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ),
-                const SizedBox(height: 16),
+                ],
+              ),
+            ),
 
-                // LIST VIEW
-                Expanded(
-                  child: listPesanan.isEmpty
-                      ? _buildEmptyState()
-                      : ListView.builder(
-                          physics: const BouncingScrollPhysics(),
-                          padding: const EdgeInsets.only(bottom: 100),
-                          itemCount: listPesanan.length,
-                          itemBuilder: (context, index) {
-                            final item = listPesanan[index];
-                            return InkWell(
-                              key: ValueKey(item?.ID ?? index),
-                              onTap: () {
-                                CusNav.nPush(
-                                  context,
-                                  PenerimaPesananDetailView(
-                                    transaction_id: item?.ID ?? '0',
-                                    seller_id: item?.SellerID ?? '0',
+            // ── Orders List ──────────────────────────────────────────
+            Expanded(
+              child: RefreshIndicator(
+                color: _kPrimary,
+                onRefresh: () async => p.fetchOrders(withLoading: true),
+                child: p.isLoadingOrders
+                    ? const Center(
+                        child: CircularProgressIndicator(color: _kPrimary),
+                      )
+                    : orders.isEmpty
+                        ? Center(
+                            child: SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.inbox_rounded, size: 64, color: Colors.grey.shade300),
+                                  const SizedBox(height: 12),
+                                  const Text(
+                                    'Tidak ada pesanan ditemukan',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: _kTextSecondary,
+                                    ),
                                   ),
-                                );
-                              },
-                              borderRadius: BorderRadius.circular(16),
-                              child: OrderItem(
-                                bgColor: Colors.transparent,
-                                orderNumber: item?.nomorOrder ?? "-",
-                                date: item?.Created ?? "-",
-                                sellerName: item?.nama ?? "-",
-                                status: TransactionStatus.fromString(
-                                    item?.status ?? "PESANAN_BARU"),
+                                  const SizedBox(height: 6),
+                                  const Text(
+                                    'Tarik ke bawah untuk memuat ulang',
+                                    style: TextStyle(fontSize: 12, color: _kTextSecondary),
+                                  ),
+                                ],
                               ),
-                            );
-                          },
-                        ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatCard({
-    required String label,
-    required int value,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 16,
-              spreadRadius: 2,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, size: 16, color: color),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              '$value',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: color,
-                letterSpacing: 0.3,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Colors.black.withValues(alpha: 0.45),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+                            itemCount: orders.length,
+                            itemBuilder: (context, index) {
+                              final order = orders[index];
+                              return InkWell(
+                                onTap: () {
+                                  CusNav.nPush(
+                                    context,
+                                    PenerimaPesananDetailView(
+                                      transactionId: order.id.toString(),
+                                    ),
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(18),
+                                child: OrderItemWidget(order: order),
+                              );
+                            },
+                          ),
               ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      children: [
-        const SizedBox(height: 80),
-        Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.receipt_long_outlined,
-                  size: 42,
-                  color: Colors.black.withValues(alpha: 0.25),
-                ),
-              ),
-              const SizedBox(height: 18),
-              const Text(
-                'Belum ada pesanan',
-                style: TextStyle(
-                  color: Colors.black87,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Pesanan yang ditugaskan kepada Anda\nakan muncul di sini',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.black.withValues(alpha: 0.45),
-                  fontSize: 13,
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

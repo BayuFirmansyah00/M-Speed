@@ -6,6 +6,7 @@ import 'package:mspeed/common/base/base_controller.dart';
 import 'package:mspeed/common/helper/constant.dart';
 import 'package:flutter/material.dart';
 import 'package:mspeed/utils/utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileProvider extends BaseController with ChangeNotifier {
   AkunSayaBuyerModel _akunBuyerModel = AkunSayaBuyerModel();
@@ -120,11 +121,28 @@ class ProfileProvider extends BaseController with ChangeNotifier {
     final response = await get(Constant.BASE_API_FULL + '/buyer/v1/buyer/profile');
 
     if (response.statusCode == 201 || response.statusCode == 200) {
-      akunBuyerModel = AkunSayaBuyerModel.fromJson(jsonDecode(response.body));
+      final decoded = jsonDecode(response.body);
+      akunBuyerModel = AkunSayaBuyerModel.fromJson(decoded);
+
+      final userData = akunBuyerModel.data?.userData;
+      if (userData != null) {
+        final fName = userData['first_name']?.toString() ?? '';
+        final lName = userData['last_name']?.toString() ?? '';
+        firstNameC.text = fName;
+        lastNameC.text = lName;
+
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(Constant.kSetPrefFirstName, fName);
+        await prefs.setString(Constant.kSetPrefLastName, lName);
+        if (decoded['data']?['email'] != null) {
+          await prefs.setString(Constant.kSetPrefEmail, decoded['data']['email'].toString());
+        }
+      }
+
       notifyListeners();
       if (withLoading) loading(false);
     } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
+      final message = jsonDecode(response.body)["messages"]?["error"] ?? 'Gagal memuat profil';
       loading(false);
       if (message.toString().contains("Unauthorized")) {
         Utils.showFailed(msg: "Unauthorized");

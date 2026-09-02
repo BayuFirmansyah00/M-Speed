@@ -17,6 +17,9 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
   var pesananSellerModel = SellerOrderModel();
   var detailPesananSellerModel = DetailPesananSellerModel(); // Legacy for Buyer
 
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
   int currentPage = 1;
   Future<void> fetchListPesanan({
     bool withLoading = false,
@@ -29,7 +32,10 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
       currentPage++;
     }
 
-    if (withLoading) loading(true);
+    if (withLoading) {
+      _isLoading = true;
+      notifyListeners();
+    }
 
     try {
       final response = await get(
@@ -52,7 +58,9 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
       if (isLoadMore) currentPage--;
       Utils.showFailed(msg: e.toString());
     } finally {
-      if (withLoading) loading(false);
+      if (withLoading) {
+        _isLoading = false;
+      }
       notifyListeners();
     }
   }
@@ -96,13 +104,20 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
     bool withLoading = false,
     required String parent_id,
     required bool terima,
+    String? note,
   }) async {
     if (withLoading) loading(true);
     try {
       // Laravel endpoint: /seller/v1/seller/orders/{order}/accept
+      final Map<String, dynamic> payload = {};
+      final finalNote = note ?? rejectOrderReason;
+      if (finalNote != null && finalNote.trim().isNotEmpty) {
+        payload['note'] = finalNote.trim();
+      }
+
       final response = await post(
         Constant.BASE_API_FULL + '${Constant.epSellerOrders}/$parent_id/accept',
-        body: {'note': rejectOrderReason ?? ''},
+        body: payload,
       );
       final parsed = jsonDecode(response.body);
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -122,13 +137,23 @@ class SellerPesananProvider extends BaseController with ChangeNotifier {
   Future<bool> kirimBarang({
     bool withLoading = false,
     required String parent_id,
+    String? receiptNum,
+    String? note,
   }) async {
     if (withLoading) loading(true);
     try {
       // Laravel endpoint: /seller/v1/seller/orders/{order}/ship
+      final Map<String, dynamic> payload = {};
+      if (receiptNum != null && receiptNum.trim().isNotEmpty) {
+        payload['receipt_num'] = receiptNum.trim();
+      }
+      if (note != null && note.trim().isNotEmpty) {
+        payload['note'] = note.trim();
+      }
+
       final response = await post(
         Constant.BASE_API_FULL + '${Constant.epSellerOrders}/$parent_id/ship',
-        body: {'receipt_num': 'AUTO_RESI', 'note': 'Dikirim'},
+        body: payload,
       );
       final parsed = jsonDecode(response.body);
       if (response.statusCode == 200 || response.statusCode == 201) {

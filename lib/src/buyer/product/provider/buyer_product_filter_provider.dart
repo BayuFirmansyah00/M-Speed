@@ -95,6 +95,19 @@ class BuyerProductFilterProvider extends BaseController with ChangeNotifier {
     refreshData();
   }
 
+  void initFilters({String keyword = '', int? categoryId}) {
+    this.keyword = keyword;
+    selectedCategoryIds.clear();
+    selectedCities.clear();
+    minPrice = '';
+    maxPrice = '';
+    sort = 0;
+    if (categoryId != null) {
+      selectedCategoryIds.add(categoryId);
+    }
+    refreshData();
+  }
+
   Future<void> _fetchProducts(int pageKey) async {
     final token = await getToken();
     try {
@@ -130,6 +143,9 @@ class BuyerProductFilterProvider extends BaseController with ChangeNotifier {
       String queryString = Uri(queryParameters: queryParams).query;
       final url = '$baseUrl?$queryString';
 
+      debugPrint('FILTER STATE: selectedCategoryIds = $selectedCategoryIds');
+      debugPrint('API QUERY: $url');
+
       final response = await get(
         url,
         headers: {
@@ -138,40 +154,64 @@ class BuyerProductFilterProvider extends BaseController with ChangeNotifier {
         },
       );
 
+      debugPrint('[BUYER CATEGORY RAW RESPONSE]');
+      debugPrint('HTTP STATUS: ${response.statusCode}');
+      debugPrint('CONTENT LENGTH: ${response.headers['content-length']}');
+      debugPrint('BODY LENGTH: ${response.body.length}');
+      final bodyLen = response.body.length;
+      debugPrint('FIRST 500 CHARACTERS: ${response.body.substring(0, bodyLen > 500 ? 500 : bodyLen)}');
+      debugPrint('LAST 500 CHARACTERS: ${response.body.substring(bodyLen > 500 ? bodyLen - 500 : 0)}');
+
       if (response.statusCode == 200) {
-        final decoded = json.decode(response.body);
-        final model = BuyerProductFilterModel.fromJson(decoded);
+        dynamic decoded;
+        try {
+          decoded = json.decode(response.body);
+        } catch (jsonErr) {
+          debugPrint('[JSON PARSE EXCEPTION]: $jsonErr');
+          debugPrint('[CORRUPTED RAW RESPONSE BODY]: ${response.body}');
+          if (pageKey == 1) error = 'Format data tidak sesuai: $jsonErr';
+          return;
+        }
 
-        if (model.data != null) {
-          if (pageKey == 1) {
-            products = model.data!.products ?? [];
-            if (model.data!.categories != null) {
-              availableCategories = model.data!.categories!;
-            }
-            if (model.data!.cities != null) {
-              availableCities = model.data!.cities!;
-            }
-            if (model.data!.wishlistProductIds != null) {
-              wishlistProductIds = model.data!.wishlistProductIds!;
-            }
-          } else {
-            products.addAll(model.data!.products ?? []);
-          }
+        if (decoded is Map) {
+          final model = BuyerProductFilterModel.fromJson(Map<String, dynamic>.from(decoded));
 
-          currentPage = pageKey;
+          if (model.data != null) {
+            if (pageKey == 1) {
+              products = model.data!.products ?? [];
+              if (model.data!.categories != null) {
+                availableCategories = model.data!.categories!;
+              }
+              if (model.data!.cities != null) {
+                availableCities = model.data!.cities!;
+              }
+              if (model.data!.wishlistProductIds != null) {
+                wishlistProductIds = model.data!.wishlistProductIds!;
+              }
+            } else {
+              products.addAll(model.data!.products ?? []);
+            }
 
-          if (model.data!.pagination != null) {
-            hasNextPage =
-                model.data!.pagination!.currentPage! <
-                (model.data!.pagination!.lastPage ?? 1);
-          } else {
-            final newItems = model.data!.products ?? [];
-            hasNextPage = newItems.length >= 10;
+            debugPrint('RESPONSE: jumlah produk = ${products.length}');
+
+            currentPage = pageKey;
+
+            if (model.data!.pagination != null) {
+              hasNextPage =
+                  (model.data!.pagination!.currentPage ?? 1) <
+                  (model.data!.pagination!.lastPage ?? 1);
+            } else {
+              final newItems = model.data!.products ?? [];
+              hasNextPage = newItems.length >= 10;
+            }
           }
         }
       } else {
-        final decoded = json.decode(response.body);
-        final message = decoded['message'] ?? 'Failed to load products';
+        dynamic decoded;
+        try {
+          decoded = json.decode(response.body);
+        } catch (_) {}
+        final message = (decoded is Map ? decoded['message'] : null) ?? 'Failed to load products';
         if (pageKey == 1) error = message;
       }
     } catch (e) {

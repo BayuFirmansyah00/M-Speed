@@ -6,6 +6,7 @@ import 'package:mspeed/src/auth/model/auth_response_model.dart';
 import 'package:mspeed/src/auth/model/firebase_token_model.dart';
 import 'package:mspeed/src/buyer/home/view/main_home.dart';
 import 'package:mspeed/src/keuangan/home/view/main_home_keuangan_view.dart';
+import 'package:mspeed/src/manager/home/view/main_home_manager_view.dart';
 import 'package:mspeed/src/penerima/home/view/dashboard_pesanan_view.dart';
 import 'package:mspeed/src/seller/home/view/seller_main_home.dart';
 
@@ -216,10 +217,13 @@ class AuthProvider extends BaseController with ChangeNotifier {
         CusNav.nPushReplace(context, MainHomeKeuanganView());
         break;
       case 'ADMIN':
-      case 'MANAGER':
       case 'AUDIT':
         debugPrint('NAVIGATING TO ADMIN');
         CusNav.nPushReplace(context, AdminMainHome());
+        break;
+      case 'MANAGER':
+        debugPrint('NAVIGATING TO MANAGER');
+        CusNav.nPushReplace(context, MainHomeManagerView());
         break;
       case 'BUYER':
       default:

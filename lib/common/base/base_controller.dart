@@ -64,11 +64,14 @@ class BaseController<S extends BaseState> {
     Map<String, String?>? body,
   }) async {
     Map<String, String> h = Map<String, String>();
-    h.putIfAbsent('Connection', () => 'Keep-Alive');
     h.putIfAbsent('accept', () => 'application/json');
     var token = await getToken();
     if (token != null) h.putIfAbsent('Authorization', () => 'Bearer ' + token);
-    if (headers != null) h.addAll(headers as Map<String, String>);
+    if (headers != null) {
+      headers.forEach((k, v) {
+        if (k != null && v != null) h[k.toString()] = v.toString();
+      });
+    }
 
     final uri = Uri.parse(url);
     final bodyUri = uri.replace(queryParameters: body);
@@ -82,67 +85,36 @@ class BaseController<S extends BaseState> {
           Duration(minutes: 1),
           onTimeout: () => http.Response("Timeout", 504),
         );
-    log("RESPONSE GET $url : ${response.body}");
+    log("RESPONSE GET $url STATUS: ${response.statusCode}");
     log("====================");
 
-    String log2 =
-        "Log : " +
-        "==== PARAMETERS ===="
-            '\r\n' +
-        "URL : $url"
-            '\r\n' +
-        "BODY : $bodyUri"
-            '\r\n' +
-        "RESPONSE GET $url : ${response.body}"
-            '\r\n' +
-        "===================="
-            '\r\n';
-    // if (kDebugMode) {
-    // XenoLog("GET").save(log2, alwaysLog: true);
-    // }
     Utils.dismissLoading();
-    if (response.body.toLowerCase().contains("timeout")) {
-      BuildContext? context = NavigationService.navigatorKey.currentContext;
-      if (context != null) {
-        CustomAlert.showSnackBar(context, 'Timeout', true);
-        throw 'Timeout';
-      }
-    }
-    if (response.body.toLowerCase().contains("unauthorized") ||
-        response.body.toLowerCase().contains("missing authorization header")) {
-      _preferences!.clear();
-      BuildContext? context = NavigationService.navigatorKey.currentContext;
-      if (context != null) {
-        CustomAlert.showSnackBar(context, 'Harap Login Ulang', true);
-        // Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-      }
-    }
-    if (response.body.toLowerCase().contains("refresh token tidak valid") ||
-        response.body.toLowerCase().contains("refresh token kedaluarsa")) {
-      BuildContext? context = NavigationService.navigatorKey.currentContext;
-      _preferences!.clear();
-      if (context != null) {
-        CustomAlert.showSnackBar(context, 'Harap Login Ulang', true);
-        // Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-      }
-    }
-    if (response.body.toLowerCase().contains("invalid token") ||
-        response.body.toLowerCase().contains("expired token")) {
-      _preferences!.clear();
-      BuildContext? context = NavigationService.navigatorKey.currentContext;
-      if (context != null) {
-        CustomAlert.showSnackBar(context, 'Harap Login Ulang', true);
-      }
-    }
 
-    if (response.body.toLowerCase().contains("unauthorized")) {
-      // _preferences!.clear();
-    }
-    if (response.body.toLowerCase().contains("gateway time") ||
-        response.body.toString().toLowerCase().contains(
-          "Internal Server Error",
-        )) {
-      throw 'Internal Server Error';
+    if (response.statusCode >= 400) {
+      final bodyLower = response.body.toLowerCase();
+      if (bodyLower.contains("timeout")) {
+        BuildContext? context = NavigationService.navigatorKey.currentContext;
+        if (context != null) {
+          CustomAlert.showSnackBar(context, 'Timeout', true);
+          throw 'Timeout';
+        }
+      }
+      if (bodyLower.contains("unauthorized") ||
+          bodyLower.contains("missing authorization header") ||
+          bodyLower.contains("refresh token tidak valid") ||
+          bodyLower.contains("refresh token kedaluarsa") ||
+          bodyLower.contains("invalid token") ||
+          bodyLower.contains("expired token")) {
+        _preferences!.clear();
+        BuildContext? context = NavigationService.navigatorKey.currentContext;
+        if (context != null) {
+          CustomAlert.showSnackBar(context, 'Harap Login Ulang', true);
+        }
+      }
+      if (bodyLower.contains("gateway time") ||
+          bodyLower.contains("internal server error")) {
+        throw 'Internal Server Error';
+      }
     }
 
     return response;
@@ -157,7 +129,6 @@ class BaseController<S extends BaseState> {
   }) async {
     // log(body);
     Map<String, String> h = Map<String, String>();
-    h.putIfAbsent('Connection', () => 'Keep-Alive');
     h.putIfAbsent('accept', () => 'application/json');
     var token = await getToken();
     if (token != null) h.putIfAbsent('Authorization', () => 'Bearer ' + token);
@@ -361,10 +332,17 @@ class BaseController<S extends BaseState> {
     Map<String, String?>? body,
   }) async {
     final response = await get(url, headers: headers, body: body);
-    final decoded = jsonDecode(response.body);
+    if (response.body.isEmpty) return {};
+
+    dynamic decoded;
+    try {
+      decoded = jsonDecode(response.body);
+    } catch (_) {
+      decoded = {'message': response.body};
+    }
 
     if (response.statusCode >= 400) {
-      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan pada server';
+      final message = (decoded is Map ? (decoded["message"] ?? decoded["messages"]?["error"]) : null) ?? 'Terjadi kesalahan pada server';
       if (message.toString().toLowerCase().contains("unauthorized")) {
         BuildContext? context = NavigationService.navigatorKey.currentContext;
         if (context != null) {
@@ -383,10 +361,17 @@ class BaseController<S extends BaseState> {
     List<http.MultipartFile>? files,
   }) async {
     final response = await post(url, headers: headers, body: body, files: files);
-    final decoded = jsonDecode(response.body);
+    if (response.body.isEmpty) return {};
+
+    dynamic decoded;
+    try {
+      decoded = jsonDecode(response.body);
+    } catch (_) {
+      decoded = {'message': response.body};
+    }
 
     if (response.statusCode >= 400) {
-      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan pada server';
+      final message = (decoded is Map ? (decoded["message"] ?? decoded["messages"]?["error"]) : null) ?? 'Terjadi kesalahan pada server';
       if (message.toString().toLowerCase().contains("unauthorized")) {
         BuildContext? context = NavigationService.navigatorKey.currentContext;
         if (context != null) {
@@ -400,14 +385,21 @@ class BaseController<S extends BaseState> {
 
   Future<dynamic> deleteRest(
     String url, {
-    Map<String, String>? headers,
+    Map? headers,
     Map<String, String>? body,
   }) async {
     final response = await delete(url, headers: headers, body: body);
-    final decoded = jsonDecode(response.body);
+    if (response.body.isEmpty) return {};
+
+    dynamic decoded;
+    try {
+      decoded = jsonDecode(response.body);
+    } catch (_) {
+      decoded = {'message': response.body};
+    }
 
     if (response.statusCode >= 400) {
-      final message = decoded["message"] ?? decoded["messages"]?["error"] ?? 'Terjadi kesalahan pada server';
+      final message = (decoded is Map ? (decoded["message"] ?? decoded["messages"]?["error"]) : null) ?? 'Terjadi kesalahan pada server';
       if (message.toString().toLowerCase().contains("unauthorized")) {
         BuildContext? context = NavigationService.navigatorKey.currentContext;
         if (context != null) {
@@ -626,11 +618,14 @@ class BaseController<S extends BaseState> {
     Map<String, String?>? body,
   }) async {
     Map<String, String> h = Map<String, String>();
-    h.putIfAbsent('Connection', () => 'Keep-Alive');
     h.putIfAbsent('accept', () => 'application/json');
     var token = await getToken();
     if (token != null) h.putIfAbsent('Authorization', () => 'Bearer ' + token);
-    if (headers != null) h.addAll(headers as Map<String, String>);
+    if (headers != null) {
+      headers.forEach((k, v) {
+        if (k != null && v != null) h[k.toString()] = v.toString();
+      });
+    }
 
     final uri = Uri.parse(url);
     final bodyUri = uri.replace(queryParameters: body);

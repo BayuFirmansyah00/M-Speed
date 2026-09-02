@@ -48,6 +48,7 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
         await prefs.setString(Constant.kSetPrefRoles, role);
         await prefs.setString('admin_original_id', adminId);
         await prefs.setBool(Constant.kSetPrefIsAdmin, false);
+        await prefs.setBool('is_impersonated', true);
 
         log('IMPERSONATE SUCCESS: role=$role, token=$accessToken, adminId=$adminId');
 
@@ -58,6 +59,8 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
           Navigator.pushNamedAndRemoveUntil(context, '/penerimaHome', (route) => false);
         } else if (role == 'KEUANGAN' || role == 'FINANCE') {
           Navigator.pushNamedAndRemoveUntil(context, '/keuanganHome', (route) => false);
+        } else if (role == 'MANAGER') {
+          Navigator.pushNamedAndRemoveUntil(context, '/managerHome', (route) => false);
         } else if (role == 'BUYER') {
           Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
         } else {
@@ -126,6 +129,7 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       // Set kembali ke role admin
       await prefs.setString(Constant.kSetPrefRoles, 'ADMIN');
       await prefs.setBool(Constant.kSetPrefIsAdmin, true);
+      await prefs.setBool('is_impersonated', false);
 
       log('BACK TO ADMIN: token restored');
 

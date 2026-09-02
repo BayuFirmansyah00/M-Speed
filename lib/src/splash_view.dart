@@ -25,15 +25,20 @@ class _SplashViewState extends State<SplashView> {
   Future<String> checkRoles() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    final roles = prefs.getString(Constant.kSetPrefRoles);
+    final roles = prefs.getString(Constant.kSetPrefRoles)?.toUpperCase() ?? '';
     switch (roles) {
       case 'SELLER':
         return '/sellerHome';
       case 'PENERIMA':
+      case 'RECEIVER':
         return '/penerimaHome';
       case 'KEUANGAN':
+      case 'FINANCE':
         return '/keuanganHome';
+      case 'MANAGER':
+        return '/managerHome';
       case 'ADMIN':
+      case 'AUDIT':
         return '/adminHome';
       default:
         return '/home';

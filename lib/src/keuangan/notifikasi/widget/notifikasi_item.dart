@@ -36,15 +36,15 @@ class NotifikasiItem extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: unread
-                ? Constant.primaryColor.withOpacity(0.4)
+                ? Constant.primaryColor.withValues(alpha: 0.4)
                 : const Color(0xffE2E4E9),
             width: unread ? 1.5 : 1,
           ),
           boxShadow: [
             BoxShadow(
               color: unread
-                  ? Constant.primaryColor.withOpacity(0.04)
-                  : Colors.black.withOpacity(0.02),
+                  ? Constant.primaryColor.withValues(alpha: 0.04)
+                  : Colors.black.withValues(alpha: 0.02),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -168,7 +168,7 @@ class NotifikasiItem extends StatelessWidget {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Constant.primaryColor.withOpacity(0.4),
+                            color: Constant.primaryColor.withValues(alpha: 0.4),
                             blurRadius: 4,
                             spreadRadius: 1,
                           ),

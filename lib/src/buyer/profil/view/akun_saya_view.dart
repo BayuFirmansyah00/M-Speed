@@ -313,21 +313,58 @@ class _AkunSayaViewState extends BaseState<AkunSayaView>
                                 color: Colors.white.withValues(alpha: 0.7),
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            FutureBuilder<String>(
-                              future: getName(),
-                              builder: (context, snap) => Text(
-                                'Hai, ${snap.data ?? 'Pengguna'}!',
-                                style: const TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                  letterSpacing: -0.3,
-                                  height: 1.2,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                            Builder(
+                              builder: (context) {
+                                final userData = userModel.data?.userData;
+                                String? displayName;
+                                if (userData != null) {
+                                  final fullName = (userData['full_name']?.toString() ?? '').trim();
+                                  if (fullName.isNotEmpty) {
+                                    displayName = fullName;
+                                  } else {
+                                    final fName = (userData['first_name']?.toString() ?? '').trim();
+                                    final lName = (userData['last_name']?.toString() ?? '').trim();
+                                    final combined = "$fName $lName".trim();
+                                    if (combined.isNotEmpty) displayName = combined;
+                                  }
+                                }
+
+                                if (displayName != null && displayName.isNotEmpty) {
+                                  return Text(
+                                    'Hai, $displayName!',
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                      letterSpacing: -0.3,
+                                      height: 1.2,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  );
+                                }
+
+                                return FutureBuilder<String>(
+                                  future: getName(),
+                                  builder: (context, snap) {
+                                    final name = (snap.data != null && snap.data!.trim().isNotEmpty)
+                                        ? snap.data!.trim()
+                                        : 'Pengguna';
+                                    return Text(
+                                      'Hai, $name!',
+                                      style: const TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white,
+                                        letterSpacing: -0.3,
+                                        height: 1.2,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    );
+                                  },
+                                );
+                              },
                             ),
                             const SizedBox(height: 10),
                             // Member badge

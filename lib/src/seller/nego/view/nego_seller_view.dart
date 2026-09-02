@@ -32,7 +32,6 @@ class NegoSellerView extends StatefulWidget {
 }
 
 class _NegoSellerViewState extends State<NegoSellerView> {
-  List<NegoSellerModelData> negoData = [];
   final searchController = TextEditingController();
 
   @override
@@ -52,24 +51,6 @@ class _NegoSellerViewState extends State<NegoSellerView> {
   Future<void> refresh() async {
     final p = context.read<NegoSellerProvider>();
     await p.fetchNego(withLoading: true);
-    _filterData(p);
-  }
-
-  void _filterData(NegoSellerProvider p) {
-    final allData = p.negoSellerModel.data ?? [];
-    final search = searchController.text.toLowerCase();
-    
-    setState(() {
-      if (search.isEmpty) {
-        negoData = List.from(allData);
-      } else {
-        negoData = allData.where((element) {
-          final productName = (element.product?.name ?? '').toLowerCase();
-          final buyerName = (element.buyer?.name ?? '').toLowerCase();
-          return productName.contains(search) || buyerName.contains(search);
-        }).toList();
-      }
-    });
   }
 
   PreferredSizeWidget _buildAppBar() {
@@ -118,7 +99,7 @@ class _NegoSellerViewState extends State<NegoSellerView> {
                   isDense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
-                onChanged: (_) => _filterData(p),
+                onChanged: (_) => setState(() {}),
               ),
             ),
             if (searchController.text.isNotEmpty)
@@ -127,7 +108,7 @@ class _NegoSellerViewState extends State<NegoSellerView> {
                 onPressed: () {
                   searchController.clear();
                   FocusScope.of(context).unfocus();
-                  _filterData(p);
+                  setState(() {});
                 },
               ),
           ],
@@ -178,18 +159,18 @@ class _NegoSellerViewState extends State<NegoSellerView> {
                 "Ajukan Nego",
                 borderRadius: BorderRadius.circular(10),
                 () async {
-                  final text = p.negoHargaC.text.replaceAll('.', '');
-                  if (text.isEmpty) return;
-                  final price = double.tryParse(text) ?? 0;
-                  
-                  if (price > hargaAsli) {
-                    await Utils.showFailed(msg: 'Harga nego tidak boleh melebihi harga asli produk');
-                  } else {
-                    CusNav.nPop(context);
-                    final success = await p.requestNegoUlang(cartId: cartId);
-                    if (success) {
-                      refresh();
-                    }
+                  if (p.isProcessingAction) return;
+
+                  final price = NegoSellerProvider.parsePriceInput(p.negoHargaC.text);
+                  if (price == null || price <= 0) {
+                    await Utils.showFailed(msg: 'Masukkan nominal harga nego yang valid (lebih dari 0)');
+                    return;
+                  }
+
+                  CusNav.nPop(context);
+                  final success = await p.requestNegoUlang(cartId: cartId);
+                  if (success) {
+                    refresh();
                   }
                 },
               ),
@@ -232,8 +213,29 @@ class _NegoSellerViewState extends State<NegoSellerView> {
   Widget _buildNegoItem(NegoSellerModelData data, NegoSellerProvider p) {
     final double hargaAsli = data.product?.price ?? data.cart?.initialPrice ?? 0;
     final double hargaNegoAktif = data.negoValue ?? 0;
-    final String statusNego = data.cart?.negoStatus ?? 'PENDING';
-    final bool canAction = statusNego != 'DEAL' && statusNego != 'SELLER_AGREED';
+    final String statusNego = (data.cart?.negoStatus ?? 'PENDING').trim();
+    final String upperStatus = statusNego.toUpperCase();
+
+    // Tentukan badge status & warna
+    Color badgeColor;
+    String badgeText;
+    if (upperStatus == 'DEAL' || upperStatus == 'SELLER_AGREED') {
+      badgeColor = _kSuccess;
+      badgeText = 'DEAL';
+    } else if (upperStatus == 'SUBMITTED_BY_BUYER') {
+      badgeColor = _kWarning;
+      badgeText = 'Tawaran Buyer';
+    } else if (upperStatus == 'COUNTER_BY_SELLER') {
+      badgeColor = _kPrimary;
+      badgeText = 'Menunggu Buyer';
+    } else {
+      badgeColor = _kTextSecondary;
+      badgeText = statusNego;
+    }
+
+    // Action hanya aktif jika status SUBMITTED_BY_BUYER atau belum deal/counter
+    final bool canAction = upperStatus == 'SUBMITTED_BY_BUYER' ||
+        (upperStatus != 'DEAL' && upperStatus != 'SELLER_AGREED' && upperStatus != 'COUNTER_BY_SELLER');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -257,16 +259,25 @@ class _NegoSellerViewState extends State<NegoSellerView> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Placeholder Image
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: _kBackground,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: _kBorder),
+                // Product Image / Placeholder
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: _kBackground,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: _kBorder),
+                    ),
+                    child: (data.product?.imageUrl != null && data.product!.imageUrl!.isNotEmpty)
+                        ? Image.network(
+                            data.product!.imageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const Icon(Icons.shopping_bag_outlined, color: _kTextSecondary),
+                          )
+                        : const Icon(Icons.shopping_bag_outlined, color: _kTextSecondary),
                   ),
-                  child: const Icon(Icons.shopping_bag_outlined, color: _kTextSecondary),
                 ),
                 const SizedBox(width: 16),
                 // Product Info
@@ -296,7 +307,7 @@ class _NegoSellerViewState extends State<NegoSellerView> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Harga Asli: Rp ${Utils.thousandSeparator(hargaAsli.toInt())}',
+                        'Harga Asli: ${Utils.thousandSeparator(hargaAsli.toInt())}',
                         style: const TextStyle(fontSize: 12, color: _kTextSecondary, decoration: TextDecoration.lineThrough),
                       ),
                       const SizedBox(height: 8),
@@ -304,9 +315,9 @@ class _NegoSellerViewState extends State<NegoSellerView> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: _kWarning.withOpacity(0.1),
+                          color: badgeColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: _kWarning.withOpacity(0.2)),
+                          border: Border.all(color: badgeColor.withOpacity(0.2)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -314,30 +325,57 @@ class _NegoSellerViewState extends State<NegoSellerView> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Tawaran Nego Terbaru',
-                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _kWarning),
+                                Text(
+                                  upperStatus == 'DEAL' ? 'Harga Deal' : 'Tawaran Nego Terbaru',
+                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: badgeColor),
                                 ),
                                 Text(
-                                  'Rp ${Utils.thousandSeparator(hargaNegoAktif.toInt())}',
-                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _kWarning),
+                                  Utils.thousandSeparator(hargaNegoAktif.toInt()),
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: badgeColor),
                                 ),
                               ],
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: _kPrimary,
+                                color: badgeColor,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                statusNego,
+                                badgeText,
                                 style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold),
                               ),
                             )
                           ],
                         ),
                       ),
+                      if (data.cart?.buyerNote != null &&
+                          data.cart!.buyerNote!.trim().isNotEmpty &&
+                          data.cart!.buyerNote!.trim().toLowerCase() != 'null') ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: Colors.blue.shade100),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(Icons.chat_bubble_outline_rounded, size: 14, color: _kPrimary),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  'Catatan Buyer: "${data.cart!.buyerNote!.trim()}"',
+                                  style: const TextStyle(fontSize: 11, color: _kTextPrimary, fontStyle: FontStyle.italic),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -356,15 +394,19 @@ class _NegoSellerViewState extends State<NegoSellerView> {
                       label: 'Tolak',
                       icon: Icons.close_rounded,
                       color: _kDanger,
-                      onTap: () async {
+                      onTap: () {
                         if (data.id == null) return;
-                        await Utils.showYesNoDialog(
+                        Utils.showYesNoDialog(
                           context: context,
                           title: 'Tolak Nego',
-                          desc: 'Apakah Anda yakin ingin menolak dan menghapus nego ini?',
+                          desc: 'Apakah Anda yakin ingin menolak pengajuan harga nego ini?',
                           yesCallback: () async {
                             CusNav.nPop(context);
-                            final success = await p.acceptOrRejectNego(negoId: data.id!, isAccept: false);
+                            final success = await p.acceptOrRejectNego(
+                              withLoading: true,
+                              negoId: data.id!,
+                              isAccept: false,
+                            );
                             if (success) refresh();
                           },
                           noCallback: () => CusNav.nPop(context),
@@ -376,9 +418,9 @@ class _NegoSellerViewState extends State<NegoSellerView> {
                   Expanded(
                     child: _buildActionButton(
                       label: 'Nego Ulang',
-                      icon: Icons.sync_rounded,
-                      color: _kWarning,
-                      onTap: () async {
+                      icon: Icons.edit_note_rounded,
+                      color: _kPrimary,
+                      onTap: () {
                         if (data.cart?.id == null) return;
                         _showNegoDialog(context, data.cart!.id!, hargaAsli, p);
                       },
@@ -390,18 +432,17 @@ class _NegoSellerViewState extends State<NegoSellerView> {
                       label: 'Terima',
                       icon: Icons.check_rounded,
                       color: _kSuccess,
-                      onTap: () async {
-                        if (data.id == null || data.cart?.id == null) return;
-                        await Utils.showYesNoDialog(
+                      onTap: () {
+                        if (data.id == null) return;
+                        Utils.showYesNoDialog(
                           context: context,
                           title: 'Terima Nego',
-                          desc: 'Apakah Anda yakin ingin menyetujui harga ini?',
+                          desc: 'Setujui penawaran harga sebesar ${Utils.thousandSeparator(hargaNegoAktif.toInt())}?',
                           yesCallback: () async {
                             CusNav.nPop(context);
                             final success = await p.acceptOrRejectNego(
+                              withLoading: true,
                               negoId: data.id!,
-                              cartId: data.cart!.id!,
-                              value: data.negoValue.toString(),
                               isAccept: true,
                             );
                             if (success) refresh();
@@ -457,6 +498,15 @@ class _NegoSellerViewState extends State<NegoSellerView> {
   @override
   Widget build(BuildContext context) {
     final p = context.watch<NegoSellerProvider>();
+    final allData = p.negoSellerModel.data ?? [];
+    final search = searchController.text.toLowerCase().trim();
+    final displayedData = search.isEmpty
+        ? allData
+        : allData.where((element) {
+            final productName = (element.product?.name ?? '').toLowerCase();
+            final buyerName = (element.buyer?.name ?? '').toLowerCase();
+            return productName.contains(search) || buyerName.contains(search);
+          }).toList();
 
     return Scaffold(
       backgroundColor: _kBackground,
@@ -466,26 +516,28 @@ class _NegoSellerViewState extends State<NegoSellerView> {
           children: [
             _buildSearchBar(p),
             Expanded(
-              child: RefreshIndicator(
-                color: _kPrimary,
-                onRefresh: refresh,
-                child: negoData.isEmpty
-                    ? ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        children: [
-                          SizedBox(height: MediaQuery.of(context).size.height * 0.25),
-                          _buildEmptyState(),
-                        ],
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        itemCount: negoData.length,
-                        itemBuilder: (context, index) {
-                          final item = negoData[index];
-                          return _buildNegoItem(item, p);
-                        },
-                      ),
-              ),
+              child: p.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : RefreshIndicator(
+                      color: _kPrimary,
+                      onRefresh: refresh,
+                      child: displayedData.isEmpty
+                          ? ListView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              children: [
+                                SizedBox(height: MediaQuery.of(context).size.height * 0.25),
+                                _buildEmptyState(),
+                              ],
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              itemCount: displayedData.length,
+                              itemBuilder: (context, index) {
+                                final item = displayedData[index];
+                                return _buildNegoItem(item, p);
+                              },
+                            ),
+                    ),
             ),
           ],
         ),

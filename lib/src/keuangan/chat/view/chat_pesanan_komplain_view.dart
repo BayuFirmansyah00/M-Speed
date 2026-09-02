@@ -118,19 +118,19 @@ class _ChatPersonViewState extends State<ChatPesananKomplainView> {
               padding: EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color:
-                    isSender ? Color(0xFFF58B2B).withOpacity(.2) : Colors.white,
+                    isSender ? const Color(0xFFF58B2B).withValues(alpha: .2) : Colors.white,
                 borderRadius: isSender
-                    ? BorderRadius.only(
+                    ? const BorderRadius.only(
                         topLeft: Radius.circular(16),
                         bottomLeft: Radius.circular(16),
                         bottomRight: Radius.circular(16))
-                    : BorderRadius.only(
+                    : const BorderRadius.only(
                         topRight: Radius.circular(16),
                         bottomLeft: Radius.circular(16),
                         bottomRight: Radius.circular(16)),
                 border: Border.all(
                     color: isSender
-                        ? Color(0xFFF58B2B).withOpacity(.2)
+                        ? const Color(0xFFF58B2B).withValues(alpha: .2)
                         : Colors.grey[300]!),
               ),
               child: Wrap(

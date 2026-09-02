@@ -9,6 +9,8 @@ import 'package:mspeed/src/buyer/cart/provider/buyer_nego_provider.dart';
 import 'package:mspeed/src/buyer/cart/provider/buyer_cart_provider.dart';
 import 'package:mspeed/utils/utils.dart';
 
+import 'package:mspeed/src/seller/nego/provider/nego_seller_provider.dart';
+
 class BuyerNegoBottomSheet extends StatefulWidget {
   final BuyerCartItem cartItem;
 
@@ -55,21 +57,23 @@ class _BuyerNegoBottomSheetState extends State<BuyerNegoBottomSheet> {
   void _submitNego() {
     if (_formKey.currentState!.validate()) {
       final negoP = context.read<BuyerNegoProvider>();
+      final cartP = context.read<BuyerCartProvider>();
       final cartId = widget.cartItem.id;
-      final valueStr = _priceController.text.replaceAll(RegExp(r'[^0-9]'), '');
+      final parsedValue = NegoSellerProvider.parsePriceInput(_priceController.text);
 
-      if (cartId == null || valueStr.isEmpty) return;
-
-      final value = double.tryParse(valueStr) ?? 0;
+      if (cartId == null || parsedValue == null || parsedValue <= 0) {
+        CustomAlert.showSnackBar(context, 'Masukkan nominal harga tawaran yang valid (lebih dari 0)', true);
+        return;
+      }
 
       negoP.submitNego(
         cartId: cartId,
-        value: value,
+        value: parsedValue,
         buyerNote: _noteController.text,
         onSuccess: (msg) {
           Utils.showSuccess(msg: msg);
-          Navigator.pop(context);
-          context.read<BuyerCartProvider>().fetchCart(withLoading: false);
+          Navigator.pop(context, true);
+          cartP.fetchCart(withLoading: false);
         },
         onError: (msg) {
           CustomAlert.showSnackBar(context, msg, true);
@@ -124,13 +128,13 @@ class _BuyerNegoBottomSheetState extends State<BuyerNegoBottomSheet> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Harga normal: Rp ${Utils.thousandSeparator(displayCurrentPrice.toInt())}',
+              'Harga normal: ${Utils.thousandSeparator(displayCurrentPrice.toInt())}',
               style: const TextStyle(color: Colors.grey, fontSize: 13),
             ),
             if (widget.cartItem.latestNegoValue != null && widget.cartItem.latestNegoValue! > 0) ...[
               const SizedBox(height: 4),
               Text(
-                'Tawaran terakhir: Rp ${Utils.thousandSeparator(widget.cartItem.latestNegoValue!.toInt())}',
+                'Tawaran terakhir: ${Utils.thousandSeparator(widget.cartItem.latestNegoValue!.toInt())}',
                 style: const TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.w600),
               ),
             ],
@@ -141,6 +145,16 @@ class _BuyerNegoBottomSheetState extends State<BuyerNegoBottomSheet> {
               controller: _priceController,
               hintText: 'Masukkan harga tawaran satuan',
               textInputType: TextInputType.number,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Masukkan harga tawaran satuan';
+                }
+                final parsed = NegoSellerProvider.parsePriceInput(value);
+                if (parsed == null || parsed <= 0) {
+                  return 'Nominal harga tidak valid';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             const Text('Catatan (Opsional)', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -149,6 +163,7 @@ class _BuyerNegoBottomSheetState extends State<BuyerNegoBottomSheet> {
               controller: _noteController,
               hintText: 'Masukkan catatan untuk penjual',
               maxLength: 100,
+              validator: (value) => null, // Catatan 100% opsional
             ),
             const SizedBox(height: 24),
             SizedBox(

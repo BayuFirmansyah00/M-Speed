@@ -1,182 +1,231 @@
-import 'dart:convert';
-import 'dart:io';
-
+import 'package:flutter/material.dart';
 import 'package:mspeed/common/base/base_controller.dart';
 import 'package:mspeed/common/helper/constant.dart';
-import 'package:flutter/material.dart';
-import 'package:mspeed/src/penerima/pesanan/model/detail_pesanan_penerima_model.dart';
-import 'package:mspeed/src/penerima/pesanan/model/pesanan_penerima_model.dart';
-import 'package:mspeed/src/seller/pesanan/model/detail_pesanan_seller_model.dart';
-import 'package:path/path.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
+import 'package:mspeed/core/network/api_client.dart';
+import 'package:mspeed/src/penerima/pesanan/model/receiver_order_model.dart';
 import 'package:mspeed/utils/utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PenerimaPesananProvider extends BaseController with ChangeNotifier {
-  PesananPenerimaModel pesananPenerimaModel = PesananPenerimaModel();
-  final searchC = TextEditingController();
+  // ── State Variables ────────────────────────────────────────────────────────
+  List<ReceiverOrderData> _orders = [];
+  List<ReceiverOrderData> get orders => _orders;
 
-  Future<void> fetchTransaction({
-    bool withLoading = false,
-    String search = '',
-  }) async {
-    if (withLoading) loading(true);
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String userId = prefs.getString(Constant.kSetPrefId) ?? '1';
-    Map<String, String> param = {};
-    // if (searchC.text.isNotEmpty)
-    //   param.addAll({'search': searchC.text});
-    param.addAll({'penerima_id': userId});
+  ReceiverOrderData? _selectedOrder;
+  ReceiverOrderData? get selectedOrder => _selectedOrder;
 
-    try {
-      final parsed = await getRest(
-        Constant.BASE_API_FULL + '/parent-orders?penerima_id=$userId',
-      );
-      
-      // Usually Laravel returns a collection inside "data", but the old code expected "result" and "data".
-      // Let's assume the old model handles {"data": [...]} via fromJson if adapted.
-      pesananPenerimaModel = PesananPenerimaModel.fromJson(parsed);
-      notifyListeners();
-    } catch (e) {
-      throw Exception(e);
-    } finally {
-      if (withLoading) loading(false);
-    }
-  }
+  ReceiverOrderMeta? _meta;
+  ReceiverOrderMeta? get meta => _meta;
 
-  DetailPesananPenerimaModel detailPesanan = DetailPesananPenerimaModel();
+  bool _isLoadingOrders = false;
+  bool get isLoadingOrders => _isLoadingOrders;
 
-  Future<void> fetchDetailTransaction({
-    bool withLoading = false,
-    required String transaction_id,
-  }) async {
-    if (withLoading) loading(true);
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String userId = prefs.getString(Constant.kSetPrefId) ?? '1';
-    // userId = "124";
+  bool _isLoadingDetail = false;
+  bool get isLoadingDetail => _isLoadingDetail;
 
-    try {
-      final parsed = await getRest(
-        Constant.BASE_API_FULL + '/parent-orders/$transaction_id?penerima_id=$userId',
-      );
-      
-      detailPesanan = DetailPesananPenerimaModel.fromJson(parsed);
-      notifyListeners();
-    } catch (e) {
-      throw Exception(e);
-    } finally {
-      if (withLoading) loading(false);
-    }
-  }
+  bool _isProcessing = false;
+  bool get isProcessing => _isProcessing;
 
-  Future<String?> fetchSuratTtd({
-    bool withLoading = false,
-    required String transaction_id,
-  }) async {
-    if (withLoading) loading(true);
-    final response = await get(
-      Constant.BASE_API_FULL + '/cetaksuratpesananbuyer',
-      body: {"parent_order_id": transaction_id},
-    );
+  // ── Search & Filter State ──────────────────────────────────────────────────
+  final TextEditingController searchController = TextEditingController();
+  String? _selectedStatus;
+  String? get selectedStatus => _selectedStatus;
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      if (withLoading) loading(false);
+  int? _selectedMonth;
+  int? get selectedMonth => _selectedMonth;
 
-      if (jsonDecode(response.body)["result"] == "success") {
-        return jsonDecode(response.body)["data"];
-      } else {
-        return null;
-      }
-      // return model;
+  int? _selectedYear;
+  int? get selectedYear => _selectedYear;
+
+  // ── Profile State ──────────────────────────────────────────────────────────
+  String _receiverName = 'Penerima';
+  String get receiverName => _receiverName;
+
+  String _receiverEmail = '';
+  String get receiverEmail => _receiverEmail;
+
+  String _receiverRole = 'RECEIVER';
+  String get receiverRole => _receiverRole;
+
+  bool _isImpersonated = false;
+  bool get isImpersonated => _isImpersonated;
+
+  // ── Computed KPI Counters ──────────────────────────────────────────────────
+  int get kpiTotalPesanan => _orders.length;
+
+  /// Orders ready for physical reception and verification (`pesanan dikirim`)
+  int get kpiSiapDiterima =>
+      _orders.where((o) => o.canVerifyReception).length;
+
+  /// Orders successfully received and confirmed
+  int get kpiTelahDiterima =>
+      _orders.where((o) => o.isReceived).length;
+
+  /// Sum of all orders' grand totals
+  double get kpiTotalNominal =>
+      _orders.fold<double>(0.0, (sum, o) => sum + o.grandTotal);
+
+  // ── Profile Loader ─────────────────────────────────────────────────────────
+  Future<void> loadProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    _receiverEmail = prefs.getString(Constant.kSetPrefEmail) ?? '';
+    _receiverRole = prefs.getString(Constant.kSetPrefRoles)?.toUpperCase() ?? 'RECEIVER';
+    final firstName = prefs.getString(Constant.kSetPrefFirstName) ?? '';
+    final lastName = prefs.getString(Constant.kSetPrefLastName) ?? '';
+
+    if (firstName.isNotEmpty || lastName.isNotEmpty) {
+      _receiverName = '$firstName $lastName'.trim();
+    } else if (_receiverEmail.isNotEmpty) {
+      _receiverName = _receiverEmail.split('@').first;
     } else {
-      loading(false);
-      return null;
+      _receiverName = 'Penerima Logistik';
+    }
+
+    _isImpersonated = prefs.getBool('is_impersonated') ?? false;
+    notifyListeners();
+  }
+
+  // ── Fetch Orders List ──────────────────────────────────────────────────────
+  Future<void> fetchOrders({bool withLoading = false}) async {
+    if (withLoading) {
+      _isLoadingOrders = true;
+      notifyListeners();
+    }
+
+    try {
+      final Map<String, dynamic> queryParams = {};
+
+      if (searchController.text.trim().isNotEmpty) {
+        queryParams['search'] = searchController.text.trim();
+      }
+      if (_selectedStatus != null && _selectedStatus!.isNotEmpty) {
+        queryParams['status_log'] = _selectedStatus;
+      }
+      if (_selectedMonth != null) {
+        queryParams['month'] = _selectedMonth;
+      }
+      if (_selectedYear != null) {
+        queryParams['year'] = _selectedYear;
+      }
+
+      final response = await ApiClient().dio.get(
+        '/receiver/v1/receiver/orders',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        final parsed = ReceiverOrderListResponse.fromJson(response.data);
+        _orders = parsed.data;
+        _meta = parsed.meta;
+      } else {
+        _orders = [];
+      }
+    } catch (e) {
+      debugPrint('[PenerimaPesananProvider] Error fetching orders: $e');
+      _orders = [];
+    } finally {
+      _isLoadingOrders = false;
+      notifyListeners();
     }
   }
 
-  bool? _isTtdSuccess = null;
+  // ── Fetch Order Detail ─────────────────────────────────────────────────────
+  Future<void> fetchOrderDetail(int orderId, {bool withLoading = false}) async {
+    if (withLoading) {
+      _isLoadingDetail = true;
+      notifyListeners();
+    }
 
-  bool? get isTtdSuccess => _isTtdSuccess;
+    try {
+      final response = await ApiClient().dio.get(
+        '/receiver/v1/receiver/orders/$orderId',
+      );
 
-  set isTtdSuccess(bool? value) {
-    _isTtdSuccess = value;
+      if (response.statusCode == 200 && response.data != null) {
+        final parsed = ReceiverOrderDetailResponse.fromJson(response.data);
+        _selectedOrder = parsed.data;
+      } else {
+        _selectedOrder = null;
+      }
+    } catch (e) {
+      debugPrint('[PenerimaPesananProvider] Error fetching order detail: $e');
+      _selectedOrder = null;
+    } finally {
+      _isLoadingDetail = false;
+      notifyListeners();
+    }
   }
 
-  Future<bool> terimaBarang({
-    bool withLoading = false,
-    required String parent_id,
+  // ── Verify & Confirm Order Receipt Action ──────────────────────────────────
+  Future<bool> verifyOrderReceipt({
+    required int orderId,
+    String? note,
+    String? title,
   }) async {
-    if (withLoading) loading(true);
+    _isProcessing = true;
+    notifyListeners();
+
     try {
-      final response = await post(
-        Constant.BASE_API_FULL + '/receiver/v1/receiver/orders/$parent_id/receive',
-        body: {'note': 'Diterima'},
+      final Map<String, dynamic> payload = {
+        'title': (title != null && title.isNotEmpty)
+            ? title
+            : 'Verifikasi Penerimaan Barang',
+        'note': (note != null && note.isNotEmpty)
+            ? note
+            : 'Pesanan telah diterima dan diverifikasi oleh Penerima (Receiver).',
+      };
+
+      final response = await ApiClient().dio.post(
+        '/receiver/v1/receiver/orders/$orderId/verify',
+        data: payload,
       );
-      final parsed = jsonDecode(response.body);
+
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Utils.showSuccess(msg: 'Barang berhasil diterima');
+        Utils.showSuccess(msg: 'Verifikasi penerimaan barang berhasil disimpan.');
+        // Refresh detail and list
+        await fetchOrderDetail(orderId);
+        await fetchOrders();
         return true;
       } else {
-        Utils.showFailed(msg: parsed['message'] ?? 'Gagal menerima barang');
+        final msg = response.data?['message'] ?? 'Gagal memproses verifikasi penerimaan.';
+        Utils.showFailed(msg: msg);
+        return false;
       }
     } catch (e) {
-      Utils.showFailed(msg: e.toString());
+      debugPrint('[PenerimaPesananProvider] Error verifying receipt: $e');
+      Utils.showFailed(msg: 'Terjadi kesalahan: $e');
+      return false;
     } finally {
-      if (withLoading) loading(false);
-    }
-    return false;
-  }
-
-  DetailPesananSellerModel detailPesananNew = DetailPesananSellerModel();
-
-  bool showMore = false;
-  Future<void> fetchDetailPesananNew({
-    bool withLoading = false,
-    String seller_id = '196',
-    required String parent_id,
-  }) async {
-    if (withLoading) loading(true);
-
-    final response = await get(
-      Constant.BASE_API_FULL + '/getdetailpesananseller',
-      body: {"seller_id": seller_id, "parent_order_id": parent_id},
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      detailPesananNew = DetailPesananSellerModel.fromJson(
-        jsonDecode(response.body),
-      );
+      _isProcessing = false;
       notifyListeners();
-
-      if (withLoading) loading(false);
-    } else {
-      final message = jsonDecode(response.body)["messages"]["error"];
-      loading(false);
-      throw Exception(message);
     }
   }
 
-  Future<String?> getPdf({
-    bool withLoading = false,
-    required String parent_id,
-  }) async {
-    if (withLoading) loading(true);
-    final response = await get(
-      Constant.BASE_API_FULL + '/cetaksuratjalanpenerima',
-      body: {"parent_order_id": parent_id},
-    );
+  // ── Filter Controls ────────────────────────────────────────────────────────
+  void setFilterStatus(String? status) {
+    _selectedStatus = status;
+    notifyListeners();
+  }
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      if (withLoading) loading(false);
+  void setFilterMonth(int? month) {
+    _selectedMonth = month;
+    notifyListeners();
+  }
 
-      if (jsonDecode(response.body)["result"] == "success") {
-        return jsonDecode(response.body)["data"];
-      } else {
-        return null;
-      }
-    } else {
-      loading(false);
-      return null;
-    }
+  void setFilterYear(int? year) {
+    _selectedYear = year;
+    notifyListeners();
+  }
+
+  void applyFilters() {
+    fetchOrders(withLoading: true);
+  }
+
+  void resetFilters() {
+    searchController.clear();
+    _selectedStatus = null;
+    _selectedMonth = null;
+    _selectedYear = null;
+    fetchOrders(withLoading: true);
   }
 }

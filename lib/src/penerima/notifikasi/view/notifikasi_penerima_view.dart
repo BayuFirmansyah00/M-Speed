@@ -4,7 +4,6 @@ import 'package:mspeed/src/penerima/notifikasi/provider/notifikasi_penerima_prov
 import 'package:mspeed/src/penerima/notifikasi/widget/notifikasi_item.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../common/helper/constant.dart';
 import '../../../../common/helper/app_colors.dart';
 
 // ─── Palet Warna ─────────────────────────────────────────────

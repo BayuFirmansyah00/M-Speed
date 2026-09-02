@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mspeed/common/component/custom_appbar.dart';
 import 'package:mspeed/common/helper/Constant.dart';
 import 'package:mspeed/src/buyer/chat/model/chat_buyer_model.dart';
 import 'package:mspeed/src/buyer/chat/provider/chat_provider.dart';
@@ -216,7 +215,7 @@ class ChatListItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -255,7 +254,7 @@ class ChatListItem extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xffF59E0B).withOpacity(0.15),
+                          color: const Color(0xffF59E0B).withValues(alpha: 0.15),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),

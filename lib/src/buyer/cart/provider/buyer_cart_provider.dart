@@ -45,15 +45,19 @@ class BuyerCartProvider extends BaseController with ChangeNotifier {
 
     try {
       final response = await getRest('${Constant.BASE_API_FULL}/buyer/v1/buyer/cart');
-      _cartResponse = BuyerCartResponse.fromJson(response);
-      _errorMessage = null;
+      if (response is Map) {
+        _cartResponse = BuyerCartResponse.fromJson(Map<String, dynamic>.from(response));
+        _errorMessage = null;
+      }
     } catch (e) {
-      _errorMessage = 'Gagal memuat keranjang: $e';
+      if (withLoading || _cartResponse == null) {
+        _errorMessage = 'Gagal memuat keranjang: $e';
+      }
     } finally {
       if (withLoading) {
         _isLoading = false;
-        notifyListeners();
       }
+      notifyListeners();
     }
   }
 

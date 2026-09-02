@@ -59,20 +59,27 @@ class PesananSellerItemWidget extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.receipt_long_rounded, size: 18, color: _kTextSecondary.withOpacity(0.8)),
-                    const SizedBox(width: 8),
-                    Text(
-                      orderNumber,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: _kTextPrimary,
+                Expanded(
+                  child: Row(
+                    children: [
+                      Icon(Icons.receipt_long_rounded, size: 18, color: _kTextSecondary.withOpacity(0.8)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          orderNumber,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: _kTextPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
@@ -111,15 +118,18 @@ class PesananSellerItemWidget extends StatelessWidget {
                         ],
                       ),
                     ),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          const Text('Total Pesanan', style: TextStyle(fontSize: 11, color: _kTextSecondary)),
+                          const Text('Total Pembayaran', style: TextStyle(fontSize: 11, color: _kTextSecondary)),
                           const SizedBox(height: 2),
                           Text(
                             totalPesanan,
                             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: _kPrimary),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),

@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:mspeed/common/base/base_state.dart';
 import 'package:mspeed/common/component/custom_navigator.dart';
-import 'package:mspeed/common/helper/constant.dart';
-
 import 'package:mspeed/src/seller/pesanan/model/pesanan_seller_model.dart';
 import 'package:mspeed/src/seller/pesanan/provider/seller_pesanan_provider.dart';
 import 'package:mspeed/src/seller/pesanan/view/pesanan_seller_detail_view.dart';
 import 'package:mspeed/src/seller/pesanan/view/pesanan_seller_item_widget.dart';
+import 'package:mspeed/utils/utils.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 // ═══════════════════════════════════════════════════════════════════
 // M-SPEED Brand Color Palette — Solid Colors Only
@@ -28,24 +26,14 @@ class PesananSellerView extends StatefulWidget {
 }
 
 class _PesananSellerViewState extends BaseState<PesananSellerView> {
-  String userId = "", userName = "";
-  List<SellerOrderData> listPesanan = [];
   final searchController = TextEditingController();
 
   @override
   void initState() {
-    initData();
     super.initState();
-  }
-
-  Future<void> initData() async {
-    final prefs = await SharedPreferences.getInstance();
-    userId = prefs.getString(Constant.kSetPrefId) ?? "";
-    userName = prefs.getString(Constant.kSetPrefFirstName) ?? "";
-    final p = context.read<SellerPesananProvider>();
-    await p.fetchListPesanan(withLoading: false);
-    listPesanan = p.pesananSellerModel.data ?? [];
-    setState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      refresh();
+    });
   }
 
   @override
@@ -57,8 +45,6 @@ class _PesananSellerViewState extends BaseState<PesananSellerView> {
   Future<void> refresh() async {
     final p = context.read<SellerPesananProvider>();
     await p.fetchListPesanan(withLoading: true);
-    listPesanan = p.pesananSellerModel.data ?? [];
-    setState(() {});
   }
 
   PreferredSizeWidget _buildAppBar() {
@@ -101,23 +87,13 @@ class _PesananSellerViewState extends BaseState<PesananSellerView> {
                 controller: searchController,
                 style: const TextStyle(fontSize: 14, color: _kTextPrimary),
                 decoration: const InputDecoration(
-                  hintText: 'Cari Pesanan',
+                  hintText: 'Cari No. Pesanan / Pembeli / Alamat',
                   hintStyle: TextStyle(fontSize: 14, color: _kTextSecondary),
                   border: InputBorder.none,
                   isDense: true,
                   contentPadding: EdgeInsets.zero,
                 ),
-                onChanged: (val) {
-                  setState(() {
-                    listPesanan = p.pesananSellerModel.data?.where((e) {
-                          return e.orderNum?.toUpperCase().contains(
-                                val.toUpperCase(),
-                              ) ??
-                              false;
-                        }).toList() ??
-                        [];
-                  });
-                },
+                onChanged: (_) => setState(() {}),
               ),
             ),
             if (searchController.text.isNotEmpty)
@@ -125,10 +101,8 @@ class _PesananSellerViewState extends BaseState<PesananSellerView> {
                 icon: const Icon(Icons.close_rounded, color: _kTextSecondary, size: 18),
                 onPressed: () {
                   searchController.clear();
-                  setState(() {
-                    listPesanan = p.pesananSellerModel.data ?? [];
-                  });
                   FocusScope.of(context).unfocus();
+                  setState(() {});
                 },
               ),
           ],
@@ -169,9 +143,16 @@ class _PesananSellerViewState extends BaseState<PesananSellerView> {
   @override
   Widget build(BuildContext context) {
     final p = context.watch<SellerPesananProvider>();
-    if (listPesanan.isEmpty && searchController.text.isEmpty) {
-      listPesanan = p.pesananSellerModel.data ?? [];
-    }
+    final allOrders = p.pesananSellerModel.data ?? [];
+    final search = searchController.text.toLowerCase().trim();
+    final displayedOrders = search.isEmpty
+        ? allOrders
+        : allOrders.where((e) {
+            final orderNum = (e.orderNum ?? '').toLowerCase();
+            final buyerName = (e.buyer?.name ?? '').toLowerCase();
+            final address = (e.buyer?.address ?? '').toLowerCase();
+            return orderNum.contains(search) || buyerName.contains(search) || address.contains(search);
+          }).toList();
 
     return Scaffold(
       backgroundColor: _kBackground,
@@ -182,46 +163,50 @@ class _PesananSellerViewState extends BaseState<PesananSellerView> {
           children: [
             _buildSearchBar(p),
             Expanded(
-              child: RefreshIndicator(
-                color: _kPrimary,
-                onRefresh: refresh,
-                child: listPesanan.isEmpty
-                    ? ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        children: [
-                          SizedBox(height: MediaQuery.of(context).size.height * 0.25),
-                          _buildEmptyState(),
-                        ],
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        itemCount: listPesanan.length,
-                        itemBuilder: (context, index) {
-                          final item = listPesanan[index];
+              child: p.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : RefreshIndicator(
+                      color: _kPrimary,
+                      onRefresh: refresh,
+                      child: displayedOrders.isEmpty
+                          ? ListView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              children: [
+                                SizedBox(height: MediaQuery.of(context).size.height * 0.25),
+                                _buildEmptyState(),
+                              ],
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              itemCount: displayedOrders.length,
+                              itemBuilder: (context, index) {
+                                final item = displayedOrders[index];
 
-                          return InkWell(
-                            borderRadius: BorderRadius.circular(16),
-                            onTap: () {
-                              CusNav.nPush(
-                                context,
-                                PesananSellerDetailView(
-                                  transaction_id: item.id?.toString() ?? "",
-                                ),
-                              );
-                            },
-                            child: PesananSellerItemWidget(
-                              bgColor: Colors.white,
-                              orderNumber: item.orderNum ?? "-",
-                              date: item.createdAt ?? "-",
-                              alamat: item.buyer?.address ?? "-",
-                              totalPesanan: item.items?.length.toString() ?? "-",
-                              sellerName: "-", // Kept for compatibility but unused visually
-                              status: item.statusEnum,
+                                return InkWell(
+                                  borderRadius: BorderRadius.circular(16),
+                                  onTap: () {
+                                    CusNav.nPush(
+                                      context,
+                                      PesananSellerDetailView(
+                                        transaction_id: item.id?.toString() ?? "",
+                                      ),
+                                    );
+                                  },
+                                  child: PesananSellerItemWidget(
+                                    bgColor: Colors.white,
+                                    orderNumber: item.orderNum ?? "-",
+                                    date: item.createdAt != null && item.createdAt!.length >= 10
+                                        ? item.createdAt!.substring(0, 10)
+                                        : (item.createdAt ?? "-"),
+                                    alamat: item.buyer?.address ?? "-",
+                                    totalPesanan: Utils.thousandSeparator(item.totalOrderPrice.toInt()),
+                                    sellerName: "-",
+                                    status: item.statusEnum,
+                                  ),
+                                );
+                              },
                             ),
-                          );
-                        },
-                      ),
-              ),
+                    ),
             ),
           ],
         ),

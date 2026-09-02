@@ -107,14 +107,20 @@ class NegoProduct {
   String? name;
   String? productCode;
   double? price;
+  String? imageUrl;
 
-  NegoProduct({this.id, this.name, this.productCode, this.price});
+  NegoProduct({this.id, this.name, this.productCode, this.price, this.imageUrl});
 
   NegoProduct.fromJson(Map<String, dynamic> json) {
     id = json['id']?.toString();
     name = json['name']?.toString();
     productCode = json['product_code']?.toString();
     price = json['price'] != null ? double.tryParse(json['price'].toString()) : null;
+    imageUrl = json['image_url']?.toString() ??
+               json['photo']?.toString() ??
+               (json['product_images'] != null && json['product_images'] is List && (json['product_images'] as List).isNotEmpty
+                   ? json['product_images'][0]['img_url']?.toString()
+                   : null);
   }
 
   Map<String, dynamic> toJson() {
@@ -123,6 +129,7 @@ class NegoProduct {
     data['name'] = name;
     data['product_code'] = productCode;
     data['price'] = price;
+    if (imageUrl != null) data['image_url'] = imageUrl;
     return data;
   }
 }

@@ -35,11 +35,8 @@ class BuyerNegoProvider extends BaseController with ChangeNotifier {
       final Map<String, dynamic> payload = {
         'cart_id': cartId.toString(),
         'value': value.toString(),
+        'buyer_note': (buyerNote != null && buyerNote.trim().isNotEmpty) ? buyerNote.trim() : '',
       };
-
-      if (buyerNote != null && buyerNote.isNotEmpty) {
-        payload['buyer_note'] = buyerNote;
-      }
 
       final response = await post(url, body: payload);
       final decoded = json.decode(response.body);

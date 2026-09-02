@@ -170,13 +170,13 @@ class _BuyerCartViewState extends State<BuyerCartView> {
                                                     Row(
                                                       children: [
                                                         Text(
-                                                          'Rp ${Utils.thousandSeparator(effectivePrice.toInt())}',
+                                                          Utils.thousandSeparator(effectivePrice.toInt()),
                                                           style: const TextStyle(
                                                               fontWeight: FontWeight.bold, color: Colors.green, fontSize: 14),
                                                         ),
                                                         const SizedBox(width: 6),
                                                         Text(
-                                                          'Rp ${Utils.thousandSeparator(normalPrice.toInt())}',
+                                                          Utils.thousandSeparator(normalPrice.toInt()),
                                                           style: TextStyle(
                                                             fontSize: 11,
                                                             color: Colors.grey.shade500,
@@ -187,7 +187,7 @@ class _BuyerCartViewState extends State<BuyerCartView> {
                                                     )
                                                   else
                                                     Text(
-                                                      'Rp ${Utils.thousandSeparator(normalPrice.toInt())}',
+                                                      Utils.thousandSeparator(normalPrice.toInt()),
                                                       style: const TextStyle(
                                                           fontWeight: FontWeight.bold, color: Colors.red),
                                                     ),
@@ -234,7 +234,7 @@ class _BuyerCartViewState extends State<BuyerCartView> {
                                                 const SizedBox(width: 6),
                                                 Expanded(
                                                   child: Text(
-                                                    'Sepakat (Deal) — Rp ${Utils.thousandSeparator(effectivePrice.toInt())} / item',
+                                                    'Sepakat (Deal) — ${Utils.thousandSeparator(effectivePrice.toInt())} / item',
                                                     style: const TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.bold),
                                                   ),
                                                 ),
@@ -262,7 +262,7 @@ class _BuyerCartViewState extends State<BuyerCartView> {
                                                     ),
                                                     const SizedBox(width: 6),
                                                     Text(
-                                                      'Rp ${Utils.thousandSeparator(counterPrice.toInt())}',
+                                                      Utils.thousandSeparator(counterPrice.toInt()),
                                                       style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black87),
                                                     ),
                                                   ],
@@ -360,7 +360,7 @@ class _BuyerCartViewState extends State<BuyerCartView> {
                                                         style: TextStyle(fontSize: 12, color: Colors.blue, fontWeight: FontWeight.bold),
                                                       ),
                                                       Text(
-                                                        'Tawaran Anda: Rp ${Utils.thousandSeparator(counterPrice.toInt())}',
+                                                        'Tawaran Anda: ${Utils.thousandSeparator(counterPrice.toInt())}',
                                                         style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
                                                       ),
                                                     ],
@@ -492,7 +492,7 @@ class _BuyerCartViewState extends State<BuyerCartView> {
                       children: [
                         const Text('Total Pembayaran', style: TextStyle(fontSize: 13, color: Colors.grey)),
                         Text(
-                          'Rp ${Utils.thousandSeparator(_calculateTotalCart(tempOrders).toInt())}',
+                          Utils.thousandSeparator(_calculateTotalCart(tempOrders).toInt()),
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.red),
                         ),
                       ],

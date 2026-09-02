@@ -111,7 +111,7 @@ class _ChatPersonViewState extends State<ChatPesananKomplainView> {
           children: [
             Expanded(
               child: ListView.builder(
-                  itemCount: groupedChats.keys.toList().length ?? 0,
+                  itemCount: groupedChats.keys.toList().length,
                   itemBuilder: (context, index) {
                     return Column(
                       children: [
@@ -314,20 +314,20 @@ class _ChatPersonViewState extends State<ChatPesananKomplainView> {
                 padding: EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: isSender
-                      ? Color(0xFFF58B2B).withOpacity(.2)
+                      ? const Color(0xFFF58B2B).withValues(alpha: .2)
                       : Colors.white,
                   borderRadius: isSender
-                      ? BorderRadius.only(
+                      ? const BorderRadius.only(
                           topLeft: Radius.circular(16),
                           bottomLeft: Radius.circular(16),
                           bottomRight: Radius.circular(16))
-                      : BorderRadius.only(
+                      : const BorderRadius.only(
                           topRight: Radius.circular(16),
                           bottomLeft: Radius.circular(16),
                           bottomRight: Radius.circular(16)),
                   border: Border.all(
                       color: isSender
-                          ? Color(0xFFF58B2B).withOpacity(.2)
+                          ? const Color(0xFFF58B2B).withValues(alpha: .2)
                           : Colors.grey[300]!),
                 ),
                 child: (isImageFile(file))
@@ -352,33 +352,33 @@ class _ChatPersonViewState extends State<ChatPesananKomplainView> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.download, color: Constant.primaryColor),
-                            SizedBox(
+                            const SizedBox(
                               width: 8,
                             ),
-                            Text('Download')
+                            const Text('Download')
                           ],
                         ),
                       ),
               ),
             if (message.isNotEmpty)
               Container(
-                padding: EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: isSender
-                      ? Color(0xFFF58B2B).withOpacity(.2)
+                      ? const Color(0xFFF58B2B).withValues(alpha: .2)
                       : Colors.white,
                   borderRadius: isSender
-                      ? BorderRadius.only(
+                      ? const BorderRadius.only(
                           topLeft: Radius.circular(16),
                           bottomLeft: Radius.circular(16),
                           bottomRight: Radius.circular(16))
-                      : BorderRadius.only(
+                      : const BorderRadius.only(
                           topRight: Radius.circular(16),
                           bottomLeft: Radius.circular(16),
                           bottomRight: Radius.circular(16)),
                   border: Border.all(
                       color: isSender
-                          ? Color(0xFFF58B2B).withOpacity(.2)
+                          ? const Color(0xFFF58B2B).withValues(alpha: .2)
                           : Colors.grey[300]!),
                 ),
                 child: Wrap(

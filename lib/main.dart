@@ -56,6 +56,8 @@ import 'package:mspeed/src/buyer/region/provider/region_provider.dart';
 import 'package:mspeed/src/keuangan/home/view/main_home_keuangan_view.dart';
 import 'package:mspeed/src/keuangan/notifikasi/provider/notifikasi_keuangan_provider.dart';
 import 'package:mspeed/src/keuangan/pesanan/provider/keuangan_provider.dart';
+import 'package:mspeed/src/manager/home/view/main_home_manager_view.dart';
+import 'package:mspeed/src/manager/pesanan/provider/manager_provider.dart';
 import 'package:mspeed/src/penerima/chat/provider/penerima_chat_provider.dart';
 import 'package:mspeed/src/penerima/home/view/dashboard_pesanan_view.dart';
 import 'package:mspeed/src/penerima/notifikasi/provider/notifikasi_penerima_provider.dart';
@@ -404,6 +406,8 @@ class MyApp extends StatelessWidget {
                   create: (context) => PenerimaPesananProvider()),
               ChangeNotifierProvider<KeuanganProvider>(
                   create: (context) => KeuanganProvider()),
+              ChangeNotifierProvider<ManagerProvider>(
+                  create: (context) => ManagerProvider()),
               ChangeNotifierProvider<TransactionProvider>(
                   create: (context) => TransactionProvider()),
               ChangeNotifierProvider<AdminHomeProvider>(

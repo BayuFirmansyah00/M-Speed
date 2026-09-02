@@ -7,6 +7,7 @@ Map<String, WidgetBuilder> get _routes => <String, WidgetBuilder>{
       '/sellerHome': (context) => SellerMainHome(),
       '/penerimaHome': (context) => DashboardPesananView(),
       '/keuanganHome': (context) => MainHomeKeuanganView(),
+      '/managerHome': (context) => MainHomeManagerView(),
       '/adminHome': (context) => AdminMainHome(),
 
       // '/forgot': (context) => ForgotView(),
