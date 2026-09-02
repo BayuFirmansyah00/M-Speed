@@ -21,35 +21,35 @@ void main() {
 
       // Acquire token for Manager (User ID 1)
       final mgrImp = await client.post(
-        Uri.parse('$baseUrl/aimpersonate/1'),
+        Uri.parse('$baseUrl/impersonate/1'),
         headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Bearer $adminToken'},
       );
       final managerToken = jsonDecode(mgrImp.body)['data']['access_token'] as String;
 
       // Acquire token for Buyer (User ID 21)
       final buyerImp = await client.post(
-        Uri.parse('$baseUrl/aimpersonate/21'),
+        Uri.parse('$baseUrl/impersonate/21'),
         headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Bearer $adminToken'},
       );
       final buyerToken = jsonDecode(buyerImp.body)['data']['access_token'] as String;
 
       // Acquire token for Seller (User ID 121)
       final sellerImp = await client.post(
-        Uri.parse('$baseUrl/aimpersonate/121'),
+        Uri.parse('$baseUrl/impersonate/121'),
         headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Bearer $adminToken'},
       );
       final sellerToken = jsonDecode(sellerImp.body)['data']['access_token'] as String;
 
       // Acquire token for Receiver (User ID 61)
       final rcvImp = await client.post(
-        Uri.parse('$baseUrl/aimpersonate/61'),
+        Uri.parse('$baseUrl/impersonate/61'),
         headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Bearer $adminToken'},
       );
       final receiverToken = jsonDecode(rcvImp.body)['data']['access_token'] as String;
 
       // Acquire token for Finance (User ID 41)
       final finImp = await client.post(
-        Uri.parse('$baseUrl/aimpersonate/41'),
+        Uri.parse('$baseUrl/impersonate/41'),
         headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Bearer $adminToken'},
       );
       final financeToken = jsonDecode(finImp.body)['data']['access_token'] as String;
@@ -118,6 +118,6 @@ void main() {
       );
       expect(stopRes.statusCode, isIn([200, 201]));
       print('ALL 5 ROLES ACCESSIBLE & SYNCHRONIZED ACROSS RUNTIME E2E!');
-    });
+    }, timeout: const Timeout(Duration(minutes: 2)));
   });
 }

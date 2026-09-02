@@ -33,9 +33,9 @@ void main() {
         final targetId = target['id'];
         final roleName = target['role'] as String;
 
-        // A. POST /api/aimpersonate/{id}
+        // A. POST /api/impersonate/{id}
         final impRes = await client.post(
-          Uri.parse('$baseUrl/aimpersonate/$targetId'),
+          Uri.parse('$baseUrl/impersonate/$targetId'),
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
@@ -75,6 +75,6 @@ void main() {
         }
         print('   ✅ $roleName → Admin: STOP SUCCESS (Admin session restored)');
       }
-    });
+    }, timeout: const Timeout(Duration(minutes: 2)));
   });
 }
