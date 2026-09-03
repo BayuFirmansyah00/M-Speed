@@ -28,7 +28,8 @@ class SellerAdminData {
   String? cpPhone;
   String? kbli;
   int? completeness;
-  int? active;
+  dynamic active;
+  String? status;
   SellerAdminCategory? category;
 
   SellerAdminData({
@@ -43,6 +44,7 @@ class SellerAdminData {
     this.kbli,
     this.completeness,
     this.active,
+    this.status,
     this.category,
   });
 
@@ -57,7 +59,8 @@ class SellerAdminData {
     cpPhone = json['cp_phone']?.toString();
     kbli = json['kbli']?.toString();
     completeness = json['completeness'] != null ? int.tryParse(json['completeness'].toString()) : null;
-    active = json['active'] != null ? int.tryParse(json['active'].toString()) : null;
+    active = json['active'] ?? json['is_active'] ?? json['status'];
+    status = json['status']?.toString();
     category = json['category'] != null ? SellerAdminCategory.fromJson(json['category']) : null;
   }
 
@@ -73,6 +76,8 @@ class SellerAdminData {
     data['cp_phone'] = cpPhone;
     data['kbli'] = kbli;
     data['completeness'] = completeness;
+    data['active'] = active;
+    data['status'] = status;
     if (category != null) {
       data['category'] = category!.toJson();
     }
@@ -130,6 +135,7 @@ class SellerAdminModelData {
   int? id;
   String? email;
   String? role;
+  dynamic active;
   String? status;
   SellerAdminData? sellerData;
   SellerAdminAddress? sellerAddress;
@@ -140,6 +146,7 @@ class SellerAdminModelData {
     this.id,
     this.email,
     this.role,
+    this.active,
     this.status,
     this.sellerData,
     this.sellerAddress,
@@ -151,7 +158,8 @@ class SellerAdminModelData {
     id = json['id'] != null ? int.tryParse(json['id'].toString()) : null;
     email = json['email']?.toString();
     role = json['role']?.toString();
-    status = json['status']?.toString();
+    active = json['active'] ?? json['is_active'] ?? json['status'] ?? json['seller_data']?['active'] ?? json['seller_data']?['status'];
+    status = json['status']?.toString() ?? json['seller_data']?['status']?.toString();
     sellerData = json['seller_data'] != null ? SellerAdminData.fromJson(json['seller_data']) : null;
     sellerAddress = json['seller_address'] != null ? SellerAdminAddress.fromJson(json['seller_address']) : null;
     createdAt = json['created_at']?.toString();
@@ -163,6 +171,8 @@ class SellerAdminModelData {
     data['id'] = id;
     data['email'] = email;
     data['role'] = role;
+    data['active'] = active;
+    data['status'] = status;
     if (sellerData != null) {
       data['seller_data'] = sellerData!.toJson();
     }

@@ -180,7 +180,23 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
   // ── Change session ──
   Future<void> _onChangeSession(int i) async {
     final p = context.read<AdminUserProvider>();
-    String id = p.userData[i].id.toString();
+    final userItem = p.userData[i];
+    final String id = userItem.id.toString();
+
+    if (userItem.status == 'Tidak Aktif') {
+      await Utils.showYesNoDialog(
+        context: context,
+        title: 'Akun Tidak Aktif',
+        desc: 'Akun "${userItem.name1 ?? ''}" berstatus Tidak Aktif di sistem backend. Ganti sesi mungkin dibatasi. Yakin ingin melanjutkan?',
+        yesCallback: () async {
+          CusNav.nPop(context);
+          await p.changeSession(context, id);
+        },
+        noCallback: () => CusNav.nPop(context),
+      );
+      return;
+    }
+
     await p.changeSession(context, id);
   }
 
@@ -818,26 +834,73 @@ class _UserCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Status badge (only for Buyer, Seller, Finance, Penerima, Manager)
+                // Status badge with toggle capability (only for Buyer, Seller, Finance, Penerima, Manager)
                 if (_hasStatus && item.status != null && item.status!.isNotEmpty) ...[
                   const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: item.status == 'Aktif'
-                          ? const Color(0xff28C76F).withOpacity(0.12)
-                          : const Color(0xffED1C24).withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(item.status!,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: item.status == 'Aktif'
-                            ? const Color(0xff28C76F)
-                            : const Color(0xffED1C24),
-                      )),
-                  ),
+                  Builder(builder: (context) {
+                    final bool isActive = (item.status == 'Aktif' || item.status == '1' || item.status?.toLowerCase() == 'active');
+                    return GestureDetector(
+                      onTap: () {
+                        onToggleStatus();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? const Color(0xff28C76F).withOpacity(0.12)
+                              : const Color(0xffED1C24).withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isActive
+                                ? const Color(0xff28C76F).withOpacity(0.3)
+                                : const Color(0xffED1C24).withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              item.status!,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: isActive
+                                    ? const Color(0xff28C76F)
+                                    : const Color(0xffED1C24),
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              width: 28,
+                              height: 14,
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: isActive
+                                    ? const Color(0xff28C76F)
+                                    : const Color(0xff94A3B8),
+                              ),
+                              child: AnimatedAlign(
+                                duration: const Duration(milliseconds: 200),
+                                alignment: isActive
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
+                                child: Container(
+                                  width: 10,
+                                  height: 10,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
                 ],
                 // ── 3-dots menu ──
                 PopupMenuButton<String>(

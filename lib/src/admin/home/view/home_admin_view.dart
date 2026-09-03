@@ -342,43 +342,82 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
-                const SizedBox(width: 10),
-                const Text(
-                  'Jumlah User Terdaftar',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xff100629),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Jumlah User Terdaftar',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xff100629),
+                    ),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 6),
                 GestureDetector(
                   onTap: () {
-                    p.filterActiveOnly = !p.filterActiveOnly;
-                    p.fetchHome(withLoading: true);
+                    p.toggleFilterActiveOnly();
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: p.filterActiveOnly ? const Color(0xff16A34A) : Colors.white,
-                      border: Border.all(color: p.filterActiveOnly ? const Color(0xff16A34A) : const Color(0xffE2E8F0)),
+                      color: p.filterActiveOnly
+                          ? const Color(0xff16A34A).withValues(alpha: 0.12)
+                          : const Color(0xffEF4444).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: p.filterActiveOnly ? [BoxShadow(color: const Color(0xff16A34A).withOpacity(0.2), blurRadius: 4, offset: const Offset(0, 2))] : null,
+                      border: Border.all(
+                        color: p.filterActiveOnly
+                            ? const Color(0xff16A34A).withValues(alpha: 0.3)
+                            : const Color(0xffEF4444).withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          p.filterActiveOnly ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                          size: 14,
-                          color: p.filterActiveOnly ? Colors.white : const Color(0xff64748B),
+                        Text(
+                          p.filterActiveOnly ? 'Akun Aktif (ON)' : 'Akun Tidak Aktif (OFF)',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: p.filterActiveOnly
+                                ? const Color(0xff16A34A)
+                                : const Color(0xffEF4444),
+                          ),
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          'Hanya Akun Aktif',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: p.filterActiveOnly ? Colors.white : const Color(0xff64748B),
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: 32,
+                          height: 18,
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: p.filterActiveOnly
+                                ? const Color(0xff16A34A)
+                                : const Color(0xffCBD5E1),
+                          ),
+                          child: AnimatedAlign(
+                            duration: const Duration(milliseconds: 200),
+                            alignment: p.filterActiveOnly
+                                ? Alignment.centerRight
+                                : Alignment.centerLeft,
+                            child: Container(
+                              width: 14,
+                              height: 14,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black26,
+                                    blurRadius: 2,
+                                    offset: Offset(0, 1),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -398,42 +437,42 @@ class _HomeSellerViewState extends BaseState<HomeAdminView> {
               children: [
                 headerInfoItemCompact(
                   icon: Icons.people_alt_rounded,
-                  title: model?.totalUser?.toString() ?? '0',
+                  title: model?.getTotalUser(p.filterActiveOnly).toString() ?? '0',
                   subtitle: 'Semua User',
                 ),
                 headerInfoItemCompact(
                   icon: Icons.storefront_rounded,
-                  title: model?.totalSeller?.toString() ?? '0',
+                  title: model?.getTotalSeller(p.filterActiveOnly).toString() ?? '0',
                   subtitle: 'Data Seller',
                 ),
                 headerInfoItemCompact(
                   icon: Icons.shopping_bag_rounded,
-                  title: model?.totalBuyer?.toString() ?? '0',
+                  title: model?.getTotalBuyer(p.filterActiveOnly).toString() ?? '0',
                   subtitle: 'Data Buyer',
                 ),
                 headerInfoItemCompact(
                   icon: Icons.account_balance_rounded,
-                  title: model?.totalFinance?.toString() ?? '0',
+                  title: model?.getTotalFinance(p.filterActiveOnly).toString() ?? '0',
                   subtitle: 'Data Finance',
                 ),
                 headerInfoItemCompact(
                   icon: Icons.person_pin_rounded,
-                  title: model?.totalPenerima?.toString() ?? '0',
+                  title: model?.getTotalPenerima(p.filterActiveOnly).toString() ?? '0',
                   subtitle: 'Data Penerima',
                 ),
                 headerInfoItemCompact(
                   icon: Icons.manage_accounts_rounded,
-                  title: model?.totalManager?.toString() ?? '0',
+                  title: model?.getTotalManager(p.filterActiveOnly).toString() ?? '0',
                   subtitle: 'Data Manager',
                 ),
                 headerInfoItemCompact(
                   icon: Icons.fact_check_rounded,
-                  title: model?.totalAudit?.toString() ?? '0',
+                  title: model?.getTotalAudit(p.filterActiveOnly).toString() ?? '0',
                   subtitle: 'Data Audit',
                 ),
                 headerInfoItemCompact(
                   icon: Icons.work_outline_rounded,
-                  title: model?.totalDireksi?.toString() ?? '0',
+                  title: model?.getTotalDireksi(p.filterActiveOnly).toString() ?? '0',
                   subtitle: 'Data Direksi',
                 ),
               ],

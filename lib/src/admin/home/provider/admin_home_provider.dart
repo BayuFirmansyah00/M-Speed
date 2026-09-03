@@ -20,7 +20,12 @@ import 'package:mspeed/core/network/api_client.dart';
 import '../model/kategori_model.dart';
 
 class AdminHomeProvider extends BaseController with ChangeNotifier {
-  bool filterActiveOnly = true;
+  bool filterActiveOnly = false;
+
+  void toggleFilterActiveOnly() {
+    filterActiveOnly = !filterActiveOnly;
+    notifyListeners();
+  }
   String isSubAgent = "agen";
   Duration duration = const Duration(seconds: 2);
   int _currentIndex = 0;
@@ -123,12 +128,14 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         homeAdminModel = HomeAdminModel.fromJson(response.data);
+        log("DASHBOARD RESPONSE: ${response.data}");
+
+        // Fetch detailed counts for all roles to populate missing backend metric fields
+        await _fetchRoleCounts(homeAdminModel);
 
         // Rebuild graph dari purchase_statistics
         graphList.clear();
         biggestGraphVal = 0;
-        // API saat ini tidak mengirimkan array data grafik bulanan (monthly_purchase_qty)
-        // Jangan membuat fake data point (FlSpot). Biarkan graphList kosong agar UI menampilkan empty state.
 
         notifyListeners();
         if (withLoading) loading(false);
@@ -140,6 +147,84 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
     } catch (e) {
       loading(false);
       throw Exception(e.toString());
+    }
+  }
+
+  Future<void> _fetchRoleCounts(HomeAdminModel model) async {
+    final endpoints = {
+      'seller': '/audit/v1/admin/sellers',
+      'buyer': '/audit/v1/admin/buyers',
+      'receiver': '/audit/v1/admin/receivers',
+      'finance': '/audit/v1/admin/finances',
+      'manager': '/audit/v1/admin/managers',
+      'audit': '/audit/v1/admin/audits',
+      'direksi': '/audit/v1/admin/direksi',
+    };
+
+    for (var entry in endpoints.entries) {
+      try {
+        final res = await ApiClient().dio.get(
+          entry.value,
+          queryParameters: {'per_page': 100},
+        );
+        if (res.statusCode == 200 || res.statusCode == 201) {
+          final List list = (res.data['data'] is List) ? res.data['data'] : [];
+          int activeCount = 0;
+          int inactiveCount = 0;
+
+          for (var item in list) {
+            final status = item['status']?.toString().toLowerCase() ?? '';
+            final isAct = item['active'] ?? item['is_active'] ?? item['user_data']?['active'] ?? item['seller_data']?['active'];
+
+            if (status == 'active' || status == 'aktif' || isAct == 1 || isAct == true || isAct == '1') {
+              activeCount++;
+            } else {
+              inactiveCount++;
+            }
+          }
+
+          log("ROLE COUNT [${entry.key}]: active=$activeCount, inactive=$inactiveCount, total=${list.length}");
+
+          switch (entry.key) {
+            case 'seller':
+              if (activeCount > 0 || model.userStatistics.activeUsers.seller == 0) {
+                model.userStatistics.activeUsers.seller = activeCount;
+              }
+              model.userStatistics.inactiveUsers.seller = inactiveCount;
+              break;
+            case 'buyer':
+              if (activeCount > 0 || model.userStatistics.activeUsers.buyer == 0) {
+                model.userStatistics.activeUsers.buyer = activeCount;
+              }
+              model.userStatistics.inactiveUsers.buyer = inactiveCount;
+              break;
+            case 'receiver':
+              if (activeCount > 0 || model.userStatistics.activeUsers.receiver == 0) {
+                model.userStatistics.activeUsers.receiver = activeCount;
+              }
+              model.userStatistics.inactiveUsers.receiver = inactiveCount;
+              break;
+            case 'finance':
+              model.userStatistics.activeUsers.finance = activeCount;
+              model.userStatistics.inactiveUsers.finance = inactiveCount;
+              break;
+            case 'manager':
+              model.userStatistics.activeUsers.manager = activeCount;
+              model.userStatistics.inactiveUsers.manager = inactiveCount;
+              break;
+            case 'audit':
+              model.userStatistics.activeUsers.audit = activeCount;
+              model.userStatistics.inactiveUsers.audit = inactiveCount;
+              break;
+            case 'direksi':
+              model.userStatistics.activeUsers.direksi = activeCount;
+              model.userStatistics.inactiveUsers.direksi = inactiveCount;
+              break;
+          }
+        }
+      } catch (e) {
+        log("FETCH ROLE COUNT ERROR (${entry.key}): $e");
+      }
     }
   }
 
@@ -347,10 +432,35 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
         sellerAdminModel = parsed;
         final dataList = parsed.data ?? [];
     
-        for (var item in dataList) {
+        final rawDataList = response.data['data'] as List<dynamic>? ?? [];
+        for (var i = 0; i < dataList.length; i++) {
+          final item = dataList[i];
           final sellerData = item.sellerData;
           final sellerAddress = item.sellerAddress;
-          
+
+          Map<String, dynamic> rawItem = {};
+          if (i < rawDataList.length && rawDataList[i] is Map<String, dynamic>) {
+            rawItem = rawDataList[i] as Map<String, dynamic>;
+          }
+          final rawSellerData = (rawItem['seller_data'] is Map<String, dynamic>)
+              ? rawItem['seller_data'] as Map<String, dynamic>
+              : <String, dynamic>{};
+
+          final dynamic activeVal = rawItem['status'] ??
+              rawItem['active'] ??
+              rawSellerData['status'] ??
+              rawSellerData['active'] ??
+              item.status ??
+              item.active ??
+              sellerData?.status ??
+              sellerData?.active;
+
+          bool isActive = false;
+          if (activeVal != null) {
+            final strVal = activeVal.toString().toLowerCase().trim();
+            isActive = (strVal == '1' || strVal == 'active' || strVal == 'true' || strVal == 'aktif');
+          }
+
           userData.add(
             UserData(
               name1: sellerData?.companyName ?? sellerData?.name ?? '',
@@ -358,7 +468,7 @@ class AdminHomeProvider extends BaseController with ChangeNotifier {
               email: item.email ?? '',
               id: item.id?.toString() ?? '',
               alamat: sellerAddress?.fullAddress ?? sellerAddress?.cityName ?? '',
-              status: 'Aktif',
+              status: isActive ? 'Aktif' : 'Tidak Aktif',
               rawModel: item,
             ),
           );

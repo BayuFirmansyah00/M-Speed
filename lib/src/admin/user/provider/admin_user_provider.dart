@@ -277,10 +277,34 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
           hasMore = dataList.isNotEmpty;
         }
     
-        for (var item in dataList) {
+        final rawDataList = response.data['data'] as List<dynamic>? ?? [];
+        for (var i = 0; i < dataList.length; i++) {
+          final item = dataList[i];
           final sellerData = item.sellerData;
           final sellerAddress = item.sellerAddress;
-          final isActive = (sellerData?.active == 1) || (item.status == 'active');
+
+          Map<String, dynamic> rawItem = {};
+          if (i < rawDataList.length && rawDataList[i] is Map<String, dynamic>) {
+            rawItem = rawDataList[i] as Map<String, dynamic>;
+          }
+          final rawSellerData = (rawItem['seller_data'] is Map<String, dynamic>)
+              ? rawItem['seller_data'] as Map<String, dynamic>
+              : <String, dynamic>{};
+
+          final dynamic activeVal = rawItem['status'] ??
+              rawItem['active'] ??
+              rawSellerData['status'] ??
+              rawSellerData['active'] ??
+              item.status ??
+              item.active ??
+              sellerData?.status ??
+              sellerData?.active;
+
+          bool isActive = false;
+          if (activeVal != null) {
+            final strVal = activeVal.toString().toLowerCase().trim();
+            isActive = (strVal == '1' || strVal == 'active' || strVal == 'true' || strVal == 'aktif');
+          }
 
           userData.add(
             UserData(
@@ -883,6 +907,7 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
   Future<void> toggleUserStatus({
     required UserDataType userType,
     required String userId,
+    int? index,
   }) async {
     String endpoint = '';
     switch (userType) {
@@ -909,6 +934,26 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       final response = await ApiClient().dio.patch(endpoint);
       if (response.statusCode == 200 || response.statusCode == 201) {
         final msg = response.data['message'] ?? 'Status berhasil diubah';
+        if (index != null && index >= 0 && index < userData.length) {
+          final item = userData[index];
+          final currentIsActive = item.status == 'Aktif';
+          userData[index] = UserData(
+            name1: item.name1,
+            name2: item.name2,
+            email: item.email,
+            alamat: item.alamat,
+            id: item.id,
+            status: currentIsActive ? 'Tidak Aktif' : 'Aktif',
+            telp: item.telp,
+            kabkota: item.kabkota,
+            departemen: item.departemen,
+            manager: item.manager,
+            anggota: item.anggota,
+            kelengkapan: item.kelengkapan,
+            rawModel: item.rawModel,
+          );
+          notifyListeners();
+        }
         await Utils.showSuccess(msg: msg);
       } else {
         throw Exception("Gagal mengubah status user");
@@ -917,5 +962,13 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       debugPrint("toggleUserStatus Error: $e");
       Utils.showFailed(msg: "Gagal mengubah status user: $e");
     }
+  }
+
+  Future<void> toggleUserStatusByIndex(int index, UserDataType userType) async {
+    if (index < 0 || index >= userData.length) return;
+    final item = userData[index];
+    final String userId = item.id ?? '';
+    if (userId.isEmpty) return;
+    await toggleUserStatus(userType: userType, userId: userId, index: index);
   }
 }
