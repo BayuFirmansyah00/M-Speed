@@ -139,7 +139,7 @@ class _UserAdminViewState extends BaseState<UserAdminView> {
                               const Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Manajemen User',
+                                  Text('User Data',
                                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)),
                                   SizedBox(height: 2),
                                   Text('Kelola semua data pengguna sistem',

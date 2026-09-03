@@ -181,6 +181,8 @@ class Utils {
       ..loadingStyle = EasyLoadingStyle.custom
       ..maskType = EasyLoadingMaskType.black
       ..backgroundColor = Colors.transparent
+      ..indicatorColor = Constant.primaryColor
+      ..textColor = const Color(0xff100629)
       ..boxShadow = []
       ..dismissOnTap = false
       ..indicatorWidget = Container(

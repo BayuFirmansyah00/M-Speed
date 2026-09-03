@@ -48,6 +48,7 @@ class _DetailPesananAdminViewState extends BaseState<DetailPesananAdminView> {
       context.read<TransactionProvider>().fetchDetailTransaction(
             transaction_id: widget.transaction_id,
             withLoading: true,
+            isAdmin: true,
           );
     }
   }

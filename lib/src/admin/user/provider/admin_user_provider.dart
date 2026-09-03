@@ -180,6 +180,12 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
         
         for (var item in dataList) {
           final uData = item['user_data'] ?? {};
+          final dept = uData['department'];
+          final mgr = uData['manager'];
+          String deptName = (dept is Map) ? (dept['name']?.toString() ?? '') : '';
+          String mgrName = (mgr is Map) ? (mgr['name']?.toString() ?? '') : '';
+          final isActive = item['status'] == 'active' || uData['active'] == 1;
+
           userData.add(
             UserData(
               name1: uData['first_name']?.toString() ?? '',
@@ -187,7 +193,11 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
               email: item['email']?.toString() ?? '',
               id: item['id']?.toString() ?? '',
               alamat: item['full_address']?.toString() ?? '',
-              status: item['status']?.toString() == 'active' ? '1' : '0', telp: uData['phone']?.toString() ?? '',
+              status: isActive ? 'Aktif' : 'Tidak Aktif',
+              telp: uData['phone']?.toString() ?? '',
+              departemen: deptName,
+              manager: mgrName,
+              rawModel: item,
             ),
           );
         }
@@ -270,7 +280,8 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
         for (var item in dataList) {
           final sellerData = item.sellerData;
           final sellerAddress = item.sellerAddress;
-          
+          final isActive = (sellerData?.active == 1) || (item.status == 'active');
+
           userData.add(
             UserData(
               name1: sellerData?.companyName ?? sellerData?.name ?? '',
@@ -278,7 +289,9 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
               email: item.email ?? '',
               id: item.id?.toString() ?? '',
               alamat: sellerAddress?.fullAddress ?? sellerAddress?.cityName ?? '',
-              status: 'Aktif', // Sesuaikan jika ada field status dari backend
+              status: isActive ? 'Aktif' : 'Tidak Aktif',
+              telp: sellerData?.cpPhone ?? sellerData?.phone ?? '',
+              kelengkapan: sellerData?.completeness != null ? '${sellerData?.completeness}%' : null,
               rawModel: item,
             ),
           );
@@ -366,10 +379,10 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
         for (var item in dataList) {
           final uData = item['user_data'] ?? {};
           final dept = uData['department'];
-          String alamatDept = '';
-          if (dept != null && dept is Map) {
-            alamatDept = dept['name']?.toString() ?? '';
-          }
+          final mgr = uData['manager'];
+          String deptName = (dept is Map) ? (dept['name']?.toString() ?? '') : '';
+          String mgrName = (mgr is Map) ? (mgr['name']?.toString() ?? '') : '';
+          final isActive = item['status'] == 'active' || uData['active'] == 1;
 
           userData.add(
             UserData(
@@ -377,8 +390,12 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
               name2: uData['last_name']?.toString() ?? '',
               email: item['email']?.toString() ?? '',
               id: item['id']?.toString() ?? '',
-              alamat: alamatDept,
-              status: item['status']?.toString() == 'active' ? '1' : '0', telp: uData['phone']?.toString() ?? '',
+              alamat: item['full_address']?.toString() ?? deptName,
+              status: isActive ? 'Aktif' : 'Tidak Aktif',
+              telp: uData['phone']?.toString() ?? '',
+              departemen: deptName,
+              manager: mgrName,
+              rawModel: item,
             ),
           );
         }
@@ -460,6 +477,7 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
         
         for (var item in dataList) {
           final uData = item['user_data'] ?? {};
+          final isActive = item['status'] == 'active' || uData['active'] == 1;
           userData.add(
             UserData(
               name1: uData['first_name']?.toString() ?? '',
@@ -467,6 +485,9 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
               email: item['email']?.toString() ?? '',
               id: item['id']?.toString() ?? '',
               alamat: item['full_address']?.toString() ?? '',
+              status: isActive ? 'Aktif' : 'Tidak Aktif',
+              telp: uData['phone']?.toString() ?? '',
+              rawModel: item,
             ),
           );
         }
@@ -550,14 +571,19 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
         for (var item in dataList) {
           // Manager menggunakan key 'profile' bukan 'user_data'
           final profile = item['profile'] ?? {};
+          final isActive = item['status'] == 'active' || profile['active'] == 1;
+          final totalMembers = item['total_members'] ?? 0;
           userData.add(
             UserData(
               name1: profile['first_name']?.toString() ?? '',
               name2: profile['last_name']?.toString() ?? '',
               email: item['email']?.toString() ?? '',
               id: item['id']?.toString() ?? '',
-              alamat: profile['phone']?.toString() ?? '',
-              status: item['status']?.toString() == 'active' ? '1' : '0', telp: profile['phone']?.toString() ?? '',
+              alamat: '',
+              status: isActive ? 'Aktif' : 'Tidak Aktif',
+              telp: profile['phone']?.toString() ?? '',
+              anggota: '$totalMembers Anggota',
+              rawModel: item,
             ),
           );
         }
@@ -645,7 +671,8 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
               name2: uData['last_name']?.toString() ?? '',
               email: item['email']?.toString() ?? '',
               id: item['id']?.toString() ?? '',
-              alamat: uData['phone']?.toString() ?? '',
+              telp: uData['phone']?.toString() ?? '',
+              rawModel: item,
             ),
           );
         }
@@ -728,7 +755,8 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
               name2: uData['last_name']?.toString() ?? '',
               email: item['email']?.toString() ?? '',
               id: item['id']?.toString() ?? '',
-              alamat: uData['phone']?.toString() ?? '',
+              telp: uData['phone']?.toString() ?? '',
+              rawModel: item,
             ),
           );
         }
@@ -849,6 +877,45 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       Utils.showFailed(msg: e.toString());
     } finally {
       if (withLoading) loading(false);
+    }
+  }
+
+  Future<void> toggleUserStatus({
+    required UserDataType userType,
+    required String userId,
+  }) async {
+    String endpoint = '';
+    switch (userType) {
+      case UserDataType.BUYER:
+        endpoint = '/audit/v1/admin/buyers/$userId/toggle-status';
+        break;
+      case UserDataType.SELLER:
+        endpoint = '/audit/v1/admin/sellers/$userId/toggle-status';
+        break;
+      case UserDataType.FINANCE:
+        endpoint = '/audit/v1/admin/finances/$userId/toggle-status';
+        break;
+      case UserDataType.PENERIMA:
+        endpoint = '/audit/v1/admin/receivers/$userId/toggle-status';
+        break;
+      case UserDataType.MANAGER:
+        endpoint = '/audit/v1/admin/managers/$userId/toggle-status';
+        break;
+      default:
+        return;
+    }
+
+    try {
+      final response = await ApiClient().dio.patch(endpoint);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final msg = response.data['message'] ?? 'Status berhasil diubah';
+        await Utils.showSuccess(msg: msg);
+      } else {
+        throw Exception("Gagal mengubah status user");
+      }
+    } catch (e) {
+      debugPrint("toggleUserStatus Error: $e");
+      Utils.showFailed(msg: "Gagal mengubah status user: $e");
     }
   }
 }

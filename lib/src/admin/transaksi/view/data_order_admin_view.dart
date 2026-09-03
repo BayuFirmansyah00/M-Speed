@@ -336,13 +336,11 @@ class _OrderCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
-                        child: _buildInfoIcon(
-                          Icons.person_pin_rounded,
-                          Colors.purple,
-                          'Penerima',
-                          model.PenerimaNama ?? '-',
-                        ),
+                      _buildInfoIcon(
+                        Icons.person_pin_rounded,
+                        Colors.purple,
+                        'Penerima',
+                        model.PenerimaNama ?? '-',
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,

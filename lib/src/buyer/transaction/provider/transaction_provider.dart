@@ -210,14 +210,19 @@ class TransactionProvider extends BaseController with ChangeNotifier {
   }
 
   Future<void> fetchDetailTransaction(
-      {bool withLoading = false, required String transaction_id}) async {
+      {bool withLoading = false, required String transaction_id, bool isAdmin = false}) async {
     if (withLoading) loading(true);
 
     try {
-      // GET /api/buyer/v1/buyer/transactions/{id}
-      // Response: BuyerTransactionResource { id, order_num, payment_status, seller, items, logs, ... }
-      final parsed = await getRest(
-          Constant.BASE_API_FULL + '/buyer/v1/buyer/transactions/$transaction_id');
+      final prefs = await preferences();
+      final role = (prefs?.getString(Constant.kSetPrefRoles) ?? prefs?.getString(Constant.kSetPrefRole) ?? '').toLowerCase();
+      final isUserAdmin = isAdmin || role.contains('admin') || role.contains('audit');
+
+      final url = isUserAdmin
+          ? '${Constant.BASE_API_FULL}/audit/v1/admin/transactions/$transaction_id'
+          : '${Constant.BASE_API_FULL}/buyer/v1/buyer/transactions/$transaction_id';
+
+      final parsed = await getRest(url);
 
       // Endpoint show() mengembalikan wrapped: { data: {...} } dari JsonResource
       final Map<String, dynamic>? raw =

@@ -44,9 +44,23 @@ enum UserDataType {
 }
 
 class UserData {
-  final String? name1, name2, email, alamat, id, status, telp, kabkota;
+  final String? name1, name2, email, alamat, id, status, telp, kabkota, departemen, manager, anggota, kelengkapan;
   final dynamic rawModel;
-  UserData({this.name1, this.name2, this.email, this.alamat, this.id, this.status, this.telp, this.kabkota, this.rawModel});
+  UserData({
+    this.name1,
+    this.name2,
+    this.email,
+    this.alamat,
+    this.id,
+    this.status,
+    this.telp,
+    this.kabkota,
+    this.departemen,
+    this.manager,
+    this.anggota,
+    this.kelengkapan,
+    this.rawModel,
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -96,7 +110,9 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
   @override
   void initState() {
     super.initState();
-    getData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) getData();
+    });
     context.read<AdminUserProvider>().searchC.clear();
     _searchC.addListener(_onSearchChanged);
   }
@@ -168,6 +184,25 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
     await p.changeSession(context, id);
   }
 
+  // ── Toggle Status ──
+  Future<void> _onToggleStatus(int i) async {
+    final p = context.read<AdminUserProvider>();
+    final item = p.userData[i];
+    final isAktif = item.status == 'Aktif';
+    final actionText = isAktif ? 'menonaktifkan' : 'mengaktifkan';
+    await Utils.showYesNoDialog(
+      context: context,
+      title: 'Konfirmasi Status',
+      desc: 'Yakin ingin $actionText user "${item.name1 ?? ''}"?',
+      yesCallback: () async {
+        CusNav.nPop(context);
+        await p.toggleUserStatus(userType: widget.userType, userId: item.id ?? '');
+        getData(q: _searchC.text);
+      },
+      noCallback: () => CusNav.nPop(context),
+    );
+  }
+
   // ── Delete ──
   Future<void> _onDelete(int i) async {
     final p = context.read<AdminUserProvider>();
@@ -178,7 +213,34 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
       desc: 'Yakin ingin menghapus data "${model[i].name1 ?? ''}"?',
       yesCallback: () async {
         CusNav.nPop(context);
-        p.deleteSeller(id: model[i].id ?? '');
+        final id = model[i].id ?? '';
+        switch (widget.userType) {
+          case UserDataType.BUYER:
+            await p.deleteBuyer(buyerId: id);
+            break;
+          case UserDataType.SELLER:
+            await p.deleteSeller(id: id);
+            break;
+          case UserDataType.FINANCE:
+            await p.deleteKeuangan(keuanganId: id);
+            break;
+          case UserDataType.PENERIMA:
+            await p.deletePenerima(penerimaId: id);
+            break;
+          case UserDataType.MANAGER:
+            await p.deleteManager(managerId: id);
+            break;
+          case UserDataType.AUDIT:
+            await p.deleteAudit(auditId: id);
+            break;
+          case UserDataType.DIREKSI:
+            await p.deleteDireksi(direksiId: id);
+            break;
+          case UserDataType.SUB_DIREKTORAT:
+            await p.deleteSubDirektorat(subditId: id);
+            break;
+        }
+        getData(q: _searchC.text);
       },
       noCallback: () => CusNav.nPop(context),
     );
@@ -449,7 +511,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.download_rounded, color: Colors.white, size: 18),
-                          SizedBox(width: 4),
+                          SizedBox(width: 6),
                           Text('Export', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
                         ],
                       ),
@@ -493,9 +555,9 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                     Positioned(
                       right: -30, top: -30,
                       child: Container(
-                        width: 140, height: 140,
+                        width: 150, height: 150,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.07),
+                          color: Colors.white.withOpacity(0.08),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -638,6 +700,7 @@ class _UserDataAdminViewState extends BaseState<UserDataAdminView> {
                           gradient: _gradient,
                           onEdit: () => _onEdit(i),
                           onChangeSession: () => _onChangeSession(i),
+                          onToggleStatus: () => _onToggleStatus(i),
                           onDelete: () => _onDelete(i),
                         ),
                       ),
@@ -670,6 +733,7 @@ class _UserCard extends StatelessWidget {
   final List<Color> gradient;
   final VoidCallback onEdit;
   final VoidCallback onChangeSession;
+  final VoidCallback onToggleStatus;
   final VoidCallback onDelete;
 
   const _UserCard({
@@ -681,8 +745,16 @@ class _UserCard extends StatelessWidget {
     required this.gradient,
     required this.onEdit,
     required this.onChangeSession,
+    required this.onToggleStatus,
     required this.onDelete,
   });
+
+  bool get _hasStatus =>
+      userType == UserDataType.BUYER ||
+      userType == UserDataType.SELLER ||
+      userType == UserDataType.FINANCE ||
+      userType == UserDataType.PENERIMA ||
+      userType == UserDataType.MANAGER;
 
   String get _initials {
     final name = (item.name1 == null || item.name1!.trim().isEmpty) ? '?' : item.name1!.trim();
@@ -695,9 +767,6 @@ class _UserCard extends StatelessWidget {
     }
     return '?';
   }
-
-  bool get _isManagerOrAudit =>
-      userType == UserDataType.MANAGER || userType == UserDataType.AUDIT || userType == UserDataType.DIREKSI || userType == UserDataType.SUB_DIREKTORAT;
 
   @override
   Widget build(BuildContext context) {
@@ -749,8 +818,8 @@ class _UserCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                // Status (seller only)
-                if ((isSeller || userType == UserDataType.DIREKSI) && item.status != null) ...[
+                // Status badge (only for Buyer, Seller, Finance, Penerima, Manager)
+                if (_hasStatus && item.status != null && item.status!.isNotEmpty) ...[
                   const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -780,6 +849,7 @@ class _UserCard extends StatelessWidget {
                   onSelected: (value) {
                     if (value == 'edit') onEdit();
                     else if (value == 'session') onChangeSession();
+                    else if (value == 'toggle_status') onToggleStatus();
                     else if (value == 'delete') onDelete();
                   },
                   itemBuilder: (_) => [
@@ -795,6 +865,14 @@ class _UserCard extends StatelessWidget {
                       label: 'Ganti Sesi',
                       iconColor: const Color(0xffF59E0B),
                     ),
+                    if (_hasStatus) ...[
+                      _popupItem(
+                        value: 'toggle_status',
+                        icon: item.status == 'Aktif' ? Icons.block_rounded : Icons.check_circle_outline_rounded,
+                        label: item.status == 'Aktif' ? 'Nonaktifkan' : 'Aktifkan',
+                        iconColor: item.status == 'Aktif' ? const Color(0xffED1C24) : const Color(0xff28C76F),
+                      ),
+                    ],
                     const PopupMenuDivider(height: 1),
                     _popupItem(
                       value: 'delete',
@@ -812,46 +890,305 @@ class _UserCard extends StatelessWidget {
           // ── Card Body ──
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-            child: Column(
-              children: [
-                // Row: name2 & email (label col)
-                Row(
-                  children: [
-                    Expanded(
-                      child: _InfoChip(
-                        label: isSeller ? 'Nama Pemilik' : 'Last Name',
-                        value: item.name2 ?? '-',
-                        icon: Icons.person_outline_rounded,
-                      ),
-                    ),
-                    if (userType != UserDataType.DIREKSI) ...[
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _InfoChip(
-                          label: 'No. ID',
-                          value: '#${item.id ?? '-'}',
-                          icon: Icons.tag_rounded,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                if (userType != UserDataType.DIREKSI) ...[
-                  const SizedBox(height: 8),
-                  // Alamat full width
-                  _InfoChip(
-                    label: 'Alamat',
-                    value: item.alamat ?? '-',
-                    icon: Icons.location_on_outlined,
-                    fullWidth: true,
-                  ),
-                ],
-              ],
-            ),
+            child: _buildBodyContent(),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildBodyContent() {
+    switch (userType) {
+      case UserDataType.BUYER:
+        return Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _InfoChip(
+                    label: 'Last Name',
+                    value: (item.name2 != null && item.name2!.isNotEmpty) ? item.name2! : '-',
+                    icon: Icons.person_outline_rounded,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _InfoChip(
+                    label: 'Departemen',
+                    value: (item.departemen != null && item.departemen!.isNotEmpty) ? item.departemen! : '-',
+                    icon: Icons.business_rounded,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: _InfoChip(
+                    label: 'Manager',
+                    value: (item.manager != null && item.manager!.isNotEmpty) ? item.manager! : '-',
+                    icon: Icons.supervisor_account_rounded,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _InfoChip(
+                    label: 'No. ID',
+                    value: '#${item.id ?? '-'}',
+                    icon: Icons.tag_rounded,
+                  ),
+                ),
+              ],
+            ),
+            if (item.alamat != null && item.alamat!.isNotEmpty && item.alamat != '-') ...[
+              const SizedBox(height: 8),
+              _InfoChip(
+                label: 'Alamat',
+                value: item.alamat!,
+                icon: Icons.location_on_outlined,
+                fullWidth: true,
+              ),
+            ],
+          ],
+        );
+
+      case UserDataType.SELLER:
+        return Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _InfoChip(
+                    label: 'Nama Pemilik',
+                    value: (item.name2 != null && item.name2!.isNotEmpty) ? item.name2! : '-',
+                    icon: Icons.person_outline_rounded,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _InfoChip(
+                    label: 'Kontak CP',
+                    value: (item.telp != null && item.telp!.isNotEmpty) ? item.telp! : '-',
+                    icon: Icons.phone_outlined,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: _InfoChip(
+                    label: 'Kelengkapan',
+                    value: (item.kelengkapan != null && item.kelengkapan!.isNotEmpty) ? item.kelengkapan! : '-',
+                    icon: Icons.check_circle_outline_rounded,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _InfoChip(
+                    label: 'No. ID',
+                    value: '#${item.id ?? '-'}',
+                    icon: Icons.tag_rounded,
+                  ),
+                ),
+              ],
+            ),
+            if (item.alamat != null && item.alamat!.isNotEmpty && item.alamat != '-') ...[
+              const SizedBox(height: 8),
+              _InfoChip(
+                label: 'Alamat',
+                value: item.alamat!,
+                icon: Icons.location_on_outlined,
+                fullWidth: true,
+              ),
+            ],
+          ],
+        );
+
+      case UserDataType.FINANCE:
+        return Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _InfoChip(
+                    label: 'Last Name',
+                    value: (item.name2 != null && item.name2!.isNotEmpty) ? item.name2! : '-',
+                    icon: Icons.person_outline_rounded,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _InfoChip(
+                    label: 'Departemen',
+                    value: (item.departemen != null && item.departemen!.isNotEmpty) ? item.departemen! : '-',
+                    icon: Icons.business_rounded,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: _InfoChip(
+                    label: 'Manager',
+                    value: (item.manager != null && item.manager!.isNotEmpty) ? item.manager! : '-',
+                    icon: Icons.supervisor_account_rounded,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _InfoChip(
+                    label: 'No. ID',
+                    value: '#${item.id ?? '-'}',
+                    icon: Icons.tag_rounded,
+                  ),
+                ),
+              ],
+            ),
+            if (item.alamat != null && item.alamat!.isNotEmpty && item.alamat != '-') ...[
+              const SizedBox(height: 8),
+              _InfoChip(
+                label: 'Alamat',
+                value: item.alamat!,
+                icon: Icons.location_on_outlined,
+                fullWidth: true,
+              ),
+            ],
+          ],
+        );
+
+      case UserDataType.PENERIMA:
+        return Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _InfoChip(
+                    label: 'Last Name',
+                    value: (item.name2 != null && item.name2!.isNotEmpty) ? item.name2! : '-',
+                    icon: Icons.person_outline_rounded,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _InfoChip(
+                    label: 'No. ID',
+                    value: '#${item.id ?? '-'}',
+                    icon: Icons.tag_rounded,
+                  ),
+                ),
+              ],
+            ),
+            if (item.telp != null && item.telp!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              _InfoChip(
+                label: 'Telepon',
+                value: item.telp!,
+                icon: Icons.phone_outlined,
+                fullWidth: true,
+              ),
+            ],
+          ],
+        );
+
+      case UserDataType.MANAGER:
+        return Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _InfoChip(
+                    label: 'Last Name',
+                    value: (item.name2 != null && item.name2!.isNotEmpty) ? item.name2! : '-',
+                    icon: Icons.person_outline_rounded,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _InfoChip(
+                    label: 'Anggota',
+                    value: (item.anggota != null && item.anggota!.isNotEmpty) ? item.anggota! : '0 Anggota',
+                    icon: Icons.group_outlined,
+                  ),
+                ),
+              ],
+            ),
+            if (item.telp != null && item.telp!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              _InfoChip(
+                label: 'Telepon',
+                value: item.telp!,
+                icon: Icons.phone_outlined,
+                fullWidth: true,
+              ),
+            ],
+          ],
+        );
+
+      case UserDataType.DIREKSI:
+      case UserDataType.AUDIT:
+        return Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _InfoChip(
+                    label: 'Last Name',
+                    value: (item.name2 != null && item.name2!.isNotEmpty) ? item.name2! : '-',
+                    icon: Icons.person_outline_rounded,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _InfoChip(
+                    label: 'No. ID',
+                    value: '#${item.id ?? '-'}',
+                    icon: Icons.tag_rounded,
+                  ),
+                ),
+              ],
+            ),
+            if (item.telp != null && item.telp!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              _InfoChip(
+                label: 'Telepon',
+                value: item.telp!,
+                icon: Icons.phone_outlined,
+                fullWidth: true,
+              ),
+            ],
+          ],
+        );
+
+      case UserDataType.SUB_DIREKTORAT:
+        return Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _InfoChip(
+                    label: 'Nama Subdit',
+                    value: (item.name2 != null && item.name2!.isNotEmpty) ? item.name2! : '-',
+                    icon: Icons.account_tree_rounded,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _InfoChip(
+                    label: 'Total Departemen',
+                    value: (item.alamat != null && item.alamat!.isNotEmpty) ? item.alamat! : '-',
+                    icon: Icons.business_rounded,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+    }
   }
 
   PopupMenuItem<String> _popupItem({

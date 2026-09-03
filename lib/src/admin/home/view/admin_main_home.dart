@@ -32,7 +32,7 @@ class _SellerMainHomeState extends State<AdminMainHome> with SingleTickerProvide
 
   static const _navItems = [
     _AdminNavItem(icon: Icons.home_outlined,           activeIcon: Icons.home_rounded,              label: 'Beranda'),
-    _AdminNavItem(icon: Icons.group_outlined,           activeIcon: Icons.group_rounded,             label: 'User'),
+    _AdminNavItem(icon: Icons.group_outlined,           activeIcon: Icons.group_rounded,             label: 'User Data'),
     _AdminNavItem(icon: Icons.swap_horiz_rounded,       activeIcon: Icons.swap_horiz_rounded,        label: 'Transaksi'),
     _AdminNavItem(icon: Icons.tune_outlined,            activeIcon: Icons.tune_rounded,              label: 'Master'),
   ];

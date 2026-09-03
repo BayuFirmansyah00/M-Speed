@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -8,6 +9,7 @@ void main() {
     String? adminToken;
 
     setUpAll(() async {
+      HttpOverrides.global = null;
       dio = Dio(BaseOptions(
         baseUrl: baseUrl,
         connectTimeout: const Duration(seconds: 15),
@@ -96,6 +98,88 @@ void main() {
 
       final cities = await dio.get('/cities');
       expect(cities.statusCode, 200);
+    });
+
+    test('8. Admin Transactions API (/audit/v1/admin/transactions)', () async {
+      final res = await dio.get('/audit/v1/admin/transactions');
+      expect(res.statusCode, 200);
+      expect(res.data['data'], isA<List>());
+      expect(res.data['meta']?['total'], isNotNull);
+      final List list = res.data['data'];
+      expect(list.isNotEmpty, isTrue);
+      expect(list[0]['id'], isNotNull);
+      expect(list[0]['order_num'], isNotNull);
+      expect(list[0]['seller_snapshot'], isNotNull);
+      expect(list[0]['actors_snapshot'], isNotNull);
+      expect(list[0]['payment_summary'], isNotNull);
+    });
+
+    test('9. Admin Transaction Detail API (/audit/v1/admin/transactions/{id})', () async {
+      final res = await dio.get('/audit/v1/admin/transactions/1');
+      expect(res.statusCode, 200);
+      final data = res.data['data'];
+      expect(data['id'], 1);
+      expect(data['order_num'], 'ORD-202667674');
+      expect(data['seller'], isNotNull);
+      expect(data['buyer'], isNotNull);
+      expect(data['items'], isA<List>());
+      expect(data['logs'], isA<List>());
+    });
+
+    test('10. Admin DPP API (/audit/v1/admin/dpp)', () async {
+      final res = await dio.get('/audit/v1/admin/dpp');
+      expect(res.statusCode, 200);
+      expect(res.data['data'], isA<List>());
+      expect(res.data['meta']?['total'], isNotNull);
+      final List list = res.data['data'];
+      expect(list.isNotEmpty, isTrue);
+      expect(list[0]['nomor_permintaan'], isNotNull);
+      expect(list[0]['nilai_prk'], isNotNull);
+      expect(list[0]['sisa'], isNotNull);
+    });
+
+    test('11. PHASE 34 — Seller 121 active = 0 and status = non-active', () async {
+      final res = await dio.get('/audit/v1/admin/sellers', queryParameters: {'search': 'seller1@example.com'});
+      expect(res.statusCode, 200);
+      final list = res.data['data'] as List;
+      final seller121 = list.firstWhere((s) => s['id'] == 121 || s['email'] == 'seller1@example.com', orElse: () => null);
+      expect(seller121, isNotNull, reason: 'Seller 121 should be found via search');
+      expect(seller121['status'], 'non-active');
+      expect(seller121['seller_data']['active'], 0);
+      expect(seller121['email'], 'seller1@example.com');
+    });
+
+    test('12. PHASE 34 — Buyer payload has manager and active', () async {
+      final res = await dio.get('/audit/v1/admin/buyers');
+      expect(res.statusCode, 200);
+      final list = res.data['data'] as List;
+      expect(list.isNotEmpty, isTrue);
+      expect(list[0]['user_data']['active'], isNotNull);
+      expect(list[0]['user_data']['manager'], isNotNull);
+    });
+
+    test('13. PHASE 34 — Finance payload has full_address and active', () async {
+      final res = await dio.get('/audit/v1/admin/finances');
+      expect(res.statusCode, 200);
+      final list = res.data['data'] as List;
+      expect(list.isNotEmpty, isTrue);
+      expect(list[0]['user_data']['active'], isNotNull);
+      expect(list[0]['full_address'], isNotNull);
+    });
+
+    test('14. PHASE 34 — Toggle status endpoint is accessible for 5 roles', () async {
+      // Get valid buyer ID from list
+      final buyersRes = await dio.get('/audit/v1/admin/buyers');
+      final buyerId = buyersRes.data['data'][0]['id'];
+
+      // Test toggle status on buyer
+      final buyerToggle = await dio.patch('/audit/v1/admin/buyers/$buyerId/toggle-status');
+      expect(buyerToggle.statusCode, 200);
+      expect(buyerToggle.data['message'], contains('Status'));
+
+      // Toggle back to keep state clean
+      final buyerToggleBack = await dio.patch('/audit/v1/admin/buyers/$buyerId/toggle-status');
+      expect(buyerToggleBack.statusCode, 200);
     });
   });
 }

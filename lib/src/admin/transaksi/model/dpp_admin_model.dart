@@ -41,15 +41,15 @@ class DppAdminModelData {
     this.description,
   });
   DppAdminModelData.fromJson(Map<String, dynamic> json) {
-    ID = json['ID']?.toString();
-    nomorPermintaan = json['nomor_permintaan']?.toString();
-    jumlahPrk = json['jumlah_prk']?.toString();
-    nilaiPrk = json['nilai_prk']?.toString();
-    IDPrk = json['IDPrk']?.toString();
-    BuyerID = json['BuyerID']?.toString();
+    ID = (json['ID'] ?? json['id'])?.toString();
+    nomorPermintaan = (json['nomor_permintaan'] ?? json['request_number'])?.toString();
+    jumlahPrk = (json['jumlah_prk'] ?? json['prk_total'])?.toString();
+    nilaiPrk = (json['nilai_prk'] ?? json['prk_value'])?.toString();
+    IDPrk = (json['IDPrk'] ?? json['loan_prk_id'])?.toString();
+    BuyerID = (json['BuyerID'] ?? json['user_data_id'])?.toString();
     status = json['status']?.toString();
-    sisa = json['sisa']?.toString();
-    subditId = json['subdit_id']?.toString();
+    sisa = (json['sisa'] ?? json['remainder'])?.toString();
+    subditId = (json['subdit_id'] ?? json['sub_direktorate_id'])?.toString();
     description = json['description']?.toString();
   }
   Map<String, dynamic> toJson() {
