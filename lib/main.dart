@@ -433,7 +433,6 @@ class MyApp extends StatelessWidget {
             ],
             child: MaterialApp(
               title: 'M-Speed',
-              restorationScopeId: 'root',
               localizationsDelegates: context.localizationDelegates,
               supportedLocales: context.supportedLocales,
               locale: context.locale,

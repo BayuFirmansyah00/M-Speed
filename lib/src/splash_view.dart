@@ -25,7 +25,7 @@ class _SplashViewState extends State<SplashView> {
   Future<String> checkRoles() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    final roles = prefs.getString(Constant.kSetPrefRoles)?.toUpperCase() ?? '';
+    final roles = (prefs.getString(Constant.kSetPrefRoles) ?? '').toUpperCase();
     switch (roles) {
       case 'SELLER':
         return '/sellerHome';
@@ -40,24 +40,33 @@ class _SplashViewState extends State<SplashView> {
       case 'ADMIN':
       case 'AUDIT':
         return '/adminHome';
-      default:
+      case 'BUYER':
         return '/home';
+      default:
+        return '/login';
     }
   }
 
   void init() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    final isLoggedIn =
-        prefs.getString(Constant.kSetPrefToken)?.isNotEmpty ?? false;
+    final token = prefs.getString(Constant.kSetPrefToken);
+    final bool isLoggedIn = token != null && token.trim().isNotEmpty;
     final roles = prefs.getString(Constant.kSetPrefRoles);
-    final route = await checkRoles();
+
+    String targetRoute = '/login';
+    if (isLoggedIn) {
+      targetRoute = await checkRoles();
+    }
 
     Timer(
-      Duration(seconds: 3),
-      () => Navigator.of(context).pushReplacementNamed(
-        isLoggedIn ? route : '/login',
-        arguments: roles,
-      ),
+      const Duration(seconds: 2),
+      () {
+        if (!mounted) return;
+        Navigator.of(context).pushReplacementNamed(
+          targetRoute,
+          arguments: roles,
+        );
+      },
     );
 
     // await requestPermission(Permission.storage);

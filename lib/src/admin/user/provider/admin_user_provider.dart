@@ -267,10 +267,35 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
           hasMore = dataList.isNotEmpty;
         }
     
-        for (var item in dataList) {
+        final rawDataList = response.data['data'] as List<dynamic>? ?? [];
+        for (var i = 0; i < dataList.length; i++) {
+          final item = dataList[i];
           final sellerData = item.sellerData;
           final sellerAddress = item.sellerAddress;
-          
+
+          Map<String, dynamic> rawItem = {};
+          if (i < rawDataList.length && rawDataList[i] is Map<String, dynamic>) {
+            rawItem = rawDataList[i] as Map<String, dynamic>;
+          }
+          final rawSellerData = (rawItem['seller_data'] is Map<String, dynamic>)
+              ? rawItem['seller_data'] as Map<String, dynamic>
+              : <String, dynamic>{};
+
+          final dynamic activeVal = rawItem['status'] ??
+              rawItem['active'] ??
+              rawSellerData['status'] ??
+              rawSellerData['active'] ??
+              item.status ??
+              item.active ??
+              sellerData?.status ??
+              sellerData?.active;
+
+          bool isActive = false;
+          if (activeVal != null) {
+            final strVal = activeVal.toString().toLowerCase().trim();
+            isActive = (strVal == '1' || strVal == 'active' || strVal == 'true' || strVal == 'aktif');
+          }
+
           userData.add(
             UserData(
               name1: sellerData?.companyName ?? sellerData?.name ?? '',
@@ -278,7 +303,7 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
               email: item.email ?? '',
               id: item.id?.toString() ?? '',
               alamat: sellerAddress?.fullAddress ?? sellerAddress?.cityName ?? '',
-              status: 'Aktif', // Sesuaikan jika ada field status dari backend
+              status: isActive ? 'Aktif' : 'Tidak Aktif',
               rawModel: item,
             ),
           );
@@ -851,4 +876,64 @@ class AdminUserProvider extends BaseController with ChangeNotifier {
       if (withLoading) loading(false);
     }
   }
+
+  Future<void> toggleUserStatus(int index, UserDataType userType) async {
+    if (index < 0 || index >= userData.length) return;
+    final item = userData[index];
+    final String userId = item.id ?? '';
+    if (userId.isEmpty) return;
+
+    final bool currentIsActive = (item.status == 'Aktif' || item.status == '1' || item.status?.toLowerCase() == 'active');
+    final bool newIsActive = !currentIsActive;
+    final String newStatusStr = newIsActive ? 'Aktif' : 'Tidak Aktif';
+    final String apiStatus = newIsActive ? 'active' : 'inactive';
+
+    // Optimistically update state in UI
+    userData[index] = UserData(
+      name1: item.name1,
+      name2: item.name2,
+      email: item.email,
+      alamat: item.alamat,
+      id: item.id,
+      status: newStatusStr,
+      telp: item.telp,
+      kabkota: item.kabkota,
+      rawModel: item.rawModel,
+    );
+    notifyListeners();
+
+    // Determine endpoint based on role
+    String endpoint = '';
+    if (userType == UserDataType.SELLER) {
+      endpoint = '/audit/v1/admin/sellers/$userId/status';
+    } else if (userType == UserDataType.BUYER) {
+      endpoint = '/audit/v1/admin/buyers/$userId/status';
+    } else if (userType == UserDataType.FINANCE) {
+      endpoint = '/audit/v1/admin/finances/$userId/status';
+    } else if (userType == UserDataType.PENERIMA) {
+      endpoint = '/audit/v1/admin/receivers/$userId/status';
+    } else if (userType == UserDataType.MANAGER) {
+      endpoint = '/audit/v1/admin/managers/$userId/status';
+    } else if (userType == UserDataType.AUDIT) {
+      endpoint = '/audit/v1/admin/audits/$userId/status';
+    } else if (userType == UserDataType.DIREKSI) {
+      endpoint = '/audit/v1/admin/direksi/$userId/status';
+    }
+
+    try {
+      if (endpoint.isNotEmpty) {
+        final response = await ApiClient().dio.post(
+          endpoint,
+          data: {'status': apiStatus, 'is_active': newIsActive},
+        );
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          Utils.showSuccess(msg: 'Status user berhasil diperbarui');
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('toggleUserStatus warning: $e');
+    }
+  }
 }
+
